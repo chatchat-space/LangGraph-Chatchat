@@ -31,7 +31,7 @@ from langchain_openai.llms import OpenAI
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
-from langgraph.checkpoint.postgres import PostgresSaver
+# from langgraph.checkpoint.postgres import PostgresSaver
 from memoization import cached, CachingAlgorithmFlag
 
 from chatchat.settings import Settings, XF_MODELS_TYPES
@@ -1025,12 +1025,12 @@ def set_graph_memory(memory_type: Literal["memory", "sqlite", "postgres", None] 
         engine = sa.create_engine(Settings.basic_settings.SQLALCHEMY_DATABASE_URI)
         conn = engine.connect().connection
         _AGENT_MEMORY = SqliteSaver(conn)
-    elif memory_type == "postgres":
-        from langgraph.checkpoint.postgres import PostgresSaver
-
-        engine = sa.create_engine(Settings.basic_settings.SQLALCHEMY_DATABASE_URI)
-        conn = engine.connect().connection
-        _AGENT_MEMORY = PostgresSaver(conn)
+    # elif memory_type == "postgres":
+    #     from langgraph.checkpoint.postgres import PostgresSaver
+    #
+    #     engine = sa.create_engine(Settings.basic_settings.SQLALCHEMY_DATABASE_URI)
+    #     conn = engine.connect().connection
+    #     _AGENT_MEMORY = PostgresSaver(conn)
 
 
 def get_graph_memory():
@@ -1064,7 +1064,7 @@ def get_graph_memory():
 def get_st_graph_memory(memory_type: Optional[Literal["memory", "sqlite", "postgres"]] = None) -> Union[
     MemorySaver,
     AsyncSqliteSaver,
-    PostgresSaver
+    # PostgresSaver
 ]:
     if memory_type is None:
         memory_type = Settings.tool_settings.GRAPH_MEMORY_TYPE
@@ -1077,11 +1077,11 @@ def get_st_graph_memory(memory_type: Optional[Literal["memory", "sqlite", "postg
         conn = aiosqlite.connect("langgraph_checkpoints.sqlite")
         return AsyncSqliteSaver(conn)
 
-    elif memory_type == "postgres":
-        import sqlalchemy as sa
-        engine = sa.create_engine(Settings.basic_settings.SQLALCHEMY_DATABASE_URI)
-        conn = engine.connect().connection
-        return PostgresSaver(conn)
+    # elif memory_type == "postgres":
+    #     import sqlalchemy as sa
+    #     engine = sa.create_engine(Settings.basic_settings.SQLALCHEMY_DATABASE_URI)
+    #     conn = engine.connect().connection
+    #     return PostgresSaver(conn)
 
     raise ValueError("Invalid memory_type provided. Must be 'memory', 'sqlite', or 'postgres'.")
 
