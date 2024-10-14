@@ -1,0 +1,13 @@
+.idea/
+.github/
+Dockerfile
+.dockerignore
+../.gitignore
+../.gitmodules
+../LICENSE
+../poetry.lock
+../poetry.toml
+../pyproject.toml
+../docs/
+../README.md
+../README_en.md
