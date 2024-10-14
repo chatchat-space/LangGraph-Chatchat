@@ -484,6 +484,22 @@ class ApiModelSettings(BaseFileSettings):
                     "text-embedding-3-large",
                 ],
             }),
+            PlatformConfig(**{
+                "platform_name": "bigmodel",
+                "platform_type": "bigmodel",
+                "api_base_url": "https://open.bigmodel.cn/api/paas/v4",
+                "api_key": "sk-proj-",
+                "api_concurrencies": 5,
+                "llm_models": [
+                    "glm-4-plus",
+                    "glm-4",
+                    "glm-4-air",
+                ],
+                "embed_models": [
+                    "embedding-3",
+                    "embedding-2",
+                ],
+            }),
         ]
     """模型平台配置"""
 
@@ -494,14 +510,14 @@ class ToolSettings(BaseFileSettings):
                                       json_file=CHATCHAT_ROOT / "tool_settings.json",
                                       extra="allow")
 
-    DEFAULT_GRAPH: str = "article_generation"
+    DEFAULT_GRAPH: str = "base_graph"
     """默认使用的 graph"""
 
     SUPPORT_GRAPHS: t.List[str] = [
-        "article_generation",
         "base_graph",
-        # "plan_and_execute",
-        # "reflexion",
+        "plan_and_execute",
+        "reflexion",
+        "article_generation",
     ]
     """支持的 graph"""
 
