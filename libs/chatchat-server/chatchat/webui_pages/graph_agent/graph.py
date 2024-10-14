@@ -324,6 +324,8 @@ def graph_agent_page(api: ApiRequest, is_lite: bool = False):
 
     if st.session_state.selected_graph == "文章生成":
         graph_name = "article_generation"
+    elif st.session_state.selected_graph == "基础机器人":
+        graph_name = "base_graph"
     else:
         graph_name = "base_graph"
 
