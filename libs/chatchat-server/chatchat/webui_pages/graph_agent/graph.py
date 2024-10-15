@@ -164,68 +164,96 @@ def extract_node_and_response(data):
 
 
 async def handle_user_input(
+        graph_name: str,
         graph_input: Any,
         graph: CompiledStateGraph,
         graph_config: Dict,
 ):
     events = graph.astream(input=graph_input, config=graph_config, stream_mode="updates")
     if events:
-        async for event in events:
-            node, response = extract_node_and_response(event)
+        if graph_name == "article_generation":
+            async for event in events:
+                node, response = extract_node_and_response(event)
 
-            # debug
-            print(f"--- node: {node} ---")
-            rich.print(response)
+                # debug
+                print(f"--- node: {node} ---")
+                rich.print(response)
 
-            if node == "history_manager":  # history_manager node 为内部实现, 不外显
-                continue
-            if node == "article_generation_init_break_point":
+                if node == "history_manager":  # history_manager node 为内部实现, 不外显
+                    continue
+                if node == "article_generation_init_break_point":
+                    with st.chat_message("assistant"):
+                        st.write("请进行初始化设置")
+                        st.session_state.messages.append({
+                            "role": "assistant",
+                            "content": "请进行初始化设置",
+                            "type": "text"  # 标识为文本类型
+                        })
+                    article_generation_init_setting()
+                    continue
+                if node == "article_generation_start_break_point":
+                    with st.chat_message("assistant"):
+                        st.write("请开始下达指令")
+                        st.session_state.messages.append({
+                            "role": "assistant",
+                            "content": "请开始下达指令",
+                            "type": "text"  # 标识为文本类型
+                        })
+                    st.session_state["article_list"] = response["article_list"]
+                    article_generation_start_setting()
+                    continue
+                if node == "article_generation_repeat_break_point":
+                    with st.chat_message("assistant"):
+                        st.write("请确认是否重写")
+                        st.session_state.messages.append({
+                            "role": "assistant",
+                            "content": "请确认是否重写",
+                            "type": "text"  # 标识为文本类型
+                        })
+                    st.session_state["article"] = response["article"]
+                    article_generation_repeat_setting()
+                    continue
+                # Display assistant response in chat message container
                 with st.chat_message("assistant"):
-                    st.write("请进行初始化设置")
+                    with st.status(node, expanded=True) as status:
+                        st.json(response, expanded=True)
+                        status.update(
+                            label=node, state="complete", expanded=False
+                        )
+                    # Add assistant response to chat history
                     st.session_state.messages.append({
                         "role": "assistant",
-                        "content": "请进行初始化设置",
-                        "type": "text"  # 标识为文本类型
+                        "content": response,
+                        "node": node,
+                        "expanded": False,
+                        "type": "json"  # 标识为JSON类型
                     })
-                article_generation_init_setting()
-                continue
-            if node == "article_generation_start_break_point":
-                with st.chat_message("assistant"):
-                    st.write("请开始下达指令")
-                    st.session_state.messages.append({
-                        "role": "assistant",
-                        "content": "请开始下达指令",
-                        "type": "text"  # 标识为文本类型
-                    })
-                st.session_state["article_list"] = response["article_list"]
-                article_generation_start_setting()
-                continue
-            if node == "article_generation_repeat_break_point":
-                with st.chat_message("assistant"):
-                    st.write("请确认是否重写")
-                    st.session_state.messages.append({
-                        "role": "assistant",
-                        "content": "请确认是否重写",
-                        "type": "text"  # 标识为文本类型
-                    })
-                st.session_state["article"] = response["article"]
-                article_generation_repeat_setting()
-                continue
+        else:
             # Display assistant response in chat message container
             with st.chat_message("assistant"):
-                with st.status(node, expanded=True) as status:
-                    st.json(response, expanded=True)
-                    status.update(
-                        label=node, state="complete", expanded=False
-                    )
-                # Add assistant response to chat history
-                st.session_state.messages.append({
-                    "role": "assistant",
-                    "content": response,
-                    "node": node,
-                    "expanded": False,
-                    "type": "json"  # 标识为JSON类型
-                })
+                response_last = ""
+                async for event in events:
+                    node, response = extract_node_and_response(event)
+                    # debug
+                    print(f"--- node: {node} ---")
+                    rich.print(response)
+                    response_last = response
+                    if node == "history_manager":  # history_manager node 为内部实现, 不外显
+                        continue
+                    with st.status(node, expanded=True) as status:
+                        st.json(response, expanded=True)
+                        status.update(
+                            label=node, state="complete", expanded=False
+                        )
+                    # Add assistant response to chat history
+                    st.session_state.messages.append({
+                        "role": "assistant",
+                        "content": response,
+                        "node": node,
+                        "expanded": False,
+                        "type": "json"  # 标识为JSON类型
+                    })
+                st.json(response_last)
 
 
 async def update_state(graph: CompiledStateGraph, graph_config: Dict, update_message: Dict, as_node: str):
@@ -322,19 +350,16 @@ def graph_agent_page(api: ApiRequest, is_lite: bool = False):
 
     selected_tools_configs = list(selected_tool_configs)
 
-    if st.session_state.selected_graph == "文章生成":
-        graph_name = "article_generation"
-    elif st.session_state.selected_graph == "基础机器人":
-        graph_name = "base_graph"
-    else:
-        graph_name = "base_graph"
+    graph_name = st.session_state.selected_graph
 
-    st.title("自媒体文章生成")
-    with st.chat_message("assistant"):
-        if graph_name == "article_generation":
-            st.write("Hello 👋, 我是自媒体文章生成 Agent, 输入任意内容以启动工作流.")
-        else:
-            st.write("Hello 👋, 我是智能 Agent, 试着输入任何内容和我聊天呦~ (ps: 可尝试选择工具)")
+    if graph_name == "article_generation":
+        st.title("自媒体文章生成")
+        with st.chat_message("assistant"):
+            if graph_name == "article_generation":
+                st.write("Hello 👋, 我是自媒体文章生成 Agent, 输入任意内容以启动工作流.")
+    else:
+        st.title("聊天助手")
+        st.write("Hello 👋, 我是智能聊天助手, 试着输入任何内容和我聊天呦~ (ps: 可尝试选择工具)")
 
     with bottom():
         cols = st.columns([1, 0.2, 15, 1])
@@ -346,7 +371,7 @@ def graph_agent_page(api: ApiRequest, is_lite: bool = False):
         if graph_name == "article_generation":
             user_input = cols[2].chat_input("请你帮我生成一篇自媒体文章")
         else:
-            user_input = cols[2].chat_input("试着和我聊天呦")
+            user_input = cols[2].chat_input("尝试输入任何内容和我聊天呦")
 
     # get_tool() 是所有工具的名称和对象的 dict 的列表
     all_tools = get_tool().values()
@@ -386,9 +411,12 @@ def graph_agent_page(api: ApiRequest, is_lite: bool = False):
 
     logger.info(f"graph: '{graph_name}', configurable: '{graph_config}'")
 
-    # 绘制流程图
-    graph_png_image = graph.get_graph().draw_mermaid_png()
-    st.sidebar.image(graph_png_image, caption="工作流流程图", use_column_width=True)
+    # 绘制流程图并缓存
+    graph_flow_image_name = f"{graph_name}_flow_image"
+    if graph_flow_image_name not in st.session_state:
+        graph_png_image = graph.get_graph().draw_mermaid_png()
+        st.session_state[graph_flow_image_name] = graph_png_image
+    st.sidebar.image(st.session_state[graph_flow_image_name], caption="工作流流程图", use_column_width=True)
 
     # 前端存储历史消息(仅作为 st.rerun() 时的 UI 展示)
     for message in st.session_state.messages:
@@ -425,7 +453,10 @@ def graph_agent_page(api: ApiRequest, is_lite: bool = False):
 
         # Run the async function in a synchronous context
         graph_input = {"messages": [("user", user_input)]}
-        asyncio.run(handle_user_input(graph_input=graph_input, graph=graph, graph_config=graph_config))
+        asyncio.run(handle_user_input(graph_name=graph_name,
+                                      graph_input=graph_input,
+                                      graph=graph,
+                                      graph_config=graph_config))
 
     if graph_name == "article_generation":
         # debug
