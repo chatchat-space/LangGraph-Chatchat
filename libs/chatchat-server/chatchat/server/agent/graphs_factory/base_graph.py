@@ -15,7 +15,7 @@ class BaseGraphEventHandler(EventHandler):
     def __init__(self):
         pass
 
-    def handle_event(self, node: str, events: State) -> BaseMessage:
+    def handle_event(self, node: str, event: State) -> BaseMessage:
         """
         event example:
         {
@@ -27,7 +27,7 @@ class BaseGraphEventHandler(EventHandler):
                             id='b9c5468a-7340-425b-ae6f-2f584a961014')]
         }
         """
-        return events["messages"][0]
+        return event["messages"][0]
 
 
 @regist_graph(name="chatbot",
