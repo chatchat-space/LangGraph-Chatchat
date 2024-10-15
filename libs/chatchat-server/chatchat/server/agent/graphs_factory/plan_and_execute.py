@@ -61,7 +61,7 @@ class PlanAndExecuteEventHandler(EventHandler):
     def __init__(self):
         pass
 
-    def handle_event(self, node: str, events: PlanExecute) -> Any:
+    def handle_event(self, node: str, event: PlanExecute) -> Any:
         '''
         event example:
         {'planner': {'messages': [HumanMessage(content='what is the hometown of the 2024 Australia open winner?', id='09da28f6-56af-4362-bd8f-f31cd98a103d')], 'history': [HumanMessage(content='what is the hometown of the 2024 Australia open winner?', id='09da28f6-56af-4362-bd8f-f31cd98a103d')], 'plan':
@@ -90,7 +90,7 @@ class PlanAndExecuteEventHandler(EventHandler):
 
         handler = handler_map.get(node)
         if handler:
-            return handler(events)
+            return handler(event)
         else:
             raise ValueError(f"Unsupported plan_and_execute node type: {node}")
 
