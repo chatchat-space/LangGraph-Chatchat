@@ -510,11 +510,11 @@ class ToolSettings(BaseFileSettings):
                                       json_file=CHATCHAT_ROOT / "tool_settings.json",
                                       extra="allow")
 
-    DEFAULT_GRAPH: str = "base_graph"
+    DEFAULT_GRAPH: str = "chatbot"
     """默认使用的 graph"""
 
     SUPPORT_GRAPHS: t.List[str] = [
-        "base_graph",
+        "chatbot",
         "plan_and_execute",
         "reflexion",
         "article_generation",

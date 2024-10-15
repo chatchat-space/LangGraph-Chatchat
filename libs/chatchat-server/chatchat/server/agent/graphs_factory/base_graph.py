@@ -30,7 +30,7 @@ class BaseGraphEventHandler(EventHandler):
         return events["messages"][0]
 
 
-@regist_graph(name="base_graph",
+@regist_graph(name="chatbot",
               input_handler=InputHandler,
               event_handler=BaseGraphEventHandler)
 def base_graph(llm: ChatOpenAI, tools: list[BaseTool], history_len: int) -> CompiledStateGraph:

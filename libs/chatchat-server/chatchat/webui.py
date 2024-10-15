@@ -57,8 +57,8 @@ if __name__ == "__main__":
             [
                 sac.MenuItem("Agent 对话", icon="robot"),
                 # sac.MenuItem("多功能对话", icon="chat"),
-                # sac.MenuItem("RAG 对话", icon="database"),
-                # sac.MenuItem("知识库管理", icon="hdd-stack"),
+                sac.MenuItem("RAG 对话", icon="database"),
+                sac.MenuItem("知识库管理", icon="hdd-stack"),
             ],
             key="selected_page",
             open_index=0,
@@ -66,13 +66,14 @@ if __name__ == "__main__":
 
         sac.divider()
 
-    # if selected_page == "知识库管理":
-    #     knowledge_base_page(api=api, is_lite=is_lite)
-    # elif selected_page == "RAG 对话":
-    #     kb_chat(api=api)
+    if selected_page == "知识库管理":
+        knowledge_base_page(api=api, is_lite=is_lite)
+    elif selected_page == "RAG 对话":
+        kb_chat(api=api)
+    elif selected_page == "Agent 对话":
+        graph_agent_page(api=api, is_lite=is_lite)
+
     # elif selected_page == "GraphAgent 对话":
     #     graph_agent_page(api=api, is_lite=is_lite)
     # else:
     #     dialogue_page(api=api, is_lite=is_lite)
-
-    graph_agent_page(api=api, is_lite=is_lite)
