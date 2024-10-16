@@ -287,7 +287,7 @@ class ArticleGenerationEventHandler(EventHandler):
     def __init__(self):
         pass
 
-    def handle_event(self, node: str, events: ArticleGenerationState) -> BaseMessage:
+    def handle_event(self, node: str, event: ArticleGenerationState) -> BaseMessage:
         """
         event example:
         {
@@ -299,7 +299,7 @@ class ArticleGenerationEventHandler(EventHandler):
                             id='b9c5468a-7340-425b-ae6f-2f584a961014')]
         }
         """
-        return events["messages"][0]
+        return event["messages"][0]
 
 
 @regist_graph(name="article_generation",

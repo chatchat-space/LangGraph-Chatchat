@@ -6,6 +6,7 @@ import streamlit as st
 from langgraph.graph.state import CompiledStateGraph
 from streamlit_extras.bottom_container import bottom
 
+from chatchat.server.agent.graphs_factory.graphs_registry import serialize_content
 from chatchat.webui_pages.utils import *
 from chatchat.webui_pages.dialogue.dialogue import list_graphs, list_tools
 from chatchat.server.utils import (
@@ -15,6 +16,7 @@ from chatchat.server.utils import (
     get_default_llm,
     get_history_len,
     get_graph_instance,
+    get_graph_event_handler,
     get_tool,
     create_agent_models,
 )
@@ -236,8 +238,15 @@ async def handle_user_input(
                     node, response = extract_node_and_response(event)
                     # debug
                     print(f"--- node: {node} ---")
+                    # rich.print(response)
+                    event_handler = get_graph_event_handler(graph_name)
+                    # 获取 event
+                    response = event_handler.handle_event(node=node, event=response)
+                    # 将 event 转化为 json
+                    response = serialize_content(response)
                     rich.print(response)
-                    response_last = response
+                    response_last = response["content"]
+
                     if node == "history_manager":  # history_manager node 为内部实现, 不外显
                         continue
                     with st.status(node, expanded=True) as status:
@@ -253,7 +262,7 @@ async def handle_user_input(
                         "expanded": False,
                         "type": "json"  # 标识为JSON类型
                     })
-                st.json(response_last)
+                st.markdown(response_last)
 
 
 async def update_state(graph: CompiledStateGraph, graph_config: Dict, update_message: Dict, as_node: str):
@@ -311,6 +320,7 @@ def graph_agent_page(api: ApiRequest, is_lite: bool = False):
         st.session_state["platform"] = "所有"
     if "llm_model" not in st.session_state:
         st.session_state["llm_model"] = get_default_llm()
+        logger.info("default llm model: {}".format(st.session_state["llm_model"]))
     if "temperature" not in st.session_state:
         st.session_state["temperature"] = 0.01
     if "prompt" not in st.session_state:
@@ -390,7 +400,7 @@ def graph_agent_page(api: ApiRequest, is_lite: bool = False):
                               max_tokens=None,
                               temperature=st.session_state["temperature"],
                               stream=True)
-    # rich.print(llm)
+    rich.print(llm)
 
     # 创建 langgraph 实例
     graph = get_graph_instance(

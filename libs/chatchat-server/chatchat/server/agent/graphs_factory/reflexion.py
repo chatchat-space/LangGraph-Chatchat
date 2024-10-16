@@ -92,30 +92,30 @@ class ReflexionEventHandler(EventHandler):
     def __init__(self):
         pass
 
-    def handle_event(self, node: str, events: ReflexionState) -> Any:
+    def handle_event(self, node: str, event: ReflexionState) -> Any:
         """
         event example:
         """
         # import rich
         if node == "revise":
             revise_answer = ReviseAnswer(
-                question=events["question"],
-                answer=events["answer"],
-                reflection=events["reflection"],
-                search_queries=events["search_queries"],
-                references=events["references"]
+                question=event["question"],
+                answer=event["answer"],
+                reflection=event["reflection"],
+                search_queries=event["search_queries"],
+                references=event["references"]
             )
             return revise_answer
         elif node == "draft":
             answer_question = AnswerQuestion(
-                question=events["question"],
-                answer=events["answer"],
-                reflection=events["reflection"],
-                search_queries=events["search_queries"],
+                question=event["question"],
+                answer=event["answer"],
+                reflection=event["reflection"],
+                search_queries=event["search_queries"],
             )
             return answer_question
         elif node == "function_call" or node == "function_call_loop":
-            function_call = extract_messages(events["messages"])
+            function_call = extract_messages(event["messages"])
             return function_call
         return None
 
