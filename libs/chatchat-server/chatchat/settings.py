@@ -510,30 +510,32 @@ class ToolSettings(BaseFileSettings):
                                       json_file=CHATCHAT_ROOT / "tool_settings.json",
                                       extra="allow")
 
-    DEFAULT_GRAPH: str = "chatbot"
     """默认使用的 graph"""
+    DEFAULT_GRAPH: str = "chatbot"
 
+    """支持的 graph"""
     SUPPORT_GRAPHS: t.List[str] = [
         "chatbot",
         "plan_and_execute",
         "reflexion",
         "article_generation",
+        "text_to_sql",
     ]
-    """支持的 graph"""
 
-    RECURSION_LIMIT: int = 50
     """
     工作流允许 agent 推理最大轮数, 设定数值 = 单次执行限制最大推理轮数 * 2
     如果不设置或设置为 0 则取 50 (25轮)
     """
+    RECURSION_LIMIT: int = 50
 
-    GRAPH_MEMORY_TYPE: t.Literal["memory", "sqlite", "postgres"] = "memory"
     """
     langgraph 历史记录类型。
     默认为 memory, 无法持久化，仅在程序运行期间用于获取历史消息。
     如果设为 sqlite/postgres，则自动使用 SQLALCHEMY_DATABASE_URI
     """
+    GRAPH_MEMORY_TYPE: t.Literal["memory", "sqlite", "postgres"] = "memory"
 
+    """本地知识库工具配置项"""
     search_local_knowledgebase: dict = {
         "use": False,
         "top_k": 3,
@@ -548,8 +550,8 @@ class ToolSettings(BaseFileSettings):
             "请注意，你必须在回答结束后强调，你的回答是根据你的经验回答而不是参考资料回答的。\n",
         },
     }
-    '''本地知识库工具配置项'''
 
+    '''搜索引擎工具配置项。推荐自己部署 searx 搜索引擎，国内使用最方便。'''
     search_internet: dict = {
         "use": False,
         "search_engine_name": "duckduckgo",
@@ -583,17 +585,16 @@ class ToolSettings(BaseFileSettings):
         "{{ question }}\n"
         "</问题>\n",
     }
-    '''搜索引擎工具配置项。推荐自己部署 searx 搜索引擎，国内使用最方便。'''
 
     arxiv: dict = {
         "use": False,
     }
 
+    '''心知天气（https://www.seniverse.com/）工具配置项'''
     weather_check: dict = {
         "use": False,
         "api_key": "",
     }
-    '''心知天气（https://www.seniverse.com/）工具配置项'''
 
     search_youtube: dict = {
         "use": False,
@@ -604,17 +605,18 @@ class ToolSettings(BaseFileSettings):
         "appid": "",
     }
 
+    '''numexpr 数学计算工具配置项'''
     calculate: dict = {
         "use": False,
     }
-    '''numexpr 数学计算工具配置项'''
 
+    '''图片生成工具配置项。model 必须是在 model_settings.yaml/MODEL_PLATFORMS 中配置过的。'''
     text2images: dict = {
         "use": False,
         "model": "sd-turbo",
         "size": "256*256",
     }
-    '''图片生成工具配置项。model 必须是在 model_settings.yaml/MODEL_PLATFORMS 中配置过的。'''
+
 
     text2sql: dict = {
         # 该工具需单独指定使用的大模型，与用户前端选择使用的模型无关
@@ -649,7 +651,7 @@ class ToolSettings(BaseFileSettings):
     5、数据库表名、字段名应与其实际作用保持一致、容易理解，且应对数据库表名、字段进行详细的备注说明，帮助大模型更好理解数据库结构；
     6、若现有数据库表名难于让大模型理解，可配置下面table_comments字段，补充说明某些表的作用。
     '''
-  
+
     amap: dict = {
         "use": False,
         "api_key": "高德地图 API KEY",
