@@ -1,0 +1,7 @@
+{
+  "dependencies": ["/Users/zhangyuehua/Documents/opensource/Keng/libs/chatchat-server/pyproject.toml"],
+  "graphs": {
+    "agent": "/Users/zhangyuehua/Documents/opensource/Keng/libs/chatchat-server/chatchat/server/agent/graphs_factory/base_graph.py:graph"
+  },
+  "env": ".env"
+}

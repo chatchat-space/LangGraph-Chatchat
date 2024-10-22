@@ -339,19 +339,35 @@ def graph_agent_page(api: ApiRequest, is_lite: bool = False):
         with tab1:
             graph_names = list_graphs(api)
             selected_graph = st.selectbox(
-                "选择工作流(必选)",
+                "选择工作流",
                 graph_names,
                 format_func=lambda x: x,
                 key="selected_graph",
+                help="必选，不同的工作流的后端 agent 的逻辑不同，仅支持单选"
             )
+
             tools_list = list_tools(api)
-            tool_names = ["None"] + list(tools_list)
-            selected_tools = st.multiselect(
-                "选择工具(可选)",
-                list(tools_list),
-                format_func=lambda x: tools_list[x]["title"],
-                key="selected_tools",
-            )
+            # tool_names = ["None"] + list(tools_list)
+            if selected_graph == "text_to_sql":
+                selected_tools = st.multiselect(
+                    label="选择工具",
+                    options=["query_sql_data"],
+                    format_func=lambda x: tools_list[x]["title"],
+                    key="selected_tools",
+                    default="query_sql_data",
+                    help="仅可选择 SQL查询工具"
+                )
+            else:
+                # selected_tools demo: ['search_internet', 'search_youtube']
+                selected_tools = st.multiselect(
+                    label="选择工具",
+                    options=list(tools_list),
+                    format_func=lambda x: tools_list[x]["title"],
+                    key="selected_tools",
+                    default="search_internet",
+                    help="支持多选"
+                )
+
             selected_tool_configs = {
                 name: tool["config"]
                 for name, tool in tools_list.items()
@@ -360,16 +376,18 @@ def graph_agent_page(api: ApiRequest, is_lite: bool = False):
 
     selected_tools_configs = list(selected_tool_configs)
 
-    graph_name = st.session_state.selected_graph
-
-    if graph_name == "article_generation":
+    if selected_graph == "article_generation":
         st.title("自媒体文章生成")
         with st.chat_message("assistant"):
-            if graph_name == "article_generation":
-                st.write("Hello 👋, 我是自媒体文章生成 Agent, 输入任意内容以启动工作流.")
+            st.write("Hello 👋😊，我是自媒体文章生成 Agent，输入任意内容以启动工作流～")
+    elif selected_graph == "text_to_sql":
+        st.title("数据库查询")
+        with st.chat_message("assistant"):
+            st.write("Hello 👋😊，我是数据库查询机器人，输入你想查询的内容～")
     else:
-        st.title("聊天助手")
-        st.write("Hello 👋, 我是智能聊天助手, 试着输入任何内容和我聊天呦~ (ps: 可尝试选择工具)")
+        st.title("智能聊天")
+        with st.chat_message("assistant"):
+            st.write("Hello 👋😊，我是智能聊天机器人，试着输入任何内容和我聊天呦～（ps: 可尝试选择多种工具）")
 
     with bottom():
         cols = st.columns([1, 0.2, 15, 1])
@@ -378,19 +396,21 @@ def graph_agent_page(api: ApiRequest, is_lite: bool = False):
         if cols[-1].button(":wastebasket:", help="清空对话"):
             st.session_state["messages"] = []
             st.rerun()
-        if graph_name == "article_generation":
+        if selected_graph == "article_generation":
             user_input = cols[2].chat_input("请你帮我生成一篇自媒体文章")
+        elif selected_graph == "text_to_sql":
+            user_input = cols[2].chat_input("请你帮忙查看名为 tcs_public 的组织下有哪些管理员？")
         else:
             user_input = cols[2].chat_input("尝试输入任何内容和我聊天呦")
 
     # get_tool() 是所有工具的名称和对象的 dict 的列表
     all_tools = get_tool().values()
     tools = [tool for tool in all_tools if tool.name in selected_tools_configs]
-    # 为保证调用效果, 如果用户没有选择任何 tool, 就默认选择互联网搜索工具
-    if len(tools) == 0:
-        search_internet = get_tool(name="search_internet")
-        tools.append(search_internet)
-    # rich.print(tools)
+    # # 为保证调用效果, 如果用户没有选择任何 tool, 就默认选择互联网搜索工具
+    # if len(tools) == 0:
+    #     search_internet = get_tool(name="search_internet")
+    #     tools.append(search_internet)
+    # # rich.print(tools)
 
     # 创建 llm 实例
     # todo: max_tokens 这里有问题, None 应该是不限制, 但是目前 llm 结果为 4096
@@ -404,13 +424,13 @@ def graph_agent_page(api: ApiRequest, is_lite: bool = False):
 
     # 创建 langgraph 实例
     graph = get_graph_instance(
-        name=graph_name,
+        name=selected_graph,
         llm=llm,
         tools=tools,
         history_len=get_history_len(),
     )
     if not graph:
-        raise ValueError(f"Graph '{graph_name}' is not registered.")
+        raise ValueError(f"Graph '{selected_graph}' is not registered.")
 
     # langgraph 配置文件
     graph_config = {
@@ -419,10 +439,10 @@ def graph_agent_page(api: ApiRequest, is_lite: bool = False):
         },
     }
 
-    logger.info(f"graph: '{graph_name}', configurable: '{graph_config}'")
+    logger.info(f"graph: '{selected_graph}', configurable: '{graph_config}'")
 
     # 绘制流程图并缓存
-    graph_flow_image_name = f"{graph_name}_flow_image"
+    graph_flow_image_name = f"{selected_graph}_flow_image"
     if graph_flow_image_name not in st.session_state:
         graph_png_image = graph.get_graph().draw_mermaid_png()
         st.session_state[graph_flow_image_name] = graph_png_image
@@ -440,7 +460,7 @@ def graph_agent_page(api: ApiRequest, is_lite: bool = False):
             elif message["type"] == "text":
                 st.markdown(message["content"])
 
-    if graph_name == "article_generation":
+    if selected_graph == "article_generation":
         # 初始化文章和图片信息
         if "article_links" not in st.session_state:
             st.session_state["article_links"] = ""
@@ -463,12 +483,12 @@ def graph_agent_page(api: ApiRequest, is_lite: bool = False):
 
         # Run the async function in a synchronous context
         graph_input = {"messages": [("user", user_input)]}
-        asyncio.run(handle_user_input(graph_name=graph_name,
+        asyncio.run(handle_user_input(graph_name=selected_graph,
                                       graph_input=graph_input,
                                       graph=graph,
                                       graph_config=graph_config))
 
-    if graph_name == "article_generation":
+    if selected_graph == "article_generation":
         # debug
         is_article_generation_init_break_point = st.session_state["article_generation_init_break_point"]
         is_article_generation_start_break_point = st.session_state["article_generation_start_break_point"]
