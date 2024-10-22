@@ -1,13 +1,10 @@
-from typing import Union, Any, Literal
-
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai.chat_models import ChatOpenAI
 from langchain_core.tools import BaseTool
-from langchain_core.messages import BaseMessage, ToolMessage, AnyMessage
+from langchain_core.messages import BaseMessage, ToolMessage
 from langgraph.graph import StateGraph, END
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.prebuilt import ToolNode, tools_condition
-from pydantic import BaseModel
 
 from chatchat.server.utils import build_logger, get_st_graph_memory
 from .graphs_registry import regist_graph, InputHandler, EventHandler, State, async_history_manager
