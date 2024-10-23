@@ -70,7 +70,7 @@ def text_to_sql(llm: ChatOpenAI, tools: list[BaseTool], history_len: int) -> Com
             
             以下是库表信息和核心字段的说明:
             # 库:作用
-            tencent_hub:储存了 csighub 平台的关系型数据
+            yunzhi_docker_hub:储存了 yunzhi_docker_hub 平台的关系型数据
 
             ## 表:作用
             auth:储存了用户密码和加密数据
@@ -109,7 +109,7 @@ def text_to_sql(llm: ChatOpenAI, tools: list[BaseTool], history_len: int) -> Com
             id:int:命名空间 id
             name:varchar(255):命名空间名称
             user_id:bigint:用户 id
-            organization_id:bigint:csighub 组织 id
+            organization_id:bigint:组织 id
             deleted_at:timestamp:删除时间
             deleted_flag:bigint:删除标记
 
@@ -162,7 +162,7 @@ def text_to_sql(llm: ChatOpenAI, tools: list[BaseTool], history_len: int) -> Com
             ### 字段:类型:作用
             id:int:session id
             expire_at:timestamp:过期时间
-            key:varchar(36):session 密钥(这里不要返回给用户)
+            key:varchar(36):session 密钥(不返回给用户)
             user_id:bigint:用户 id
 
             ## 表:作用
@@ -210,7 +210,7 @@ def text_to_sql(llm: ChatOpenAI, tools: list[BaseTool], history_len: int) -> Com
             注意与要求:
             1. 只允许生成查询（SELECT）语句，其他涉及改数据的 SQL 不允许被执行。
             2. 请严格审视提供的 SQL 是否正确，数据类问题的结果在实际生产环境下非常重要，不容有失。
-            3. 在 tencent_hub 库中，organization 和 team 是两个维度的概念，请不要将 organization 表的 id 等同于 team 表的 id 或 organization 表的 team_id。
+            3. 在 yunzhi_docker_hub 库中，organization 和 team 是两个维度的概念，请不要将 organization 表的 id 等同于 team 表的 id 或 organization 表的 team_id。
             4. 答案尽可能以表格的形式返回，表格格式应清晰易读。
             5. 如果用户的问题与数据库表查询无关，可以友好地引导用户提出与数据库相关的问题。
             6. 对于无效查询或无法识别的请求，返回一条友好的提示信息。
