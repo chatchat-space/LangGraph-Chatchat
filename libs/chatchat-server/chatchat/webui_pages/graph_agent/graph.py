@@ -399,7 +399,7 @@ def graph_agent_page(api: ApiRequest, is_lite: bool = False):
         if selected_graph == "article_generation":
             user_input = cols[2].chat_input("请你帮我生成一篇自媒体文章")
         elif selected_graph == "text_to_sql":
-            user_input = cols[2].chat_input("请你帮忙查看名为 tcs_public 的组织下有哪些管理员？")
+            user_input = cols[2].chat_input("请你帮忙查看组织`tcs_public`的成员有哪些？")
         else:
             user_input = cols[2].chat_input("尝试输入任何内容和我聊天呦")
 
