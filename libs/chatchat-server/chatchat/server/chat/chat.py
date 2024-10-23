@@ -10,7 +10,7 @@ from langchain_core.messages import convert_to_messages
 from sse_starlette.sse import EventSourceResponse
 
 from chatchat.settings import Settings
-from chatchat.server.agent.agent_factory.agents_registry import agents_registry
+# from chatchat.server.agent.agent_factory.agents_registry import agents_registry
 from chatchat.server.api_server.api_schemas import OpenAIChatOutput
 from chatchat.server.callback_handler.agent_callback_handler import (
     AgentExecutorAsyncIteratorCallbackHandler,
@@ -84,12 +84,13 @@ def create_models_chains(
         chat_prompt = ChatPromptTemplate.from_messages([input_msg])
 
     if "action_model" in models and tools:
-        llm = models["action_model"]
-        llm.callbacks = callbacks
-        agent_executor = agents_registry(
-            llm=llm, callbacks=callbacks, tools=tools, prompt=None, verbose=True
-        )
-        full_chain = {"input": lambda x: x["input"]} | agent_executor
+        # llm = models["action_model"]
+        # llm.callbacks = callbacks
+        # agent_executor = agents_registry(
+        #     llm=llm, callbacks=callbacks, tools=tools, prompt=None, verbose=True
+        # )
+        # full_chain = {"input": lambda x: x["input"]} | agent_executor
+        pass
     else:
         llm = models["llm_model"]
         llm.callbacks = callbacks
