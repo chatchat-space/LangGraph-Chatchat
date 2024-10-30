@@ -5,6 +5,8 @@ import asyncio, json
 import uuid
 from typing import AsyncIterable, List, Optional, Literal
 import time
+
+import rich
 from fastapi import Body, Request
 from fastapi.concurrency import run_in_threadpool
 from sse_starlette.sse import EventSourceResponse
@@ -29,11 +31,11 @@ logger = build_logger()
 
 
 async def adaptive_docs(
-        docs:List[str],
-        model:str,
-        temperature:float,
-        max_tokens:int,
-        query:str,
+        docs: List[str],
+        model: str,
+        temperature: float,
+        max_tokens: int,
+        query: str,
         lang="zh",
                   ):
     """
@@ -125,14 +127,14 @@ async def adaptive_docs(
     
 
 async def self_verify_evidence(
-    docs:List[str],
-    answer:str,
-    model:str,
-    temperature:float,
-    max_tokens:int,
-    query:str,
+    docs: List[str],
+    answer: str,
+    model: str,
+    temperature: float,
+    max_tokens: int,
+    query: str,
     lang="zh",
-    ):
+):
     """
     select related documents accroding to answer by self-verify whether the evidence support the answer
     """
@@ -242,6 +244,7 @@ async def self_verify_evidence(
 
     docs_self_verify = [docs[i] for i in support_idx]
     return docs_self_verify
+
 
 async def self_verify_evidence_one_call(
         docs:List[str],
@@ -384,39 +387,30 @@ async def self_verify_evidence_one_call(
     return docs_self_verify
 
 
-async def kb_chat(query: str = Body(..., description="用户输入", examples=["你好"]),
-                mode: Literal["local_kb", "temp_kb", "search_engine"] = Body("local_kb", description="知识来源"),
-                kb_name: str = Body("", description="mode=local_kb时为知识库名称；temp_kb时为临时知识库ID，search_engine时为搜索引擎名称", examples=["samples"]),
-                top_k: int = Body(Settings.kb_settings.VECTOR_SEARCH_TOP_K, description="匹配向量数"),
-                score_threshold: float = Body(
-                    Settings.kb_settings.SCORE_THRESHOLD,
-                    description="知识库匹配相关度阈值，取值范围在0-1之间，SCORE越小，相关度越高，取到1相当于不筛选，建议设置在0.5左右",
-                    ge=0,
-                    le=2,
-                ),
-                history: List[History] = Body(
-                    [],
-                    description="历史对话",
-                    examples=[[
-                        {"role": "user",
-                        "content": "我们来玩成语接龙，我先来，生龙活虎"},
-                        {"role": "assistant",
-                        "content": "虎头虎脑"}]]
-                ),
-                stream: bool = Body(True, description="流式输出"),
-                model: str = Body(get_default_llm(), description="LLM 模型名称。"),
-                temperature: float = Body(Settings.model_settings.TEMPERATURE, description="LLM 采样温度", ge=0.0, le=2.0),
-                max_tokens: Optional[int] = Body(
-                    Settings.model_settings.MAX_TOKENS,
-                    description="限制LLM生成Token数量，默认None代表模型最大值"
-                ),
-                prompt_name: str = Body(
-                    "default",
-                    description="使用的prompt模板名称(在prompt_settings.yaml中配置)"
-                ),
-                return_direct: bool = Body(False, description="直接返回检索结果，不送入 LLM"),
-                request: Request = None,
-                ):
+async def kb_chat(
+        query: str = Body(..., description="用户输入", examples=["你好"]),
+        mode: Literal["local_kb", "temp_kb", "search_engine"] = Body("local_kb", description="知识来源"),
+        kb_name: str = Body("",
+                            description="mode=local_kb时为知识库名称；temp_kb时为临时知识库ID，search_engine时为搜索引擎名称",
+                            examples=["samples"]),
+        top_k: int = Body(Settings.kb_settings.VECTOR_SEARCH_TOP_K, description="匹配向量数"),
+        score_threshold: float = Body(Settings.kb_settings.SCORE_THRESHOLD,
+                                      description="知识库匹配相关度阈值，取值范围在0-1之间，SCORE越小，相关度越高，取到1相当于不筛选，建议设置在0.5左右",
+                                      ge=0,
+                                      le=2,),
+        history: List[History] = Body([],
+                                      description="历史对话",
+                                      examples=[[{"role": "user", "content": "我们来玩成语接龙，我先来，生龙活虎"},
+                                                 {"role": "assistant", "content": "虎头虎脑"}]]),
+        stream: bool = Body(True, description="流式输出"),
+        model: str = Body(get_default_llm(), description="LLM 模型名称。"),
+        temperature: float = Body(Settings.model_settings.TEMPERATURE, description="LLM 采样温度", ge=0.0, le=2.0),
+        max_tokens: Optional[int] = Body(Settings.model_settings.MAX_TOKENS,
+                                         description="限制LLM生成Token数量，默认None代表模型最大值"),
+        prompt_name: str = Body("default", description="使用的prompt模板名称(在prompt_settings.yaml中配置)"),
+        return_direct: bool = Body(False, description="直接返回检索结果，不送入 LLM"),
+        request: Request = None,
+):
     start = time.time()
     if mode == "local_kb":
         kb = KBServiceFactory.get_service_by_name(kb_name)
@@ -432,16 +426,22 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
 
             if mode == "local_kb":
                 kb = KBServiceFactory.get_service_by_name(kb_name)
+                print(f" ✅ yuehuazhang kb: {kb}")
                 ok, msg = kb.check_embed_model()
                 if not ok:
                     raise ValueError(msg)
+                print(f" ✅ yuehuazhang query: {query}")
+                print(f" ✅ yuehuazhang kb_name: {kb_name}")
+                print(f" ✅ yuehuazhang top_k: {top_k}")
+                print(f" ✅ yuehuazhang score_threshold: {score_threshold}")
                 docs = await run_in_threadpool(search_docs,
-                                                query=query,
-                                                knowledge_base_name=kb_name,
-                                                top_k=top_k,
-                                                score_threshold=score_threshold,
-                                                file_name="",
-                                                metadata={})
+                                               query=query,
+                                               knowledge_base_name=kb_name,
+                                               top_k=top_k,
+                                               score_threshold=score_threshold,
+                                               file_name="",
+                                               metadata={})
+                print(f" ✅ yuehuazhang docs: {docs}")
                 # source_documents = format_reference(kb_name, docs, api_address(is_public=True))
                 doc_source = "kb"
             elif mode == "temp_kb":
@@ -449,10 +449,10 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
                 if not ok:
                     raise ValueError(msg)
                 docs = await run_in_threadpool(search_temp_docs,
-                                                kb_name,
-                                                query=query,
-                                                top_k=top_k,
-                                                score_threshold=score_threshold)
+                                               kb_name,
+                                               query=query,
+                                               top_k=top_k,
+                                               score_threshold=score_threshold)
                 doc_source = "kb"
                 # source_documents = format_reference(kb_name, docs, api_address(is_public=True))
             elif mode == "search_engine":
@@ -467,21 +467,25 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
                 logger.warning(f"mode {mode} not supported")
                 docs = []
                 source_documents = []
-            # import rich
-            # rich.print(dict(
-            #     mode=mode,
-            #     query=query,
-            #     knowledge_base_name=kb_name,
-            #     top_k=top_k,
-            #     score_threshold=score_threshold,
-            # ))
-            # rich.print(docs)
+
+            # debug
+            import rich
+            rich.print(dict(
+                mode=mode,
+                query=query,
+                knowledge_base_name=kb_name,
+                top_k=top_k,
+                score_threshold=score_threshold,
+            ))
+            rich.print(docs)
+
             # # 加入reranker
             docs_original = copy.deepcopy(docs)
             # * -----------------add reranker---------------------------- 
             if Settings.model_settings.USE_RERANKER:
                 from chatchat.server.reranker.reranker import reranker_docs
                 docs = await reranker_docs(query, docs, top_k)
+
             if Settings.kb_settings.ADAPTIVE_DOCUMENTS:
                 start = time.time()
 
@@ -495,16 +499,21 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
                                         )
                 end = time.time()
                 logger.info(f"adaptive_docs time: {end-start}s")
+
             source_documents = format_reference(kb_name, 
                                                 docs, 
                                                 api_address(is_public=True), 
                                                 doc_source=doc_source)
+            # print(f" ✅ yuehuazhang source_documents: {source_documents}")
+
             # return filtered documents
             docs_filtered = [doc for doc in docs_original if doc not in docs]
             source_documents_filtered = format_reference(kb_name,
-                                                docs_filtered,
-                                                api_address(is_public=True),
-                                                doc_source=doc_source)
+                                                         docs_filtered,
+                                                         api_address(is_public=True),
+                                                         doc_source=doc_source)
+            # print(f" ✅ yuehuazhang source_documents: {source_documents}")
+
             if return_direct:
                 yield OpenAIChatOutput(
                     id=f"chat{uuid.uuid4()}",
@@ -520,127 +529,135 @@ async def kb_chat(query: str = Body(..., description="用户输入", examples=["
             callback = AsyncIteratorCallbackHandler()
             callbacks = [callback]
 
-            # Enable langchain-chatchat to support langfuse
-            import os
-            langfuse_secret_key = os.environ.get('LANGFUSE_SECRET_KEY')
-            langfuse_public_key = os.environ.get('LANGFUSE_PUBLIC_KEY')
-            langfuse_host = os.environ.get('LANGFUSE_HOST')
-            if langfuse_secret_key and langfuse_public_key and langfuse_host :
-                from langfuse import Langfuse
-                from langfuse.callback import CallbackHandler
-                langfuse_handler = CallbackHandler()
-                callbacks.append(langfuse_handler)
+            # # Enable langchain-chatchat to support langfuse
+            # import os
+            # langfuse_secret_key = os.environ.get('LANGFUSE_SECRET_KEY')
+            # langfuse_public_key = os.environ.get('LANGFUSE_PUBLIC_KEY')
+            # langfuse_host = os.environ.get('LANGFUSE_HOST')
+            # if langfuse_secret_key and langfuse_public_key and langfuse_host:
+            #     from langfuse import Langfuse
+            #     from langfuse.callback import CallbackHandler
+            #     langfuse_handler = CallbackHandler()
+            #     callbacks.append(langfuse_handler)
 
             if max_tokens in [None, 0]:
                 max_tokens = Settings.model_settings.MAX_TOKENS
 
-
             # TODO： 视情况使用 API
 
             context = "\n\n".join([doc["page_content"] for doc in docs])
+            print(f" ✅ yuehuazhang context:")
+            rich.print(context)
+            print("\n")
 
             if len(docs) == 0:  # 如果没有找到相关文档，使用empty模板
                 prompt_name = "empty"
             prompt_template = get_prompt_template("rag", prompt_name)
+            print(f" ✅ yuehuazhang prompt_template:")
+            rich.print(prompt_template)
+
             input_msg = History(role="user", content=prompt_template).to_msg_template(False)
-            chat_prompt = ChatPromptTemplate.from_messages(
-                [i.to_msg_template() for i in history] + [input_msg])
-            llm = get_ChatOpenAI(
-                model_name=model,
-                temperature=temperature,
-                max_tokens=max_tokens,
-                callbacks=callbacks,
-            )
+            print(f" ✅ yuehuazhang input_msg: {input_msg}")
+
+            chat_prompt = ChatPromptTemplate.from_messages([i.to_msg_template() for i in history] + [input_msg])
+            print(f" ✅ yuehuazhang chat_prompt:")
+            rich.print(chat_prompt)
+
+            llm = get_ChatOpenAI(model_name=model,
+                                 temperature=temperature,
+                                 max_tokens=max_tokens,
+                                 callbacks=callbacks,)
+            print(f" ✅ yuehuazhang llm:")
+            rich.print(llm)
             chain = chat_prompt | llm
+            print(f" ✅ yuehuazhang chain:")
+            rich.print(chain)
 
             # Begin a task that runs in the background.
             task = asyncio.create_task(wrap_done(
                 chain.ainvoke({"context": context, "question": query}),
                 callback.done),
             )
+            print(f" ✅ yuehuazhang task:")
+            rich.print(task)
 
             if len(source_documents) == 0:  # 没有找到相关文档
                 source_documents.append(f"<span style='color:red'>未找到相关文档,该回答为大模型自身能力解答！</span>")
 
             if stream:
+                print(f" ✅ yuehuazhang this is stream.")
                 answer = ""
                 async for token in callback.aiter():
                     answer += token
-                    ret = OpenAIChatOutput(
-                        id=f"chat{uuid.uuid4()}",
-                        object="chat.completion.chunk",
-                        content=token,
-                        role="assistant",
-                        model=model,
-                        docs=source_documents,
-                        filtered_docs=source_documents_filtered,
-                    )
-
+                    print(f" ✅ yuehuazhang stream-token: {token}")
+                    ret = OpenAIChatOutput(id=f"chat{uuid.uuid4()}",
+                                           object="chat.completion.chunk",
+                                           content=token,
+                                           role="assistant",
+                                           model=model,
+                                           docs=source_documents,
+                                           filtered_docs=source_documents_filtered,)
                     yield ret.model_dump_json()
+
                 if Settings.kb_settings.SELF_VERIFY_EVIDENCE:
                     start = time.time()
-                        
-                    docs = await self_verify_evidence(
-                                            docs, 
-                                            answer=answer,
-                                            model=model,
-                                            temperature=temperature,
-                                            max_tokens=max_tokens,
-                                            query=query,
-                                            lang="zh"
-                                            )
+                    print(f" ✅ yuehuazhang stream-answer: {answer}")
+                    docs = await self_verify_evidence(docs,
+                                                      answer=answer,
+                                                      model=model,
+                                                      temperature=temperature,
+                                                      max_tokens=max_tokens,
+                                                      query=query,
+                                                      lang="zh")
                     end = time.time()
                     logger.info(f"self_verify_evidence time: {end-start}s")
-                    source_documents = format_reference(kb_name, 
-                                                    docs, 
-                                                    api_address(is_public=True), 
-                                                    doc_source=doc_source)
+                    source_documents = format_reference(kb_name,
+                                                        docs,
+                                                        api_address(is_public=True),
+                                                        doc_source=doc_source)
                     # return filtered documents
                     docs_filtered = [doc for doc in docs_original if doc not in docs]
                     source_documents_filtered = format_reference(kb_name,
-                                                        docs_filtered,
-                                                        api_address(is_public=True),
-                                                        doc_source=doc_source)
-                    ret = OpenAIChatOutput(
-                    id=f"chat{uuid.uuid4()}",
-                    object="chat.completion.chunk",
-                    content="",
-                    role="assistant",
-                    model=model,
-                    docs=source_documents,
-                    filtered_docs=source_documents_filtered,
-                    )
+                                                                 docs_filtered,
+                                                                 api_address(is_public=True),
+                                                                 doc_source=doc_source)
+                    ret = OpenAIChatOutput(id=f"chat{uuid.uuid4()}",
+                                           object="chat.completion.chunk",
+                                           content="",
+                                           role="assistant",
+                                           model=model,
+                                           docs=source_documents,
+                                           filtered_docs=source_documents_filtered)
                     yield ret.model_dump_json()
             else:
+                print(f" ✅ yuehuazhang this is no-stream.")
                 answer = ""
                 async for token in callback.aiter():
                     answer += token
-                            # filter evidence with self-verify evidence
+                # filter evidence with self-verify evidence
                 if Settings.kb_settings.SELF_VERIFY_EVIDENCE:
                     start = time.time()
 
-                    docs = await self_verify_evidence(
-                                            docs, 
-                                            answer=answer,
-                                            model=model,
-                                            temperature=temperature,
-                                            max_tokens=max_tokens,
-                                            query=query,
-                                            lang="zh"
-                                            )
+                    docs = await self_verify_evidence(docs,
+                                                      answer=answer,
+                                                      model=model,
+                                                      temperature=temperature,
+                                                      max_tokens=max_tokens,
+                                                      query=query,
+                                                      lang="zh")
                     end = time.time()
                     logger.info(f"self_verify_evidence time: {end-start}s")
                     
-                    source_documents = format_reference(kb_name, 
-                                                        docs, 
-                                                        api_address(is_public=True), 
+                    source_documents = format_reference(kb_name,
+                                                        docs,
+                                                        api_address(is_public=True),
                                                         doc_source=doc_source)
                     # return filtered documents
                     docs_filtered = [doc for doc in docs_original if doc not in docs]
                     source_documents_filtered = format_reference(kb_name,
-                                                        docs_filtered,
-                                                        api_address(is_public=True),
-                                                        doc_source=doc_source)
+                                                                 docs_filtered,
+                                                                 api_address(is_public=True),
+                                                                 doc_source=doc_source)
                 ret = OpenAIChatOutput(
                     id=f"chat{uuid.uuid4()}",
                     object="chat.completion",

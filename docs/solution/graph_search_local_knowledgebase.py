@@ -157,7 +157,7 @@ async def search_knowledgebase(query: str, database: str="samples", config: dict
     # Compile
     app = workflow.compile()
     g = app.get_graph()
-    with open("graph.png", "wb") as fp:
+    with open("../../libs/chatchat-server/graph.png", "wb") as fp:
         fp.write(g.draw_mermaid_png())
     from langchain_core.messages import HumanMessage
     inputs = {"question": query, "knowledge_base": database, "retrieve_retry": 0,

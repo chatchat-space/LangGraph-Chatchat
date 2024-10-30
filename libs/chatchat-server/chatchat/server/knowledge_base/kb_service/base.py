@@ -364,37 +364,37 @@ class KBServiceFactory:
             from chatchat.server.knowledge_base.kb_service.faiss_kb_service import (
                 FaissKBService,
             )
-
+            print(f" ✅ yuehuazhang this is FaissKBService.")
             return FaissKBService(**params)
         elif SupportedVSType.PG == vector_store_type:
             from chatchat.server.knowledge_base.kb_service.pg_kb_service import (
                 PGKBService,
             )
-
+            print(f" ✅ yuehuazhang this is PGKBService.")
             return PGKBService(**params)
         elif SupportedVSType.RELYT == vector_store_type:
             from chatchat.server.knowledge_base.kb_service.relyt_kb_service import (
                 RelytKBService,
             )
-
+            print(f" ✅ yuehuazhang this is RelytKBService.")
             return RelytKBService(**params)
         elif SupportedVSType.MILVUS == vector_store_type:
             from chatchat.server.knowledge_base.kb_service.milvus_kb_service import (
                 MilvusKBService,
             )
-
+            print(f" ✅ yuehuazhang this is MilvusKBService.")
             return MilvusKBService(**params)
         elif SupportedVSType.ZILLIZ == vector_store_type:
             from chatchat.server.knowledge_base.kb_service.zilliz_kb_service import (
                 ZillizKBService,
             )
-
+            print(f" ✅ yuehuazhang this is ZillizKBService.")
             return ZillizKBService(**params)
         elif SupportedVSType.DEFAULT == vector_store_type:
             from chatchat.server.knowledge_base.kb_service.milvus_kb_service import (
                 MilvusKBService,
             )
-
+            print(f" ✅ yuehuazhang this is MilvusKBService.")
             return MilvusKBService(
                 **params
             )  # other milvus parameters are set in model_config.Settings.kb_settings.kbs_config
@@ -402,13 +402,13 @@ class KBServiceFactory:
             from chatchat.server.knowledge_base.kb_service.es_kb_service import (
                 ESKBService,
             )
-
+            print(f" ✅ yuehuazhang this is ESKBService.")
             return ESKBService(**params)
         elif SupportedVSType.CHROMADB == vector_store_type:
             from chatchat.server.knowledge_base.kb_service.chromadb_kb_service import (
                 ChromaKBService,
             )
-
+            print(f" ✅ yuehuazhang this is ChromaKBService.")
             return ChromaKBService(**params)
         elif (
             SupportedVSType.DEFAULT == vector_store_type
@@ -416,7 +416,7 @@ class KBServiceFactory:
             from chatchat.server.knowledge_base.kb_service.default_kb_service import (
                 DefaultKBService,
             )
-
+            print(f" ✅ yuehuazhang this is DefaultKBService.")
             return DefaultKBService(kb_name)
 
     @staticmethod
@@ -424,7 +424,13 @@ class KBServiceFactory:
         _, vs_type, embed_model = load_kb_from_db(kb_name)
         if _ is None:  # kb not in db, just return None
             return None
-        return KBServiceFactory.get_service(kb_name, vs_type, embed_model)
+        print(f" ✅ yuehuazhang KBServiceFactory _: {_}")
+        print(f" ✅ yuehuazhang KBServiceFactory vs_type: {vs_type}")
+        print(f" ✅ yuehuazhang KBServiceFactory embed_model: {embed_model}")
+        res = KBServiceFactory.get_service(kb_name, vs_type, embed_model)
+        print(f" ✅ yuehuazhang KBServiceFactory res: {res}")
+        return res
+        # return KBServiceFactory.get_service(kb_name, vs_type, embed_model)
 
     @staticmethod
     def get_default():
