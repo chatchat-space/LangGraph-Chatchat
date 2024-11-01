@@ -1,6 +1,7 @@
 from typing import Callable, Any, Dict, Type, Annotated, List, Optional, TypedDict, TypeVar
 from abc import ABC, abstractmethod
 
+import rich
 from langchain_core.tools import BaseTool
 from langchain_openai import ChatOpenAI
 from langgraph.graph.message import add_messages
@@ -146,7 +147,7 @@ class Graph:
         pass
 
     @abstractmethod
-    async def get_graph(self) -> CompiledStateGraph:
+    def get_graph(self) -> CompiledStateGraph:
         """
         定义了 graph 流程, 子类必须实现.
         """
@@ -167,6 +168,7 @@ class Graph:
         todo: 目前 history_len 直接截取了 messages 长度, 希望通过 对话轮数 来限制.
         todo: 原因: 一轮对话会追加数个 message, 但是目前没有从 snapshot(graph.get_state) 中找到很好的办法来获取一轮对话.
         """
+        print("---HISTORY MANAGER---")
         try:
             filtered_messages = []
             for message in filter_messages(state["messages"], exclude_types=[ToolMessage]):
@@ -193,8 +195,6 @@ class Graph:
         例如，等待用户输入并更新 state["user_feedback"]
         """
         print("---HUMAN FEEDBACK---")
-        import rich
-        rich.print(state)
         return state
 
     @staticmethod
@@ -203,9 +203,6 @@ class Graph:
         在知识库检索后, 将检索出来的知识文档提取出来.
         """
         print("---INIT DOCS---")
-        tool_message = state["messages"][-1]
-        print(f" ✅ tool message:")
-        import rich
-        rich.print(tool_message)
-        state["docs"] = tool_message.content
-        return Any
+        state["docs"] = state["messages"][-1].content
+        rich.print(state["docs"])
+        return state

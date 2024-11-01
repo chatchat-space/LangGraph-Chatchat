@@ -1,7 +1,6 @@
 from typing import List, Literal, Dict
 from pydantic import BaseModel, Field
 
-from langchain import hub
 from langchain_openai.chat_models import ChatOpenAI
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import PromptTemplate
@@ -15,7 +14,8 @@ from chatchat.server.utils import (
     build_logger,
     get_st_graph_memory,
     get_tool,
-    add_tools_if_not_exists
+    add_tools_if_not_exists,
+    get_prompt_template
 )
 from .graphs_registry import State, Graph
 
@@ -68,6 +68,7 @@ class BaseRagGraph(Graph):
         todo: 目前 history_len 直接截取了 messages 长度, 希望通过 对话轮数 来限制.
         todo: 原因: 一轮对话会追加数个 message, 但是目前没有从 snapshot(graph.get_state) 中找到很好的办法来获取一轮对话.
         """
+        print("---HISTORY MANAGER---")
         try:
             filtered_messages = []
             for message in filter_messages(state["messages"], exclude_types=[ToolMessage]):
@@ -83,6 +84,60 @@ class BaseRagGraph(Graph):
         except Exception as e:
             raise Exception(f"Filtering messages error: {e}")
 
+    async def chatbot(self, state: BaseRagState) -> BaseRagState:
+        """
+        Invokes the agent model to generate a response based on the current state. Given
+        the question, it will decide to retrieve using the retriever tool, or simply end.
+
+        Args:
+            state (messages): The current state
+
+        Returns:
+            dict: The updated state with the agent response appended to messages
+        """
+        print("---CHATBOT---")
+        # ToolNode 默认只将结果追加到 messages 队列中, 所以需要手动在 history 中追加 ToolMessage 结果, 否则报错如下:
+        # Error code: 400 -
+        # {
+        #     "error": {
+        #         "message": "Invalid parameter: messages with role 'tool' must be a response to a preceeding message with 'tool_calls'.",
+        #         "type": "invalid_request_error",
+        #         "param": "messages.[1].role",
+        #         "code": null
+        #     }
+        # }
+        if isinstance(state["messages"][-1], ToolMessage):
+            state["history"].append(state["messages"][-1])
+
+        prompt = PromptTemplate(
+            template="""
+            You are an intelligent robot that determines whether it is necessary to call the local knowledge base query tool to answer questions.
+
+            The knowledge base call parameters are as follows.
+
+            knowledge_base:
+            {knowledge_base}
+
+            top_k:
+            {top_k}
+
+            score_threshold:
+            {score_threshold}
+
+            The chat history and user questions are as follows:
+            {history}
+            """,
+            input_variables=["history", "knowledge_base", "top_k", "score_threshold"],
+        )
+
+        llm_with_tools = prompt | self.llm_with_tools
+
+        message = await llm_with_tools.ainvoke(state)
+        state["messages"] = [message]
+        # 因为 chatbot 执行依赖于 state["history"], 所以在同一次 workflow 没有执行结束前, 需要将每一次输出内容都追加到 state["history"] 队列中缓存起来
+        state["history"].append(message)
+        return state
+
     async def grade_documents(self, state: BaseRagState) -> Literal["generate", "rewrite"]:
         """
         Determines whether the retrieved documents are relevant to the question.
@@ -93,8 +148,7 @@ class BaseRagGraph(Graph):
         Returns:
             str: A decision for whether the documents are relevant or not
         """
-        print("---CHECK RELEVANCE---")
-
+        print("---GRADE DOCUMENTS---")
         # Prompt
         prompt = PromptTemplate(
             template="""
@@ -123,35 +177,41 @@ class BaseRagGraph(Graph):
             print("---DECISION: DOCS NOT RELEVANT---")
             return "rewrite"
 
-    async def chatbot(self, state: BaseRagState) -> BaseRagState:
+    async def generate(self, state: BaseRagState) -> BaseRagState:
         """
-        Invokes the agent model to generate a response based on the current state. Given
-        the question, it will decide to retrieve using the retriever tool, or simply end.
+        Generate answer
 
         Args:
             state (messages): The current state
 
         Returns:
-            dict: The updated state with the agent response appended to messages
+             dict: The updated state with re-phrased question
         """
-        print("---CALL AGENT---")
-        # ToolNode 默认只将结果追加到 messages 队列中, 所以需要手动在 history 中追加 ToolMessage 结果, 否则报错如下:
-        # Error code: 400 -
-        # {
-        #     "error": {
-        #         "message": "Invalid parameter: messages with role 'tool' must be a response to a preceeding message with 'tool_calls'.",
-        #         "type": "invalid_request_error",
-        #         "param": "messages.[1].role",
-        #         "code": null
-        #     }
-        # }
-        if isinstance(state["messages"][-1], ToolMessage):
-            state["history"].append(state["messages"][-1])
+        print("---GENERATE---")
+        # Prompt
+        # prompt = hub.pull("rlm/rag-prompt")
+        # prompt_template = get_prompt_template("rag", "default")
+        prompt = PromptTemplate(
+            template="""
+            【指令】
+            根据已知信息，简洁和专业的来回答问题。如果无法从中得到答案，请说 “根据已知信息无法回答该问题”，不允许在答案中添加编造成分，答案请使用中文。
+            
+            【已知信息】
+            {docs}
+            
+            【历史消息及用户问题】
+            {history}
+            """,
+            input_variables=["context", "question"],
+        )
 
-        message = await self.llm_with_tools.ainvoke(state["history"])
-        state["messages"] = [message]
-        # 因为 chatbot 执行依赖于 state["history"], 所以在同一次 workflow 没有执行结束前, 需要将每一次输出内容都追加到 state["history"] 队列中缓存起来
-        state["history"].append(message)
+        # Chain
+        rag_chain = prompt | self.llm | StrOutputParser()
+
+        # Run
+        response = await rag_chain.ainvoke(state)
+        state["messages"].append(HumanMessage(content=response))
+
         return state
 
     async def rewrite(self, state: BaseRagState) -> BaseRagState:
@@ -164,7 +224,7 @@ class BaseRagGraph(Graph):
         Returns:
             dict: The updated state with re-phrased question
         """
-        print("---TRANSFORM QUERY---")
+        print("---REWRITE---")
         prompt = PromptTemplate(
             template="""
             Look at the input and try to reason about the underlying semantic intent / meaning.
@@ -190,30 +250,7 @@ class BaseRagGraph(Graph):
 
         return state
 
-    async def generate(self, state: BaseRagState) -> BaseRagState:
-        """
-        Generate answer
-
-        Args:
-            state (messages): The current state
-
-        Returns:
-             dict: The updated state with re-phrased question
-        """
-        print("---GENERATE---")
-        # Prompt
-        prompt = hub.pull("rlm/rag-prompt")
-
-        # Chain
-        rag_chain = prompt | self.llm | StrOutputParser()
-
-        # Run
-        response = await rag_chain.ainvoke({"context": state["docs"], "question": state["history"]})
-        state["messages"].append(HumanMessage(content=response))
-
-        return state
-
-    async def get_graph(self) -> CompiledStateGraph:
+    def get_graph(self) -> CompiledStateGraph:
         """
         description: https://langchain-ai.github.io/langgraph/tutorials/rag/langgraph_agentic_rag/
         """

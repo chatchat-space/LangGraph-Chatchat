@@ -7,7 +7,6 @@ from chatchat.server.agent.tools_factory.tools_registry import (
 from chatchat.server.knowledge_base.kb_api import list_kbs
 from chatchat.server.knowledge_base.kb_doc_api import search_docs
 from chatchat.server.pydantic_v1 import Field
-from chatchat.server.utils import get_tool_config
 
 template = (
     "Use local knowledgebase from one or more of these:\n{KB_info}\n to get information，Only local data on "
@@ -18,7 +17,7 @@ template_knowledge = template.format(KB_info=KB_info_str, key="samples")
 
 
 # todo: 将配置中 search_knowledgebase 的相关配置文件干掉.
-def search_knowledgebase(query: str, database: str, top_k: int, score_threshold: float, config: dict):
+def search_knowledgebase(query: str, database: str, top_k: int, score_threshold: float):
     docs = search_docs(
         query=query,
         knowledge_base_name=database,
@@ -41,12 +40,10 @@ def search_local_knowledgebase(
     score_threshold: float = Field(description="Score threshold for Knowledge Search")
 ):
     """temp docstr to avoid langchain error"""
-    tool_config = get_tool_config("search_local_knowledgebase")
     result = search_knowledgebase(
         query=query,
         database=database,
         top_k=top_k,
         score_threshold=score_threshold,
-        config=tool_config
     )
     return BaseToolOutput(result, format=format_context)

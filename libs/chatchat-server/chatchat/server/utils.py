@@ -1143,11 +1143,11 @@ def add_tools_if_not_exists(
     """
     为避免前端没有传入 graph 所必须的 tools, 定义此函数用来追加 graph 所必须的 tools 到前端传入的 tools 合集中.
     """
-    tools_provides_set: Set[BaseTool] = set(tools_provides)  # 使用集合来跟踪已存在的工具
+    tools_provides_list = tools_provides[:]  # 使用列表来跟踪已存在的工具
     for tool in tools_need_append:
-        if tool not in tools_provides_set:  # 检查工具是否已存在
+        if tool not in tools_provides_list:  # 检查工具是否已存在
             tools_provides.append(tool)  # 追加工具
-            tools_provides_set.add(tool)  # 更新集合
+            tools_provides_list.append(tool)  # 更新列表
     return tools_provides
 
 
