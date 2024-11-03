@@ -101,47 +101,47 @@ def upload_temp_docs(files, _api: ApiRequest) -> str:
 #     return f"{api_address(True)}/v1/files/{file_id}/content"
 
 
-def add_conv(name: str = ""):
-    conv_names = chat_box.get_chat_names()
-    if not name:
-        i = len(conv_names) + 1
-        while True:
-            name = f"会话{i}"
-            if name not in conv_names:
-                break
-            i += 1
-    if name in conv_names:
-        sac.alert(
-            "创建新会话出错",
-            f"该会话名称 “{name}” 已存在",
-            color="error",
-            closable=True,
-        )
-    else:
-        chat_box.use_chat_name(name)
-        st.session_state["cur_conv_name"] = name
+# def add_conv(name: str = ""):
+#     conv_names = chat_box.get_chat_names()
+#     if not name:
+#         i = len(conv_names) + 1
+#         while True:
+#             name = f"会话{i}"
+#             if name not in conv_names:
+#                 break
+#             i += 1
+#     if name in conv_names:
+#         sac.alert(
+#             "创建新会话出错",
+#             f"该会话名称 “{name}” 已存在",
+#             color="error",
+#             closable=True,
+#         )
+#     else:
+#         chat_box.use_chat_name(name)
+#         st.session_state["cur_conv_name"] = name
 
 
-def del_conv(name: str = None):
-    conv_names = chat_box.get_chat_names()
-    name = name or chat_box.cur_chat_name
+# def del_conv(name: str = None):
+#     conv_names = chat_box.get_chat_names()
+#     name = name or chat_box.cur_chat_name
+#
+#     if len(conv_names) == 1:
+#         sac.alert(
+#             "删除会话出错", f"这是最后一个会话，无法删除", color="error", closable=True
+#         )
+#     elif not name or name not in conv_names:
+#         sac.alert(
+#             "删除会话出错", f"无效的会话名称：“{name}”", color="error", closable=True
+#         )
+#     else:
+#         chat_box.del_chat_name(name)
+#         # restore_session()
+#     st.session_state["cur_conv_name"] = chat_box.cur_chat_name
 
-    if len(conv_names) == 1:
-        sac.alert(
-            "删除会话出错", f"这是最后一个会话，无法删除", color="error", closable=True
-        )
-    elif not name or name not in conv_names:
-        sac.alert(
-            "删除会话出错", f"无效的会话名称：“{name}”", color="error", closable=True
-        )
-    else:
-        chat_box.del_chat_name(name)
-        # restore_session()
-    st.session_state["cur_conv_name"] = chat_box.cur_chat_name
 
-
-def clear_conv(name: str = None):
-    chat_box.reset_history(name=name or None)
+# def clear_conv(name: str = None):
+#     chat_box.reset_history(name=name or None)
 
 
 # @st.cache_data

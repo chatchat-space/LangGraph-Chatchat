@@ -1,19 +1,18 @@
 from __future__ import annotations
 import re
 import copy
-import asyncio, json
+import asyncio
+import json
 import uuid
 from typing import AsyncIterable, List, Optional, Literal
 import time
 
-import rich
 from fastapi import Body, Request
 from fastapi.concurrency import run_in_threadpool
 from sse_starlette.sse import EventSourceResponse
 from langchain.callbacks import AsyncIteratorCallbackHandler
 from langchain.prompts.chat import ChatPromptTemplate
 
-from langchain_openai.chat_models import ChatOpenAI
 from chatchat.settings import Settings
 from chatchat.server.agent.tools_factory.search_internet import search_engine
 from chatchat.server.api_server.api_schemas import OpenAIChatOutput
@@ -21,10 +20,16 @@ from chatchat.server.chat.utils import History
 from chatchat.server.knowledge_base.kb_service.base import KBServiceFactory
 from chatchat.server.knowledge_base.kb_doc_api import search_docs, search_temp_docs
 from chatchat.server.knowledge_base.utils import format_reference
-from chatchat.server.utils import (wrap_done, get_ChatOpenAI, get_default_llm,
-                                   BaseResponse, get_prompt_template, build_logger,
-                                   check_embed_model, api_address
-                                )
+from chatchat.server.utils import (
+    wrap_done,
+    get_ChatOpenAI,
+    get_default_llm,
+    BaseResponse,
+    get_prompt_template,
+    build_logger,
+    check_embed_model,
+    api_address
+)
 from pprint import pprint
 
 logger = build_logger()
@@ -426,14 +431,9 @@ async def kb_chat(
 
             if mode == "local_kb":
                 kb = KBServiceFactory.get_service_by_name(kb_name)
-                print(f" ✅ yuehuazhang kb: {kb}")
                 ok, msg = kb.check_embed_model()
                 if not ok:
                     raise ValueError(msg)
-                print(f" ✅ yuehuazhang query: {query}")
-                print(f" ✅ yuehuazhang kb_name: {kb_name}")
-                print(f" ✅ yuehuazhang top_k: {top_k}")
-                print(f" ✅ yuehuazhang score_threshold: {score_threshold}")
                 docs = await run_in_threadpool(search_docs,
                                                query=query,
                                                knowledge_base_name=kb_name,
@@ -441,7 +441,6 @@ async def kb_chat(
                                                score_threshold=score_threshold,
                                                file_name="",
                                                metadata={})
-                print(f" ✅ yuehuazhang docs: {docs}")
                 # source_documents = format_reference(kb_name, docs, api_address(is_public=True))
                 doc_source = "kb"
             elif mode == "temp_kb":
@@ -469,15 +468,15 @@ async def kb_chat(
                 source_documents = []
 
             # debug
-            import rich
-            rich.print(dict(
-                mode=mode,
-                query=query,
-                knowledge_base_name=kb_name,
-                top_k=top_k,
-                score_threshold=score_threshold,
-            ))
-            rich.print(docs)
+            # import rich
+            # rich.print(dict(
+            #     mode=mode,
+            #     query=query,
+            #     knowledge_base_name=kb_name,
+            #     top_k=top_k,
+            #     score_threshold=score_threshold,
+            # ))
+            # rich.print(docs)
 
             # # 加入reranker
             docs_original = copy.deepcopy(docs)
@@ -504,7 +503,6 @@ async def kb_chat(
                                                 docs, 
                                                 api_address(is_public=True), 
                                                 doc_source=doc_source)
-            # print(f" ✅ yuehuazhang source_documents: {source_documents}")
 
             # return filtered documents
             docs_filtered = [doc for doc in docs_original if doc not in docs]
@@ -512,7 +510,6 @@ async def kb_chat(
                                                          docs_filtered,
                                                          api_address(is_public=True),
                                                          doc_source=doc_source)
-            # print(f" ✅ yuehuazhang source_documents: {source_documents}")
 
             if return_direct:
                 yield OpenAIChatOutput(
@@ -546,50 +543,34 @@ async def kb_chat(
             # TODO： 视情况使用 API
 
             context = "\n\n".join([doc["page_content"] for doc in docs])
-            print(f" ✅ yuehuazhang context:")
-            rich.print(context)
-            print("\n")
 
             if len(docs) == 0:  # 如果没有找到相关文档，使用empty模板
                 prompt_name = "empty"
             prompt_template = get_prompt_template("rag", prompt_name)
-            print(f" ✅ yuehuazhang prompt_template:")
-            rich.print(prompt_template)
 
             input_msg = History(role="user", content=prompt_template).to_msg_template(False)
-            print(f" ✅ yuehuazhang input_msg: {input_msg}")
 
             chat_prompt = ChatPromptTemplate.from_messages([i.to_msg_template() for i in history] + [input_msg])
-            print(f" ✅ yuehuazhang chat_prompt:")
-            rich.print(chat_prompt)
 
             llm = get_ChatOpenAI(model_name=model,
                                  temperature=temperature,
                                  max_tokens=max_tokens,
                                  callbacks=callbacks,)
-            print(f" ✅ yuehuazhang llm:")
-            rich.print(llm)
             chain = chat_prompt | llm
-            print(f" ✅ yuehuazhang chain:")
-            rich.print(chain)
 
             # Begin a task that runs in the background.
             task = asyncio.create_task(wrap_done(
                 chain.ainvoke({"context": context, "question": query}),
                 callback.done),
             )
-            print(f" ✅ yuehuazhang task:")
-            rich.print(task)
 
             if len(source_documents) == 0:  # 没有找到相关文档
                 source_documents.append(f"<span style='color:red'>未找到相关文档,该回答为大模型自身能力解答！</span>")
 
             if stream:
-                print(f" ✅ yuehuazhang this is stream.")
                 answer = ""
                 async for token in callback.aiter():
                     answer += token
-                    print(f" ✅ yuehuazhang stream-token: {token}")
                     ret = OpenAIChatOutput(id=f"chat{uuid.uuid4()}",
                                            object="chat.completion.chunk",
                                            content=token,
@@ -601,7 +582,6 @@ async def kb_chat(
 
                 if Settings.kb_settings.SELF_VERIFY_EVIDENCE:
                     start = time.time()
-                    print(f" ✅ yuehuazhang stream-answer: {answer}")
                     docs = await self_verify_evidence(docs,
                                                       answer=answer,
                                                       model=model,
@@ -630,7 +610,6 @@ async def kb_chat(
                                            filtered_docs=source_documents_filtered)
                     yield ret.model_dump_json()
             else:
-                print(f" ✅ yuehuazhang this is no-stream.")
                 answer = ""
                 async for token in callback.aiter():
                     answer += token

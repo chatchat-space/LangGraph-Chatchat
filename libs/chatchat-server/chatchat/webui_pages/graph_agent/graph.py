@@ -335,8 +335,8 @@ def graph_agent_page(api: ApiRequest, is_lite: bool = False):
         st.session_state["is_article_generation_complete"] = False
 
     with st.sidebar:
-        tab1, = st.tabs(["工具设置"])
-        with tab1:
+        tabs_1 = st.tabs(["工具设置"])
+        with tabs_1[0]:
             graph_names = list_graphs(api)
             selected_graph = st.selectbox(
                 "选择工作流",
@@ -373,6 +373,8 @@ def graph_agent_page(api: ApiRequest, is_lite: bool = False):
                 for name, tool in tools_list.items()
                 if name in selected_tools
             }
+
+        st.tabs(["工作流流程图"])
 
     selected_tools_configs = list(selected_tool_configs)
 
@@ -446,7 +448,7 @@ def graph_agent_page(api: ApiRequest, is_lite: bool = False):
     if graph_flow_image_name not in st.session_state:
         graph_png_image = graph.get_graph().draw_mermaid_png()
         st.session_state[graph_flow_image_name] = graph_png_image
-    st.sidebar.image(st.session_state[graph_flow_image_name], caption="工作流流程图", use_column_width=True)
+    st.sidebar.image(st.session_state[graph_flow_image_name], use_column_width=True)
 
     # 前端存储历史消息(仅作为 st.rerun() 时的 UI 展示)
     for message in st.session_state.messages:

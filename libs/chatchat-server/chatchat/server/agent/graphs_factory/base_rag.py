@@ -17,7 +17,7 @@ from chatchat.server.utils import (
     add_tools_if_not_exists,
     get_prompt_template
 )
-from .graphs_registry import State, Graph
+from .graphs_registry import State, Graph, register_graph
 
 logger = build_logger()
 
@@ -44,7 +44,12 @@ class BaseRagState(State):
     retrieve_retry: int
 
 
+@register_graph
 class BaseRagGraph(Graph):
+    name = "base_rag"
+    label = "rag"
+    title = "基础RAG"
+
     def __init__(self,
                  llm: ChatOpenAI,
                  tools: list[BaseTool],

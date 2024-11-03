@@ -4,8 +4,7 @@ import streamlit as st
 import streamlit_antd_components as sac
 
 from chatchat import __version__
-# from chatchat.webui_pages.dialogue.dialogue import dialogue_page
-from chatchat.webui_pages.kb_chat import kb_chat
+from chatchat.webui_pages.graph_rag.rag import graph_rag_page
 from chatchat.webui_pages.knowledge_base.knowledge_base import knowledge_base_page
 from chatchat.webui_pages.graph_agent.graph import graph_agent_page
 from chatchat.webui_pages.utils import *
@@ -55,10 +54,9 @@ if __name__ == "__main__":
 
         selected_page = sac.menu(
             [
-                # sac.MenuItem("多功能对话", icon="chat"),
-                sac.MenuItem("RAG 对话", icon="database"),
                 sac.MenuItem("Agent 对话", icon="robot"),
-                sac.MenuItem("知识库管理", icon="hdd-stack"),
+                sac.MenuItem("RAG 对话", icon="book"),
+                sac.MenuItem("知识库管理", icon="database"),
             ],
             key="selected_page",
             open_index=0,
@@ -69,8 +67,6 @@ if __name__ == "__main__":
     if selected_page == "知识库管理":
         knowledge_base_page(api=api, is_lite=is_lite)
     elif selected_page == "RAG 对话":
-        kb_chat(api=api)
+        graph_rag_page(api=api, is_lite=is_lite)
     elif selected_page == "Agent 对话":
         graph_agent_page(api=api, is_lite=is_lite)
-    # else:
-    #     dialogue_page(api=api, is_lite=is_lite)
