@@ -1,18 +1,13 @@
-import asyncio
-import multiprocessing as mp
 import os
-import socket
-import sys
 import requests
 import httpx
 import openai
 
-from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from urllib.parse import urlparse
 from typing import (
     Any,
-    Awaitable,
     Callable,
     Dict,
     Generator,
@@ -21,14 +16,13 @@ from typing import (
     Optional,
     Tuple,
     Union,
-    Set,
 )
 
 from fastapi import FastAPI
 from langchain.tools import BaseTool
 from langchain_core.embeddings import Embeddings
 from langchain_openai.chat_models import ChatOpenAI
-from langchain_openai.llms import OpenAI
+# from langchain_openai.llms import OpenAI
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
@@ -42,16 +36,16 @@ from chatchat.utils import build_logger
 logger = build_logger()
 
 
-async def wrap_done(fn: Awaitable, event: asyncio.Event):
-    """Wrap an awaitable with a event to signal when it's done or an exception is raised."""
-    try:
-        await fn
-    except Exception as e:
-        msg = f"Caught exception: {e}"
-        logger.error(f"{e.__class__.__name__}: {msg}")
-    finally:
-        # Signal the aiter to stop.
-        event.set()
+# async def wrap_done(fn: Awaitable, event: asyncio.Event):
+#     """Wrap an awaitable with a event to signal when it's done or an exception is raised."""
+#     try:
+#         await fn
+#     except Exception as e:
+#         msg = f"Caught exception: {e}"
+#         logger.error(f"{e.__class__.__name__}: {msg}")
+#     finally:
+#         # Signal the aiter to stop.
+#         event.set()
 
 
 def get_base_url(url):
@@ -245,8 +239,8 @@ def get_history_len() -> int:
             Settings.model_settings.LLM_MODEL_CONFIG["action_model"]["history_len"])
 
 
-def get_recursion_limit() -> int:
-    return Settings.tool_settings.RECURSION_LIMIT or 50
+# def get_recursion_limit() -> int:
+#     return Settings.tool_settings.RECURSION_LIMIT or 50
 
 
 def get_ChatOpenAI(
@@ -295,46 +289,46 @@ def get_ChatOpenAI(
     return model
 
 
-def get_OpenAI(
-        model_name: str,
-        temperature: float,
-        max_tokens: int = Settings.model_settings.MAX_TOKENS,
-        streaming: bool = True,
-        echo: bool = True,
-        callbacks: List[Callable] = [],
-        verbose: bool = True,
-        local_wrap: bool = False,  # use local wrapped api
-        **kwargs: Any,
-) -> OpenAI:
-    # TODO: 从API获取模型信息
-    model_info = get_model_info(model_name)
-    params = dict(
-        streaming=streaming,
-        verbose=verbose,
-        callbacks=callbacks,
-        model_name=model_name,
-        temperature=temperature,
-        max_tokens=max_tokens,
-        echo=echo,
-        **kwargs,
-    )
-    try:
-        if local_wrap:
-            params.update(
-                openai_api_base=f"{api_address()}/v1",
-                openai_api_key="EMPTY",
-            )
-        else:
-            params.update(
-                openai_api_base=model_info.get("api_base_url"),
-                openai_api_key=model_info.get("api_key"),
-                openai_proxy=model_info.get("api_proxy"),
-            )
-        model = OpenAI(**params)
-    except Exception as e:
-        logger.exception(f"failed to create OpenAI for model: {model_name}.")
-        model = None
-    return model
+# def get_OpenAI(
+#         model_name: str,
+#         temperature: float,
+#         max_tokens: int = Settings.model_settings.MAX_TOKENS,
+#         streaming: bool = True,
+#         echo: bool = True,
+#         callbacks: List[Callable] = [],
+#         verbose: bool = True,
+#         local_wrap: bool = False,  # use local wrapped api
+#         **kwargs: Any,
+# ) -> OpenAI:
+#     # TODO: 从API获取模型信息
+#     model_info = get_model_info(model_name)
+#     params = dict(
+#         streaming=streaming,
+#         verbose=verbose,
+#         callbacks=callbacks,
+#         model_name=model_name,
+#         temperature=temperature,
+#         max_tokens=max_tokens,
+#         echo=echo,
+#         **kwargs,
+#     )
+#     try:
+#         if local_wrap:
+#             params.update(
+#                 openai_api_base=f"{api_address()}/v1",
+#                 openai_api_key="EMPTY",
+#             )
+#         else:
+#             params.update(
+#                 openai_api_base=model_info.get("api_base_url"),
+#                 openai_api_key=model_info.get("api_key"),
+#                 openai_proxy=model_info.get("api_proxy"),
+#             )
+#         model = OpenAI(**params)
+#     except Exception as e:
+#         logger.exception(f"failed to create OpenAI for model: {model_name}.")
+#         model = None
+#     return model
 
 
 def get_Embeddings(
@@ -500,41 +494,41 @@ class ChatMessage(BaseModel):
         }
 
 
-def run_async(cor):
-    """
-    在同步环境中运行异步代码.
-    """
-    try:
-        loop = asyncio.get_event_loop()
-    except:
-        loop = asyncio.new_event_loop()
-    return loop.run_until_complete(cor)
+# def run_async(cor):
+#     """
+#     在同步环境中运行异步代码.
+#     """
+#     try:
+#         loop = asyncio.get_event_loop()
+#     except:
+#         loop = asyncio.new_event_loop()
+#     return loop.run_until_complete(cor)
 
 
-def iter_over_async(ait, loop=None):
-    """
-    将异步生成器封装成同步生成器.
-    """
-    ait = ait.__aiter__()
-
-    async def get_next():
-        try:
-            obj = await ait.__anext__()
-            return False, obj
-        except StopAsyncIteration:
-            return True, None
-
-    if loop is None:
-        try:
-            loop = asyncio.get_event_loop()
-        except:
-            loop = asyncio.new_event_loop()
-
-    while True:
-        done, obj = loop.run_until_complete(get_next())
-        if done:
-            break
-        yield obj
+# def iter_over_async(ait, loop=None):
+#     """
+#     将异步生成器封装成同步生成器.
+#     """
+#     ait = ait.__aiter__()
+#
+#     async def get_next():
+#         try:
+#             obj = await ait.__anext__()
+#             return False, obj
+#         except StopAsyncIteration:
+#             return True, None
+#
+#     if loop is None:
+#         try:
+#             loop = asyncio.get_event_loop()
+#         except:
+#             loop = asyncio.new_event_loop()
+#
+#     while True:
+#         done, obj = loop.run_until_complete(get_next())
+#         if done:
+#             break
+#         yield obj
 
 
 def MakeFastAPIOffline(
@@ -768,29 +762,29 @@ def run_in_thread_pool(
                 logger.exception(f"error in sub thread: {e}")
 
 
-def run_in_process_pool(
-        func: Callable,
-        params: List[Dict] = [],
-) -> Generator:
-    """
-    在线程池中批量运行任务，并将运行结果以生成器的形式返回。
-    请确保任务中的所有操作是线程安全的，任务函数请全部使用关键字参数。
-    """
-    tasks = []
-    max_workers = None
-    if sys.platform.startswith("win"):
-        max_workers = min(
-            mp.cpu_count(), 60
-        )  # max_workers should not exceed 60 on windows
-    with ProcessPoolExecutor(max_workers=max_workers) as pool:
-        for kwargs in params:
-            tasks.append(pool.submit(func, **kwargs))
-
-        for obj in as_completed(tasks):
-            try:
-                yield obj.result()
-            except Exception as e:
-                logger.exception(f"error in sub process: {e}")
+# def run_in_process_pool(
+#         func: Callable,
+#         params: List[Dict] = [],
+# ) -> Generator:
+#     """
+#     在线程池中批量运行任务，并将运行结果以生成器的形式返回。
+#     请确保任务中的所有操作是线程安全的，任务函数请全部使用关键字参数。
+#     """
+#     tasks = []
+#     max_workers = None
+#     if sys.platform.startswith("win"):
+#         max_workers = min(
+#             mp.cpu_count(), 60
+#         )  # max_workers should not exceed 60 on windows
+#     with ProcessPoolExecutor(max_workers=max_workers) as pool:
+#         for kwargs in params:
+#             tasks.append(pool.submit(func, **kwargs))
+#
+#         for obj in as_completed(tasks):
+#             try:
+#                 yield obj.result()
+#             except Exception as e:
+#                 logger.exception(f"error in sub process: {e}")
 
 
 def get_httpx_client(
@@ -1011,9 +1005,9 @@ def get_tool_config(name: str = None) -> Dict:
         return Settings.tool_settings.model_dump().get(name, {})
 
 
-def is_port_in_use(port):
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-        return sock.connect_ex(("localhost", port)) == 0
+# def is_port_in_use(port):
+#     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+#         return sock.connect_ex(("localhost", port)) == 0
 
 
 # langgraph checkpointer 使用的全局 memory
