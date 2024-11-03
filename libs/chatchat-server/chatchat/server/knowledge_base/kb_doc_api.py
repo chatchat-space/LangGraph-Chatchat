@@ -67,22 +67,14 @@ def search_docs(
         file_name: str = Body("", description="文件名称，支持 sql 通配符"),
         metadata: dict = Body({}, description="根据 metadata 进行过滤，仅支持一级键"),
 ) -> List[Dict]:
-    print(f" ✅ yuehuazhang search_docs knowledge_base_name: {knowledge_base_name}")
     kb = KBServiceFactory.get_service_by_name(knowledge_base_name)
-    print(f" ✅ yuehuazhang search_docs kb: {kb}")
     data = []
     if kb is not None:
         if query:
-            print(f" ✅ yuehuazhang search_docs query: {query}")
-            print(f" ✅ yuehuazhang search_docs top_k: {top_k}")
-            print(f" ✅ yuehuazhang search_docs score_threshold: {score_threshold}")
+            print(f" ✅ yuehuazhang search_docs knowledge_base_name: {knowledge_base_name} kb: {kb} query: {query} top_k: {top_k} score_threshold: {score_threshold}")
             docs = kb.search_docs(query, top_k, score_threshold)
-            print(f" ✅ yuehuazhang search_docs docs:")
-            rich.print(docs)
             # data = [DocumentWithVSId(**x[0].dict(), score=x[1], id=x[0].metadata.get("id")) for x in docs]
             data = [DocumentWithVSId(**{"id": x.metadata.get("id"), **x.dict()}) for x in docs]
-            print(f" ✅ yuehuazhang search_docs data:")
-            rich.print(data)
         elif file_name or metadata:
             data = kb.list_docs(file_name=file_name, metadata=metadata)
             for d in data:

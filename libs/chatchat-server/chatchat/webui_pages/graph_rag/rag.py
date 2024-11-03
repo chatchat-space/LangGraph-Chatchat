@@ -60,7 +60,8 @@ async def handle_user_input(graph: CompiledStateGraph,
                 response = await graph_class.handle_event(node=node, event=response)
                 # 将 event 转化为 json
                 response = serialize_content(response)
-                rich.print(response)
+                # print("after serialize_content response:")
+                # rich.print(response)
                 response_last = response["content"]
 
                 if node == "history_manager":  # history_manager node 为内部实现, 不外显
@@ -234,18 +235,15 @@ def graph_rag_page(api: ApiRequest, is_lite: bool = False):
 
     # 创建 langgraph 实例
     graph_class = get_graph_class_by_label_and_title(label="rag", title=selected_graph)
-    rich.print(graph_class)
     graph_class = graph_class(llm=llm,
                               tools=tools,
                               history_len=history_len,
                               knowledge_base=selected_kb,
                               top_k=kb_top_k,
                               score_threshold=score_threshold)
-    rich.print(graph_class)
     graph = graph_class.get_graph()
     if not graph:
         raise ValueError(f"Graph '{selected_graph}' is not registered.")
-    rich.print(graph)
 
     # langgraph 配置文件
     graph_config = {

@@ -1,4 +1,6 @@
 from typing import List, Literal, Dict
+
+import rich
 from pydantic import BaseModel, Field
 
 from langchain_openai.chat_models import ChatOpenAI
@@ -73,7 +75,6 @@ class BaseRagGraph(Graph):
         todo: 目前 history_len 直接截取了 messages 长度, 希望通过 对话轮数 来限制.
         todo: 原因: 一轮对话会追加数个 message, 但是目前没有从 snapshot(graph.get_state) 中找到很好的办法来获取一轮对话.
         """
-        print("---HISTORY MANAGER---")
         try:
             filtered_messages = []
             for message in filter_messages(state["messages"], exclude_types=[ToolMessage]):
@@ -100,7 +101,6 @@ class BaseRagGraph(Graph):
         Returns:
             dict: The updated state with the agent response appended to messages
         """
-        print("---CHATBOT---")
         # ToolNode 默认只将结果追加到 messages 队列中, 所以需要手动在 history 中追加 ToolMessage 结果, 否则报错如下:
         # Error code: 400 -
         # {
@@ -153,7 +153,6 @@ class BaseRagGraph(Graph):
         Returns:
             str: A decision for whether the documents are relevant or not
         """
-        print("---GRADE DOCUMENTS---")
         # Prompt
         prompt = PromptTemplate(
             template="""
@@ -176,10 +175,8 @@ class BaseRagGraph(Graph):
         score = scored_result["binary_score"]
 
         if score == "yes":
-            print("---DECISION: DOCS RELEVANT---")
             return "generate"
         else:
-            print("---DECISION: DOCS NOT RELEVANT---")
             return "rewrite"
 
     async def generate(self, state: BaseRagState) -> BaseRagState:
@@ -192,7 +189,6 @@ class BaseRagGraph(Graph):
         Returns:
              dict: The updated state with re-phrased question
         """
-        print("---GENERATE---")
         # Prompt
         # prompt = hub.pull("rlm/rag-prompt")
         # prompt_template = get_prompt_template("rag", "default")
@@ -215,7 +211,8 @@ class BaseRagGraph(Graph):
 
         # Run
         response = await rag_chain.ainvoke(state)
-        state["messages"].append(HumanMessage(content=response))
+        state["messages"].append(AIMessage(content=response))
+        # state["history"].append(AIMessage(content=response))  # 其实无意义, 因为已经走到 graph 的最后一步
 
         return state
 
@@ -229,7 +226,6 @@ class BaseRagGraph(Graph):
         Returns:
             dict: The updated state with re-phrased question
         """
-        print("---REWRITE---")
         prompt = PromptTemplate(
             template="""
             Look at the input and try to reason about the underlying semantic intent / meaning.
@@ -320,4 +316,10 @@ class BaseRagGraph(Graph):
                             id='b9c5468a-7340-425b-ae6f-2f584a961014')]
         }
         """
-        return event["messages"][0]
+        print(' ✅ yuehuazhang test handle_event event["messages"]:')
+        rich.print(event["messages"])
+
+        # todo: 讲道理 events = graph.astream(input=graph_input, config=graph_config, stream_mode="updates")
+        #  只需要 event["messages"][0], 每次都是更新最新的 "messages", 但是这里不行, 需要再研究一下
+        # return event["messages"][0]
+        return event["messages"][-1]

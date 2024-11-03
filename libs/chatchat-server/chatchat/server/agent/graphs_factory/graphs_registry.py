@@ -232,7 +232,6 @@ class Graph:
         """
         在知识库检索后, 将检索出来的知识文档提取出来.
         """
-        print("---INIT DOCS---")
         state["docs"] = state["messages"][-1].content
         rich.print(state["docs"])
         return state
