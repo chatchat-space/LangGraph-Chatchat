@@ -1,5 +1,3 @@
-from urllib.parse import urlencode
-
 from chatchat.settings import Settings
 from chatchat.server.agent.tools_factory.tools_registry import (
     BaseToolOutput,
@@ -9,7 +7,6 @@ from chatchat.server.agent.tools_factory.tools_registry import (
 from chatchat.server.knowledge_base.kb_api import list_kbs
 from chatchat.server.knowledge_base.kb_doc_api import search_docs
 from chatchat.server.pydantic_v1 import Field
-from chatchat.server.utils import get_tool_config
 
 template = (
     "Use local knowledgebase from one or more of these:\n{KB_info}\n to get information，Only local data on "
@@ -19,12 +16,13 @@ KB_info_str = "\n".join([f"{key}: {value}" for key, value in Settings.kb_setting
 template_knowledge = template.format(KB_info=KB_info_str, key="samples")
 
 
-def search_knowledgebase(query: str, database: str, config: dict):
+# todo: 将配置中 search_knowledgebase 的相关配置文件干掉.
+def search_knowledgebase(query: str, database: str, top_k: int, score_threshold: float):
     docs = search_docs(
         query=query,
         knowledge_base_name=database,
-        top_k=config["top_k"],
-        score_threshold=config["score_threshold"],
+        top_k=top_k,
+        score_threshold=score_threshold,
         file_name="",
         metadata={},
     )
@@ -38,8 +36,14 @@ def search_local_knowledgebase(
         choices=[kb.kb_name for kb in list_kbs().data],
     ),
     query: str = Field(description="Query for Knowledge Search"),
+    top_k: int = Field(description="Top K for Knowledge Search"),
+    score_threshold: float = Field(description="Score threshold for Knowledge Search")
 ):
     """temp docstr to avoid langchain error"""
-    tool_config = get_tool_config("search_local_knowledgebase")
-    ret = search_knowledgebase(query=query, database=database, config=tool_config)
-    return BaseToolOutput(ret, format=format_context)
+    result = search_knowledgebase(
+        query=query,
+        database=database,
+        top_k=top_k,
+        score_threshold=score_threshold,
+    )
+    return BaseToolOutput(result, format=format_context)

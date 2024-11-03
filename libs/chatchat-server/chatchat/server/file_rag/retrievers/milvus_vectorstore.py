@@ -119,4 +119,5 @@ class MilvusVectorstoreRetrieverService(BaseRetrieverService):
         return MilvusVectorstoreRetrieverService(retriever=retriever, top_k=top_k)
 
     def get_relevant_documents(self, query: str):
+        print(f" ✅ yuehuazhang this is MilvusRetriever.")
         return self.retriever.get_relevant_documents(query)[: self.top_k]

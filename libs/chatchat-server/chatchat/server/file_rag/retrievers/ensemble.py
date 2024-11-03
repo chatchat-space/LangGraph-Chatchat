@@ -45,5 +45,5 @@ class EnsembleRetrieverService(BaseRetrieverService):
         return EnsembleRetrieverService(retriever=ensemble_retriever, top_k=top_k)
 
     def get_relevant_documents(self, query: str):
-
+        print(f" ✅ yuehuazhang this is EnsembleRetriever.")
         return self.retriever.get_relevant_documents(query)[: self.top_k]

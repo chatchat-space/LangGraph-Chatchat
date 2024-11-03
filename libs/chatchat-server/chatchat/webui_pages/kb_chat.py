@@ -1,19 +1,20 @@
 from datetime import datetime
 import uuid
-from typing import List, Dict
 
 import openai
 import streamlit as st
-import streamlit_antd_components as sac
 from streamlit_chatbox import *
 from streamlit_extras.bottom_container import bottom
 
-from chatchat.settings import Settings
 from chatchat.server.knowledge_base.utils import LOADER_DICT
-from chatchat.server.utils import get_config_models, get_config_platforms, get_default_llm, api_address
-from chatchat.webui_pages.dialogue.dialogue import (save_session, restore_session, rerun,
-                                                    get_messages_history, upload_temp_docs,
-                                                    add_conv, del_conv, clear_conv)
+from chatchat.server.utils import get_config_models, get_config_platforms, get_default_llm
+from chatchat.webui_pages.dialogue.dialogue import (
+    save_session,
+    restore_session,
+    rerun,
+    get_messages_history,
+    upload_temp_docs
+)
 from chatchat.webui_pages.utils import *
 
 
@@ -137,30 +138,30 @@ def kb_chat(api: ApiRequest):
                         key="search_engine",
                     )
 
-        with tabs[1]:
-            # 会话
-            cols = st.columns(3)
-            conv_names = chat_box.get_chat_names()
-
-            def on_conv_change():
-                print(conversation_name, st.session_state.cur_conv_name)
-                save_session(conversation_name)
-                restore_session(st.session_state.cur_conv_name)
-
-            conversation_name = sac.buttons(
-                conv_names,
-                label="当前会话：",
-                key="cur_conv_name",
-                on_change=on_conv_change,
-            )
-            chat_box.use_chat_name(conversation_name)
-            conversation_id = chat_box.context["uid"]
-            if cols[0].button("新建", on_click=add_conv):
-                ...
-            if cols[1].button("重命名"):
-                rename_conversation()
-            if cols[2].button("删除", on_click=del_conv):
-                ...
+        # with tabs[1]:
+        #     # 会话
+        #     cols = st.columns(3)
+        #     conv_names = chat_box.get_chat_names()
+        #
+        #     def on_conv_change():
+        #         print(conversation_name, st.session_state.cur_conv_name)
+        #         save_session(conversation_name)
+        #         restore_session(st.session_state.cur_conv_name)
+        #
+        #     conversation_name = sac.buttons(
+        #         conv_names,
+        #         label="当前会话：",
+        #         key="cur_conv_name",
+        #         on_change=on_conv_change,
+        #     )
+        #     chat_box.use_chat_name(conversation_name)
+        #     conversation_id = chat_box.context["uid"]
+        #     if cols[0].button("新建", on_click=add_conv):
+        #         ...
+        #     if cols[1].button("重命名"):
+        #         rename_conversation()
+        #     if cols[2].button("删除", on_click=del_conv):
+        #         ...
 
     # Display chat messages from history on app rerun
     chat_box.output_messages()
