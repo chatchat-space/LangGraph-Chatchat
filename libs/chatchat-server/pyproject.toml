@@ -3,7 +3,7 @@ name = "langchain-chatchat"
 version = "0.3.2.20240727"
 description = "Langchain-Chatchat (formerly langchain-ChatGLM), local knowledge based LLM (like ChatGLM, Qwen and Llama) RAG and Agent app with langchain"
 authors = ["chatchat"]
-readme = "README.md"
+#readme = "README.md"
 packages = [
     {include = "chatchat"},
     {include = "langchain_chatchat"}
@@ -27,7 +27,7 @@ uvicorn = ">=0.27.0.post1"
 unstructured = "~0.11.0"
 python-magic-bin = {version = "*", platform = "win32"}
 SQLAlchemy = "~2.0.25"
-faiss-cpu = "~1.7.4"
+faiss-cpu = "1.9.0"
 jieba = "0.42.1"
 rank_bm25 = "0.2.2"
 openpyxl = "3.1.4"
