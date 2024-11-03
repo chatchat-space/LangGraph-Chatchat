@@ -30,5 +30,4 @@ class VectorstoreRetrieverService(BaseRetrieverService):
         return VectorstoreRetrieverService(retriever=retriever, top_k=top_k)
 
     def get_relevant_documents(self, query: str):
-        print(f" ✅ yuehuazhang this is vectorstore.as_retriever.")
         return self.retriever.get_relevant_documents(query)[: self.top_k]

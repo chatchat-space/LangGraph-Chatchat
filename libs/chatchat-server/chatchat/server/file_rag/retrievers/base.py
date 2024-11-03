@@ -24,5 +24,4 @@ class BaseRetrieverService(metaclass=ABCMeta):
 
     @abstractmethod
     def get_relevant_documents(self, query: str):
-        print(f" ✅ yuehuazhang this is BaseRetrieverService.")
         pass

@@ -316,10 +316,6 @@ class BaseRagGraph(Graph):
                             id='b9c5468a-7340-425b-ae6f-2f584a961014')]
         }
         """
-        print(' ✅ yuehuazhang test handle_event event["messages"]:')
-        rich.print(event["messages"])
-
         # todo: 讲道理 events = graph.astream(input=graph_input, config=graph_config, stream_mode="updates")
         #  只需要 event["messages"][0], 每次都是更新最新的 "messages", 但是这里不行, 需要再研究一下
-        # return event["messages"][0]
         return event["messages"][-1]
