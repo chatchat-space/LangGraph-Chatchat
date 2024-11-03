@@ -21,6 +21,7 @@ from typing import (
     Optional,
     Tuple,
     Union,
+    Set,
 )
 
 from fastapi import FastAPI
@@ -1074,11 +1075,15 @@ def get_graph_memory():
 #     raise ValueError("Invalid memory_type provided. Must be 'memory', 'sqlite', or 'postgres'.")
 
 
-def get_st_graph_memory(memory_type: Optional[Literal["memory", "sqlite", "postgres"]] = None) -> Union[
+def get_st_graph_memory(memory_type: Optional[Literal["memory", "sqlite", "postgres"]] = None) -> (
+        Union)[
     MemorySaver,
     AsyncSqliteSaver,
     # PostgresSaver
 ]:
+    """
+    获取 graph 的 memory
+    """
     if memory_type is None:
         memory_type = Settings.tool_settings.GRAPH_MEMORY_TYPE
 
@@ -1099,11 +1104,17 @@ def get_st_graph_memory(memory_type: Optional[Literal["memory", "sqlite", "postg
     raise ValueError("Invalid memory_type provided. Must be 'memory', 'sqlite', or 'postgres'.")
 
 
-def create_agent_models(configs: Any,
-                        model: str,
-                        max_tokens: Any,
-                        temperature: float,
-                        stream: Any) -> ChatOpenAI:
+def create_agent_models(
+        configs: Any,
+        model: str,
+        max_tokens: Any,
+        temperature: float,
+        stream: Any
+) -> ChatOpenAI:
+    """
+    为适配原先 chatchat 逻辑中创建 ChatOpenAI 的函数构造此函数.
+    todo: 不要同时包含传入 configs 和不传入 configs 的情况, 评判哪种合理, 只保留一种创建 ChatOpenAI 对象的方式.
+    """
     # Settings.model_settings.LLM_MODEL_CONFIG 数据结构 与 UI 传入 configs 数据结构不同, 故分开处理
     if not configs:
         configs = Settings.model_settings.LLM_MODEL_CONFIG
@@ -1123,6 +1134,21 @@ def create_agent_models(configs: Any,
 
     return get_ChatOpenAI(model_name=model, temperature=temperature, max_tokens=max_tokens, callbacks=[],
                           streaming=stream, local_wrap=False)
+
+
+def add_tools_if_not_exists(
+        tools_provides: List[BaseTool],
+        tools_need_append: List[BaseTool]
+) -> List[BaseTool]:
+    """
+    为避免前端没有传入 graph 所必须的 tools, 定义此函数用来追加 graph 所必须的 tools 到前端传入的 tools 合集中.
+    """
+    tools_provides_list = tools_provides[:]  # 使用列表来跟踪已存在的工具
+    for tool in tools_need_append:
+        if tool not in tools_provides_list:  # 检查工具是否已存在
+            tools_provides.append(tool)  # 追加工具
+            tools_provides_list.append(tool)  # 更新列表
+    return tools_provides
 
 
 if __name__ == "__main__":

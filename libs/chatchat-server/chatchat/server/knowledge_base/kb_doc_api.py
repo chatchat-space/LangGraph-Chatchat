@@ -4,6 +4,7 @@ import os
 import urllib
 from typing import Dict, List
 
+import rich
 from fastapi import Body, File, Form, Query, UploadFile
 from fastapi.responses import FileResponse
 from langchain.docstore.document import Document
@@ -70,6 +71,7 @@ def search_docs(
     data = []
     if kb is not None:
         if query:
+            print(f" ✅ yuehuazhang search_docs knowledge_base_name: {knowledge_base_name} kb: {kb} query: {query} top_k: {top_k} score_threshold: {score_threshold}")
             docs = kb.search_docs(query, top_k, score_threshold)
             # data = [DocumentWithVSId(**x[0].dict(), score=x[1], id=x[0].metadata.get("id")) for x in docs]
             data = [DocumentWithVSId(**{"id": x.metadata.get("id"), **x.dict()}) for x in docs]
@@ -78,7 +80,11 @@ def search_docs(
             for d in data:
                 if "vector" in d.metadata:
                     del d.metadata["vector"]
-    return [x.dict() for x in data]
+    res = [x.dict() for x in data]
+    print(f" ✅ yuehuazhang search_docs res:")
+    rich.print(res)
+    return res
+    # return [x.dict() for x in data]
 
 
 def list_files(knowledge_base_name: str) -> ListResponse:
