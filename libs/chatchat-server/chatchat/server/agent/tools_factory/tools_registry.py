@@ -6,9 +6,9 @@ from typing import Any, Callable, Dict, Optional, Tuple, Type, Union
 
 from langchain.agents import tool
 from langchain_core.tools import BaseTool
+from pydantic import BaseModel, Extra
 
 from chatchat.server.knowledge_base.kb_doc_api import DocumentWithVSId
-from chatchat.server.pydantic_v1 import BaseModel, Extra
 
 
 __all__ = ["regist_tool", "BaseToolOutput", "format_context"]
@@ -17,8 +17,15 @@ __all__ = ["regist_tool", "BaseToolOutput", "format_context"]
 _TOOLS_REGISTRY = {}
 
 
+class ExtendedBaseTool(BaseTool):
+    title: str = ""  # 添加 title 属性
+
+    class Config:
+        extra = Extra.allow
+
+
 # patch BaseTool to support extra fields e.g. a title
-BaseTool.Config.extra = Extra.allow
+# BaseTool.Config.extra = Extra.allow
 
 ################################### TODO: workaround to langchain #15855
 # patch BaseTool to support tool parameters defined using pydantic Field
@@ -76,13 +83,13 @@ def regist_tool(
     return_direct: bool = False,
     args_schema: Optional[Type[BaseModel]] = None,
     infer_schema: bool = True,
-) -> Union[Callable, BaseTool]:
+) -> Union[Callable, ExtendedBaseTool]:
     """
     wrapper of langchain tool decorator
-    add tool to regstiry automatically
+    add tool to registry automatically
     """
 
-    def _parse_tool(t: BaseTool):
+    def _parse_tool(t: ExtendedBaseTool):
         nonlocal description, title
 
         _TOOLS_REGISTRY[t.name] = t
@@ -97,9 +104,9 @@ def regist_tool(
         # set a default title for human
         if not title:
             title = "".join([x.capitalize() for x in t.name.split("_")])
-        t.title = title
+        setattr(t, 'title', title)  # 动态添加 title 属性
 
-    def wrapper(def_func: Callable) -> BaseTool:
+    def wrapper(def_func: Callable) -> ExtendedBaseTool:
         partial_ = tool(
             *args,
             return_direct=return_direct,

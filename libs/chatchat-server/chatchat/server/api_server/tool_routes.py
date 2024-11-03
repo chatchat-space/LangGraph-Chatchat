@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import rich
 from fastapi import APIRouter, Body
 
 from chatchat.server.utils import BaseResponse, get_tool, get_tool_config
@@ -24,6 +25,23 @@ async def list_tools():
         }
         for t in tools.values()
     }
+    return {"data": data}
+
+
+def list_tools_new():
+    tools = get_tool()
+    data = {
+        t.name: {
+            "name": t.name,
+            "title": t.title,
+            "description": t.description,
+            "args": t.args,
+            "config": get_tool_config(t.name),
+        }
+        for t in tools.values()
+    }
+    print(" ✅ yuehuazhang test list_tools_new:")
+    rich.print(data)
     return {"data": data}
 
 

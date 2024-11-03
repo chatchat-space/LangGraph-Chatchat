@@ -7,8 +7,10 @@ from langgraph.graph.state import CompiledStateGraph
 from streamlit_extras.bottom_container import bottom
 
 from chatchat.server.agent.graphs_factory.graphs_registry import serialize_content
+from chatchat.server.api_server.tool_routes import list_tools_new
 from chatchat.webui_pages.utils import *
-from chatchat.webui_pages.dialogue.dialogue import list_graphs, list_tools
+from chatchat.webui_pages.dialogue.dialogue import list_graphs  # list_tools
+
 from chatchat.server.utils import (
     build_logger,
     get_config_models,
@@ -346,7 +348,9 @@ def graph_agent_page(api: ApiRequest, is_lite: bool = False):
                 help="必选，不同的工作流的后端 agent 的逻辑不同，仅支持单选"
             )
 
-            tools_list = list_tools(api)
+            # tools_list = list_tools(api)
+            tools_list = list_tools_new()
+            print(f"tools_list: {tools_list}")
             # tool_names = ["None"] + list(tools_list)
             if selected_graph == "text_to_sql":
                 selected_tools = st.multiselect(
