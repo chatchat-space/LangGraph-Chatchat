@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from typing import List
-
-from fastapi import APIRouter, Body, Request
+from fastapi import APIRouter, Body
 
 from chatchat.server.utils import BaseResponse, get_tool, get_tool_config
 from chatchat.utils import build_logger

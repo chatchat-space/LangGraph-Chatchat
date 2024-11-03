@@ -9,7 +9,7 @@ from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 from langgraph.graph import StateGraph, add_messages, END
 from langgraph.graph.graph import CompiledGraph
 from langgraph.graph.state import CompiledStateGraph
-from langgraph.prebuilt import ToolNode, tools_condition
+from langgraph.prebuilt import ToolNode
 
 from chatchat.server.utils import (
     build_logger,

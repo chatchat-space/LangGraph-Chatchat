@@ -13,7 +13,7 @@ from langchain_core.messages import BaseMessage
 # import openai
 import streamlit as st
 # import streamlit_antd_components as sac
-from streamlit_chatbox import *
+# from streamlit_chatbox import *
 # from streamlit_extras.bottom_container import bottom
 # from streamlit_paste_button import paste_image_button
 
@@ -144,7 +144,7 @@ from chatchat.webui_pages.utils import *
 #     chat_box.reset_history(name=name or None)
 
 
-# @st.cache_data
+@st.cache_data
 def list_tools(_api: ApiRequest):
     return _api.list_tools() or {}
 

@@ -74,6 +74,10 @@ langfuse = "^2.40.0"
 aiosqlite = "^0.20.0"
 
 arxiv = "2.1.0"
+openai = "^1.53.0"
+langgraph-checkpoint-sqlite = "^2.0.1"
+tiktoken = "^0.8.0"
+langchain-openai = "^0.2.5"
 [tool.poetry.extras]
 xinference = ["xinference_client"]
 zhipuai = ["zhipuai"]

@@ -1,6 +1,5 @@
 from typing import List, Literal, Dict
 
-import rich
 from pydantic import BaseModel, Field
 
 from langchain_openai.chat_models import ChatOpenAI

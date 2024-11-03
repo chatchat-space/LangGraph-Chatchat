@@ -6,7 +6,7 @@ from langchain_core.tools import BaseTool
 from langchain_openai import ChatOpenAI
 from langgraph.graph.message import add_messages
 from langchain_core.messages import BaseMessage, ToolMessage, AIMessage, filter_messages
-from langchain_core.pydantic_v1 import BaseModel
+from pydantic import BaseModel
 from langgraph.graph.state import CompiledStateGraph
 
 from chatchat.server.utils import build_logger
