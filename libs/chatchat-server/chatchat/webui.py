@@ -67,6 +67,6 @@ if __name__ == "__main__":
     if selected_page == "知识库管理":
         knowledge_base_page(api=api, is_lite=is_lite)
     elif selected_page == "RAG 对话":
-        graph_rag_page(api=api, is_lite=is_lite)
+        graph_rag_page(api=api)
     elif selected_page == "Agent 对话":
-        graph_agent_page(api=api, is_lite=is_lite)
+        graph_agent_page()

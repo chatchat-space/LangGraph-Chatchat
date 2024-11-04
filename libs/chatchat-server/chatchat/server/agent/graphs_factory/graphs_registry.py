@@ -21,7 +21,6 @@ __all__ = [
     "State",
     "Response",
     "async_history_manager",
-    "serialize_content",
     "human_feedback",
     "break_point",
     "register_graph",
@@ -46,16 +45,6 @@ class State(TypedDict):
 class Response(TypedDict):
     node: str
     content: Any
-
-
-def serialize_content(content: Any) -> Any:
-    if isinstance(content, BaseModel):
-        return content.dict()
-    elif isinstance(content, list):
-        return [serialize_content(item) for item in content]
-    elif isinstance(content, dict):
-        return {key: serialize_content(value) for key, value in content.items()}
-    return content
 
 
 class Message(TypedDict):

@@ -6,21 +6,21 @@ import streamlit as st
 from langgraph.graph.state import CompiledStateGraph
 from streamlit_extras.bottom_container import bottom
 
-from chatchat.server.agent.graphs_factory.graphs_registry import serialize_content
+from chatchat.server.agent.graphs_factory.graphs_registry import (
+    list_graph_titles_by_label,
+    get_graph_class_by_label_and_title
+)
 from chatchat.webui_pages.utils import *
-from chatchat.webui_pages.dialogue.dialogue import list_graphs
 
 from chatchat.server.utils import (
     build_logger,
     get_config_models,
     get_config_platforms,
     get_default_llm,
-    get_history_len,
-    get_graph_instance,
-    get_graph_event_handler,
     get_tool,
     list_tools,
     create_agent_models,
+    serialize_content_to_json
 )
 
 logger = build_logger()
@@ -168,14 +168,14 @@ def extract_node_and_response(data):
 
 
 async def handle_user_input(
-        graph_name: str,
-        graph_input: Any,
         graph: CompiledStateGraph,
+        graph_input: Any,
         graph_config: Dict,
+        graph_class_instance: Any
 ):
     events = graph.astream(input=graph_input, config=graph_config, stream_mode="updates")
     if events:
-        if graph_name == "article_generation":
+        if graph_class_instance.name == "article_generation":
             async for event in events:
                 node, response = extract_node_and_response(event)
 
@@ -241,12 +241,14 @@ async def handle_user_input(
                     # debug
                     print(f"--- node: {node} ---")
                     # rich.print(response)
-                    event_handler = get_graph_event_handler(graph_name)
+                    # event_handler = get_graph_event_handler(graph_name)
+                    # # 获取 event
+                    # response = event_handler.handle_event(node=node, event=response)
                     # 获取 event
-                    response = event_handler.handle_event(node=node, event=response)
+                    response = await graph_class_instance.handle_event(node=node, event=response)
                     # 将 event 转化为 json
-                    response = serialize_content(response)
-                    rich.print(response)
+                    response = serialize_content_to_json(response)
+                    # rich.print(response)
                     response_last = response["content"]
 
                     if node == "history_manager":  # history_manager node 为内部实现, 不外显
@@ -310,7 +312,7 @@ def llm_model_setting():
         st.rerun()
 
 
-def graph_agent_page(api: ApiRequest, is_lite: bool = False):
+def graph_agent_page():
     # 初始化会话 id
     init_conversation_id()
 
@@ -339,10 +341,10 @@ def graph_agent_page(api: ApiRequest, is_lite: bool = False):
     with st.sidebar:
         tabs_1 = st.tabs(["工具设置"])
         with tabs_1[0]:
-            graph_names = list_graphs(api)
+            agent_graph_names = list_graph_titles_by_label(label="agent")
             selected_graph = st.selectbox(
                 "选择工作流",
-                graph_names,
+                agent_graph_names,
                 format_func=lambda x: x,
                 key="selected_graph",
                 help="必选，不同的工作流的后端 agent 的逻辑不同，仅支持单选"
@@ -375,6 +377,10 @@ def graph_agent_page(api: ApiRequest, is_lite: bool = False):
                 for name, tool in tools_list.items()
                 if name in selected_tools
             }
+
+        tabs_2 = st.tabs(["聊天设置"])
+        with tabs_2[0]:
+            history_len = st.number_input("历史对话轮数：", 0, 20, key="history_len")
 
         st.tabs(["工作流流程图"])
 
@@ -427,14 +433,17 @@ def graph_agent_page(api: ApiRequest, is_lite: bool = False):
     rich.print(llm)
 
     # 创建 langgraph 实例
-    graph = get_graph_instance(
-        name=selected_graph,
-        llm=llm,
-        tools=tools,
-        history_len=get_history_len(),
-    )
+    graph_class = get_graph_class_by_label_and_title(label="agent", title=selected_graph)
+
+    if graph_class.__name__ == "BaseAgentGraph":
+        graph_class = graph_class(llm=llm, tools=tools, history_len=history_len)
+    else:
+        graph_class = graph_class(llm=llm, tools=tools, history_len=history_len)
+
+    graph = graph_class.get_graph()
     if not graph:
         raise ValueError(f"Graph '{selected_graph}' is not registered.")
+    rich.print(graph)
 
     # langgraph 配置文件
     graph_config = {
@@ -487,10 +496,7 @@ def graph_agent_page(api: ApiRequest, is_lite: bool = False):
 
         # Run the async function in a synchronous context
         graph_input = {"messages": [("user", user_input)]}
-        asyncio.run(handle_user_input(graph_name=selected_graph,
-                                      graph_input=graph_input,
-                                      graph=graph,
-                                      graph_config=graph_config))
+        asyncio.run(handle_user_input(graph=graph, graph_input=graph_input, graph_config=graph_config, graph_class_instance=graph_class))
 
     if selected_graph == "article_generation":
         # debug
@@ -515,7 +521,7 @@ def graph_agent_page(api: ApiRequest, is_lite: bool = False):
                 update_message=update_message,
                 as_node="article_generation_init_break_point"
             ))
-            asyncio.run(handle_user_input(graph_input=None, graph=graph, graph_config=graph_config))
+            asyncio.run(handle_user_input(graph=graph, graph_input=None, graph_config=graph_config, graph_class_instance=graph_class))
             # 后续不再需要进行 爬虫动作, 将 article_generation_init_break_point 状态扭转为 False
             st.session_state["article_generation_init_break_point"] = False
         if st.session_state["article_generation_start_break_point"]:
@@ -531,7 +537,7 @@ def graph_agent_page(api: ApiRequest, is_lite: bool = False):
                 update_message=update_message,
                 as_node="article_generation_start_break_point"
             ))
-            asyncio.run(handle_user_input(graph_input=None, graph=graph, graph_config=graph_config))
+            asyncio.run(handle_user_input(graph=graph, graph_input=None, graph_config=graph_config, graph_class_instance=graph_class))
             # 后续不再需要进行 爬虫动作, 将 article_generation_init_break_point 状态扭转为 False
             st.session_state["article_generation_start_break_point"] = False
         if st.session_state["article_generation_repeat_break_point"]:
@@ -556,6 +562,6 @@ def graph_agent_page(api: ApiRequest, is_lite: bool = False):
                 update_message=update_message,
                 as_node="article_generation_repeat_break_point"
             ))
-            asyncio.run(handle_user_input(graph_input=None, graph=graph, graph_config=graph_config))
+            asyncio.run(handle_user_input(graph=graph, graph_input=None, graph_config=graph_config, graph_class_instance=graph_class))
             # 将 article_generation_repeat_break_point 状态扭转为 False
             st.session_state["article_generation_start_break_point"] = False

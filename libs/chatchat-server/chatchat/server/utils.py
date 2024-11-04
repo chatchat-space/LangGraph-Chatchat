@@ -941,39 +941,6 @@ def list_tools():
     return data
 
 
-# def get_graph(
-#         name: str,
-#         llm: ChatOpenAI,
-#         tools: List[BaseTool],
-#         history_len: int,
-#         query: str,
-#         metadata: Dict[str, Any],
-# ) -> Dict[str, Any]:
-#     """
-#     获取已注册的图
-#     :param name: 选用 graph 的名称(工作流)
-#     :param llm: ChatOpenAI 对象
-#     :param tools: 需要调用的 tool 列表
-#     :param history_len: 默认历史对话轮数
-#     :param query: 用户输入
-#     :param metadata: 用户输入元信息
-#     :return: 包含已注册的 graph 实例, InputHandler 和 EventHandler
-#     """
-#     from chatchat.server.agent.graphs_factory import graphs_registry
-#     if name in graphs_registry._GRAPHS_REGISTRY:
-#         graph_info = graphs_registry._GRAPHS_REGISTRY[name]
-#         graph_instance = graph_info["func"](llm=llm, tools=tools, history_len=history_len)
-#         input_handler = graph_info["input_handler"](query=query, metadata=metadata)
-#         event_handler = graph_info["event_handler"]()
-#         return {
-#             "graph_instance": graph_instance,
-#             "input_handler": input_handler,
-#             "event_handler": event_handler
-#         }
-#     else:
-#         raise ValueError(f"Graph '{name}' is not registered.")
-
-
 def get_graph_instance(
         name: str,
         llm: ChatOpenAI,
@@ -1062,29 +1029,6 @@ def get_graph_memory():
     return _AGENT_MEMORY
 
 
-# def get_st_graph_memory(memory_type: Literal["memory", "sqlite", "postgres", None] = None) -> Union[MemorySaver, AsyncSqliteSaver, PostgresSaver]:
-#     import sqlalchemy as sa
-#
-#     if memory_type is None:
-#         memory_type = Settings.tool_settings.GRAPH_MEMORY_TYPE
-#
-#     if memory_type == "memory":
-#         from langgraph.checkpoint.memory import MemorySaver
-#         return MemorySaver()
-#     elif memory_type == "sqlite":
-#         import aiosqlite
-#         from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
-#         conn = aiosqlite.connect("langgraph_checkpoints.sqlite")
-#         return AsyncSqliteSaver(conn)
-#     elif memory_type == "postgres":
-#         from langgraph.checkpoint.postgres import PostgresSaver
-#         engine = sa.create_engine(Settings.basic_settings.SQLALCHEMY_DATABASE_URI)
-#         conn = engine.connect().connection
-#         return PostgresSaver(conn)
-#
-#     raise ValueError("Invalid memory_type provided. Must be 'memory', 'sqlite', or 'postgres'.")
-
-
 def get_st_graph_memory(memory_type: Optional[Literal["memory", "sqlite", "postgres"]] = None) -> (
         Union)[
     MemorySaver,
@@ -1159,6 +1103,16 @@ def add_tools_if_not_exists(
             tools_provides.append(tool)  # 追加工具
             tools_provides_list.append(tool)  # 更新列表
     return tools_provides
+
+
+def serialize_content_to_json(content: Any) -> Any:
+    if isinstance(content, BaseModel):
+        return content.dict()
+    elif isinstance(content, list):
+        return [serialize_content_to_json(item) for item in content]
+    elif isinstance(content, dict):
+        return {key: serialize_content_to_json(value) for key, value in content.items()}
+    return content
 
 
 if __name__ == "__main__":
