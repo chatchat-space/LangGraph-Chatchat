@@ -6,22 +6,15 @@ from typing import Any, Callable, Dict, Optional, Tuple, Type, Union
 
 from langchain.agents import tool
 from langchain_core.tools import BaseTool
+from pydantic import BaseModel
 
 from chatchat.server.knowledge_base.kb_doc_api import DocumentWithVSId
-from chatchat.server.pydantic_v1 import BaseModel, Extra
 
 
 __all__ = ["regist_tool", "BaseToolOutput", "format_context"]
 
 
 _TOOLS_REGISTRY = {}
-
-
-# patch BaseTool to support extra fields e.g. a title
-BaseTool.Config.extra = Extra.allow
-
-################################### TODO: workaround to langchain #15855
-# patch BaseTool to support tool parameters defined using pydantic Field
 
 
 def _new_parse_input(
@@ -79,7 +72,7 @@ def regist_tool(
 ) -> Union[Callable, BaseTool]:
     """
     wrapper of langchain tool decorator
-    add tool to regstiry automatically
+    add tool to registry automatically
     """
 
     def _parse_tool(t: BaseTool):
@@ -97,7 +90,7 @@ def regist_tool(
         # set a default title for human
         if not title:
             title = "".join([x.capitalize() for x in t.name.split("_")])
-        t.title = title
+        setattr(t, "_title", title)
 
     def wrapper(def_func: Callable) -> BaseTool:
         partial_ = tool(
@@ -154,9 +147,9 @@ class BaseToolOutput:
 
 
 def format_context(self: BaseToolOutput) -> str:
-    '''
+    """
     将包含知识库输出的ToolOutput格式化为 LLM 需要的字符串
-    '''
+    """
     context = ""
     docs = self.data["docs"]
     source_documents = []

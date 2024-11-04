@@ -1,3 +1,5 @@
+from pydantic import Field
+
 from chatchat.settings import Settings
 from chatchat.server.agent.tools_factory.tools_registry import (
     BaseToolOutput,
@@ -6,7 +8,6 @@ from chatchat.server.agent.tools_factory.tools_registry import (
 )
 from chatchat.server.knowledge_base.kb_api import list_kbs
 from chatchat.server.knowledge_base.kb_doc_api import search_docs
-from chatchat.server.pydantic_v1 import Field
 
 template = (
     "Use local knowledgebase from one or more of these:\n{KB_info}\n to get information，Only local data on "
@@ -46,4 +47,5 @@ def search_local_knowledgebase(
         top_k=top_k,
         score_threshold=score_threshold,
     )
-    return BaseToolOutput(result, format=format_context)
+    # return BaseToolOutput(result, format=format_context)
+    return BaseToolOutput(result)

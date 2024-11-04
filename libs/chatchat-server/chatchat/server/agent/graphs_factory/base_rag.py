@@ -24,13 +24,6 @@ from .graphs_registry import State, Graph, register_graph
 logger = build_logger()
 
 
-# Data model
-class Grade(BaseModel):
-    """Binary score for relevance check."""
-
-    binary_score: str = Field(description="Relevance score 'yes' or 'no'")
-
-
 class BaseRagState(State):
     """
     定义一个基础 State 供 各类 rag graph 继承, 其中:
@@ -153,6 +146,12 @@ class BaseRagGraph(Graph):
         Returns:
             str: A decision for whether the documents are relevant or not
         """
+
+        # Data model
+        class Grade(BaseModel):
+            """Binary score for relevance check."""
+            binary_score: str = Field(description="Relevance score 'yes' or 'no'")
+
         # Prompt
         prompt = PromptTemplate(
             template="""
@@ -172,7 +171,7 @@ class BaseRagGraph(Graph):
         # Chain
         referee = prompt | self.llm.with_structured_output(Grade)
         scored_result = await referee.ainvoke(state)
-        score = scored_result["binary_score"]
+        score = scored_result.binary_score
 
         if score == "yes":
             return "generate"
@@ -316,10 +315,6 @@ class BaseRagGraph(Graph):
                             id='b9c5468a-7340-425b-ae6f-2f584a961014')]
         }
         """
-        print(' ✅ yuehuazhang test handle_event event["messages"]:')
-        rich.print(event["messages"])
-
         # todo: 讲道理 events = graph.astream(input=graph_input, config=graph_config, stream_mode="updates")
         #  只需要 event["messages"][0], 每次都是更新最新的 "messages", 但是这里不行, 需要再研究一下
-        # return event["messages"][0]
         return event["messages"][-1]

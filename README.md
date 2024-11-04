@@ -349,23 +349,17 @@ docker pull ccr.ccs.tencentyun.com/langchain-chatchat/chatchat:0.3.1.3-93e2c87-2
 
 🎉 Langchain-Chatchat 项目微信交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。
 
-### 公众号
-
-<img src="docs/img/official_wechat_mp_account.png" alt="二维码" width="300" />
-
-🎉 Langchain-Chatchat 项目官方公众号，欢迎扫码关注。
-
 ## 引用
 
 如果本项目有帮助到您的研究，请引用我们：
 
 ```
-@software{langchain_chatchat,
-    title        = {{langchain-chatchat}},
-    author       = {Liu, Qian and Song, Jinke, and Huang, Zhiguo, and Zhang, Yuxuan, and glide-the, and liunux4odoo},
+@software{langchain-chatchat/keng,
+    title        = {{langchain-chatchat/keng}},
+    author       = {Liu, Qian and Zhang, Yuehua, and Song, Jinke, and Huang, Zhiguo, and Zhang, Yuxuan, and glide-the, and liunux4odoo},
     year         = 2024,
     journal      = {GitHub repository},
     publisher    = {GitHub},
-    howpublished = {\url{https://github.com/chatchat-space/Langchain-Chatchat}}
+    howpublished = {\url{https://github.com/chatchat-space/Keng}}
 }
 ```

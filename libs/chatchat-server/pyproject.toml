@@ -1,9 +1,8 @@
 [tool.poetry]
 name = "langchain-chatchat"
-version = "0.3.2.20240727"
+version = "0.0.1"
 description = "Langchain-Chatchat (formerly langchain-ChatGLM), local knowledge based LLM (like ChatGLM, Qwen and Llama) RAG and Agent app with langchain"
 authors = ["chatchat"]
-readme = "README.md"
 packages = [
     {include = "chatchat"},
     {include = "langchain_chatchat"}
@@ -14,12 +13,9 @@ chatchat = 'chatchat.cli:main'
 
 [tool.poetry.dependencies]
 python = ">=3.9,<3.9.7 || >3.9.7,<3.13"
-langchain = "0.3.3"
-langgraph = "0.2.35"
+langchain = "0.3.7"
+langgraph = "0.2.44"
 langchainhub = "0.1.20"
-#langchain-community = "0.2.9"
-#langchain-openai = { version = "0.1.17", python = ">=3.9.1,<3.13,!=3.9.7" }
-#langchain-experimental = "0.0.62"
 fastapi = "~0.109.2"
 sse_starlette = "~1.8.2"
 nltk = "~3.8.1"
@@ -27,7 +23,7 @@ uvicorn = ">=0.27.0.post1"
 unstructured = "~0.11.0"
 python-magic-bin = {version = "*", platform = "win32"}
 SQLAlchemy = "~2.0.25"
-faiss-cpu = "~1.7.4"
+faiss-cpu = "1.9.0"
 jieba = "0.42.1"
 rank_bm25 = "0.2.2"
 openpyxl = "3.1.4"
@@ -46,7 +42,7 @@ tqdm = ">=4.66.1"
 websockets = ">=12.0"
 #numpy = "~1.24.4"
 pandas = "~1" # test
-pydantic = "~2.7.4"
+pydantic = "2.9.2"
 httpx = {version = ">=0.25.2", extras = ["brotli", "http2", "socks"]}
 python-multipart = "0.0.9"
 python-docx = "~1.1.2"
@@ -63,7 +59,6 @@ xinference_client = { version = "^0.13.0", optional = true }
 zhipuai = { version = "^2.1.0", optional = true }
 pymysql = "^1.1.0"
 memoization = "0.4.0"
-pydantic_settings = "2.3.4"
 ruamel_yaml = "0.18.6"
 loguru = "^0.7.2"
 streamlit-paste-button = "0.1.2"
@@ -74,6 +69,11 @@ langfuse = "^2.40.0"
 aiosqlite = "^0.20.0"
 
 arxiv = "2.1.0"
+openai = "^1.53.0"
+langgraph-checkpoint-sqlite = "^2.0.1"
+tiktoken = "^0.8.0"
+langchain-openai = "^0.2.5"
+langchain-community = "^0.3.5"
 [tool.poetry.extras]
 xinference = ["xinference_client"]
 zhipuai = ["zhipuai"]
