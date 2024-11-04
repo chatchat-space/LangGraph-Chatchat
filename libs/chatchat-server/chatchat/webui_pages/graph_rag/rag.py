@@ -8,9 +8,8 @@ from streamlit_extras.bottom_container import bottom
 
 from chatchat.webui_pages.utils import *
 from chatchat.server.agent.graphs_factory.graphs_registry import (
-    serialize_content,
     list_graph_titles_by_label,
-    get_graph_class_by_label_and_title
+    get_graph_class_by_label_and_title,
 )
 from chatchat.server.utils import (
     build_logger,
@@ -19,7 +18,8 @@ from chatchat.server.utils import (
     get_default_llm,
     get_tool,
     create_agent_models,
-    list_tools
+    list_tools,
+    serialize_content_to_json
 )
 
 logger = build_logger()
@@ -42,10 +42,12 @@ def extract_node_and_response(data):
     return node, response
 
 
-async def handle_user_input(graph: CompiledStateGraph,
-                            graph_input: Any,
-                            graph_config: Dict,
-                            graph_class: Any):
+async def handle_user_input(
+        graph: CompiledStateGraph,
+        graph_input: Any,
+        graph_config: Dict,
+        graph_class_instance: Any
+):
     events = graph.astream(input=graph_input, config=graph_config, stream_mode="updates")
     if events:
         # Display assistant response in chat message container
@@ -55,11 +57,11 @@ async def handle_user_input(graph: CompiledStateGraph,
                 node, response = extract_node_and_response(event)
                 # debug
                 print(f"--- node: {node} ---")
-                rich.print(response)
+                # rich.print(response)
                 # 获取 event
-                response = await graph_class.handle_event(node=node, event=response)
+                response = await graph_class_instance.handle_event(node=node, event=response)
                 # 将 event 转化为 json
-                response = serialize_content(response)
+                response = serialize_content_to_json(response)
                 # print("after serialize_content response:")
                 # rich.print(response)
                 response_last = response["content"]
@@ -126,7 +128,7 @@ def llm_model_setting():
         st.rerun()
 
 
-def graph_rag_page(api: ApiRequest, is_lite: bool = False):
+def graph_rag_page(api: ApiRequest):
     # 初始化会话 id
     init_conversation_id()
 
@@ -235,15 +237,18 @@ def graph_rag_page(api: ApiRequest, is_lite: bool = False):
 
     # 创建 langgraph 实例
     graph_class = get_graph_class_by_label_and_title(label="rag", title=selected_graph)
-    graph_class = graph_class(llm=llm,
-                              tools=tools,
-                              history_len=history_len,
-                              knowledge_base=selected_kb,
-                              top_k=kb_top_k,
-                              score_threshold=score_threshold)
+
+    if graph_class.__name__ == "BaseRagGraph":
+        graph_class = graph_class(llm=llm, tools=tools, history_len=history_len, knowledge_base=selected_kb,
+                                  top_k=kb_top_k, score_threshold=score_threshold)
+    else:
+        graph_class = graph_class(llm=llm, tools=tools, history_len=history_len, knowledge_base=selected_kb,
+                                  top_k=kb_top_k, score_threshold=score_threshold)
+
     graph = graph_class.get_graph()
     if not graph:
         raise ValueError(f"Graph '{selected_graph}' is not registered.")
+    rich.print(graph)
 
     # langgraph 配置文件
     graph_config = {
@@ -285,7 +290,4 @@ def graph_rag_page(api: ApiRequest, is_lite: bool = False):
 
         # Run the async function in a synchronous context
         graph_input = {"messages": [("user", user_input)]}
-        asyncio.run(handle_user_input(graph=graph,
-                                      graph_input=graph_input,
-                                      graph_config=graph_config,
-                                      graph_class=graph_class))
+        asyncio.run(handle_user_input(graph=graph, graph_input=graph_input, graph_config=graph_config, graph_class_instance=graph_class))
