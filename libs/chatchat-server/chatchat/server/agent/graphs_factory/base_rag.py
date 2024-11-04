@@ -1,5 +1,6 @@
 from typing import List, Literal, Dict
 
+import rich
 from pydantic import BaseModel, Field
 
 from langchain_openai.chat_models import ChatOpenAI
@@ -21,13 +22,6 @@ from chatchat.server.utils import (
 from .graphs_registry import State, Graph, register_graph
 
 logger = build_logger()
-
-
-# Data model
-class Grade(BaseModel):
-    """Binary score for relevance check."""
-
-    binary_score: str = Field(description="Relevance score 'yes' or 'no'")
 
 
 class BaseRagState(State):
@@ -152,6 +146,12 @@ class BaseRagGraph(Graph):
         Returns:
             str: A decision for whether the documents are relevant or not
         """
+
+        # Data model
+        class Grade(BaseModel):
+            """Binary score for relevance check."""
+            binary_score: str = Field(description="Relevance score 'yes' or 'no'")
+
         # Prompt
         prompt = PromptTemplate(
             template="""
@@ -171,7 +171,7 @@ class BaseRagGraph(Graph):
         # Chain
         referee = prompt | self.llm.with_structured_output(Grade)
         scored_result = await referee.ainvoke(state)
-        score = scored_result["binary_score"]
+        score = scored_result.binary_score
 
         if score == "yes":
             return "generate"

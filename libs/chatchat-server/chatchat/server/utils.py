@@ -924,6 +924,23 @@ def get_tool(name: str = None) -> Union[BaseTool, Dict[str, BaseTool]]:
         return tools_registry._TOOLS_REGISTRY.get(name)
 
 
+def list_tools():
+    from chatchat.server.agent.tools_factory import tools_registry
+
+    data = {
+        t.name: {
+            "name": t.name,
+            "title": getattr(t, "_title", "".join([x.capitalize() for x in t.name.split("_")])),  # 动态获取 title
+            "description": t.description,
+            "args": t.args_schema.schema() if t.args_schema else {},
+            "config": {},  # Assuming get_tool_config is not defined, you can replace it with actual config retrieval logic
+        }
+        for t in tools_registry._TOOLS_REGISTRY.values()
+    }
+
+    return data
+
+
 # def get_graph(
 #         name: str,
 #         llm: ChatOpenAI,

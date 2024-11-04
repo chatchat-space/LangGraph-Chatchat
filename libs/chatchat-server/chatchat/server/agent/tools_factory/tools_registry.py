@@ -6,7 +6,7 @@ from typing import Any, Callable, Dict, Optional, Tuple, Type, Union
 
 from langchain.agents import tool
 from langchain_core.tools import BaseTool
-from pydantic import BaseModel, Extra
+from pydantic import BaseModel
 
 from chatchat.server.knowledge_base.kb_doc_api import DocumentWithVSId
 
@@ -15,20 +15,6 @@ __all__ = ["regist_tool", "BaseToolOutput", "format_context"]
 
 
 _TOOLS_REGISTRY = {}
-
-
-class ExtendedBaseTool(BaseTool):
-    title: str = ""  # 添加 title 属性
-
-    class Config:
-        extra = Extra.allow
-
-
-# patch BaseTool to support extra fields e.g. a title
-# BaseTool.Config.extra = Extra.allow
-
-################################### TODO: workaround to langchain #15855
-# patch BaseTool to support tool parameters defined using pydantic Field
 
 
 def _new_parse_input(
@@ -83,13 +69,13 @@ def regist_tool(
     return_direct: bool = False,
     args_schema: Optional[Type[BaseModel]] = None,
     infer_schema: bool = True,
-) -> Union[Callable, ExtendedBaseTool]:
+) -> Union[Callable, BaseTool]:
     """
     wrapper of langchain tool decorator
     add tool to registry automatically
     """
 
-    def _parse_tool(t: ExtendedBaseTool):
+    def _parse_tool(t: BaseTool):
         nonlocal description, title
 
         _TOOLS_REGISTRY[t.name] = t
@@ -104,9 +90,9 @@ def regist_tool(
         # set a default title for human
         if not title:
             title = "".join([x.capitalize() for x in t.name.split("_")])
-        setattr(t, 'title', title)  # 动态添加 title 属性
+        setattr(t, "_title", title)
 
-    def wrapper(def_func: Callable) -> ExtendedBaseTool:
+    def wrapper(def_func: Callable) -> BaseTool:
         partial_ = tool(
             *args,
             return_direct=return_direct,
@@ -161,9 +147,9 @@ class BaseToolOutput:
 
 
 def format_context(self: BaseToolOutput) -> str:
-    '''
+    """
     将包含知识库输出的ToolOutput格式化为 LLM 需要的字符串
-    '''
+    """
     context = ""
     docs = self.data["docs"]
     source_documents = []

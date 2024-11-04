@@ -7,7 +7,6 @@ from langgraph.graph.state import CompiledStateGraph
 from streamlit_extras.bottom_container import bottom
 
 from chatchat.webui_pages.utils import *
-from chatchat.webui_pages.dialogue.dialogue import list_tools
 from chatchat.server.agent.graphs_factory.graphs_registry import (
     serialize_content,
     list_graph_titles_by_label,
@@ -20,6 +19,7 @@ from chatchat.server.utils import (
     get_default_llm,
     get_tool,
     create_agent_models,
+    list_tools
 )
 
 logger = build_logger()
@@ -178,7 +178,7 @@ def graph_rag_page(api: ApiRequest, is_lite: bool = False):
                     key="selected_kb",
                 )
 
-                tools_list = list_tools(api)
+                tools_list = list_tools()
                 # tool_names = ["None"] + list(tools_list)
                 # selected_tools demo: ['search_internet', 'search_youtube']
                 selected_tools = st.multiselect(

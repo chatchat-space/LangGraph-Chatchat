@@ -233,7 +233,9 @@ class Graph:
         在知识库检索后, 将检索出来的知识文档提取出来.
         """
         state["docs"] = state["messages"][-1].content
-        rich.print(state["docs"])
+        # ToolMessage 默认不会往 history 队列中追加消息, 需要手动追加
+        if isinstance(state["messages"][-1], ToolMessage):
+            state["history"].append(state["messages"][-1])
         return state
 
 

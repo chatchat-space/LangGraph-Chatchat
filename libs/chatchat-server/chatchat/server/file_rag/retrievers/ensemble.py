@@ -6,7 +6,6 @@ from langchain_community.retrievers import BM25Retriever
 from langchain_core.retrievers import BaseRetriever
 
 from chatchat.server.file_rag.retrievers.base import BaseRetrieverService
-from chatchat.settings import Settings
 
 class EnsembleRetrieverService(BaseRetrieverService):
     def do_init(
@@ -19,11 +18,9 @@ class EnsembleRetrieverService(BaseRetrieverService):
         self.retriever = retriever
 
     @staticmethod
-    def from_vectorstore(
-        vectorstore: VectorStore,
-        top_k: int,
-        score_threshold: int | float,
-    ):
+    def from_vectorstore(vectorstore: VectorStore,
+                         top_k: int,
+                         score_threshold: int | float):
         faiss_retriever = vectorstore.as_retriever(
             search_type="similarity_score_threshold",
             search_kwargs={"score_threshold": score_threshold, "k": top_k},

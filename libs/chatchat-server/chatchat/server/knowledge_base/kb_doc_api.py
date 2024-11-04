@@ -8,6 +8,7 @@ import rich
 from fastapi import Body, File, Form, Query, UploadFile
 from fastapi.responses import FileResponse
 from langchain.docstore.document import Document
+from pydantic import ValidationError
 from sse_starlette import EventSourceResponse
 
 from chatchat.settings import Settings
@@ -69,16 +70,40 @@ def search_docs(
 ) -> List[Dict]:
     kb = KBServiceFactory.get_service_by_name(knowledge_base_name)
     data = []
+    # if kb is not None:
+    #     if query:
+    #         docs = kb.search_docs(query, top_k, score_threshold)
+    #         # data = [DocumentWithVSId(**x[0].dict(), score=x[1], id=x[0].metadata.get("id")) for x in docs]
+    #         data = [DocumentWithVSId(**{"id": x.metadata.get("id"), **x.dict()}) for x in docs]
+    #     elif file_name or metadata:
+    #         data = kb.list_docs(file_name=file_name, metadata=metadata)
+    #         for d in data:
+    #             if "vector" in d.metadata:
+    #                 del d.metadata["vector"]
     if kb is not None:
-        if query:
-            docs = kb.search_docs(query, top_k, score_threshold)
-            # data = [DocumentWithVSId(**x[0].dict(), score=x[1], id=x[0].metadata.get("id")) for x in docs]
-            data = [DocumentWithVSId(**{"id": x.metadata.get("id"), **x.dict()}) for x in docs]
-        elif file_name or metadata:
-            data = kb.list_docs(file_name=file_name, metadata=metadata)
-            for d in data:
-                if "vector" in d.metadata:
-                    del d.metadata["vector"]
+        try:
+            if query:
+                # docs = kb.search_docs(query, top_k, score_threshold)
+                # data = [DocumentWithVSId(**{"id": x.metadata.get("id"), **x.dict()}) for x in docs]
+                # for idx, doc in enumerate(docs):
+                #     doc_id = doc.metadata.get("id") or f"doc_{idx}"  # 根据文档顺序生成 id
+                #     print(f"doc_id: {doc_id}")
+                #     print(f"doc idx: {idx}")
+                #     print(f"doc doc:")
+                #     rich.print(doc)
+                #     data.append(DocumentWithVSId(**{"id": str(doc_id), **doc.dict()}))
+                data = kb.search_docs(query, top_k, score_threshold)
+            elif file_name or metadata:
+                data = kb.list_docs(file_name=file_name, metadata=metadata)
+                for d in data:
+                    if "vector" in d.metadata:
+                        del d.metadata["vector"]
+        except ValidationError as e:
+            logger.error(f"Validation error: {e}")
+            raise ValidationError(f"Validation error: {e}")
+        except Exception as e:
+            logger.error(f"An unexpected error occurred: {e}")
+            raise Exception(f"An unexpected error occurred: {e}")
     return [x.dict() for x in data]
 
 
