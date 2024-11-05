@@ -1,6 +1,6 @@
 # 基础镜像
-FROM python:3.11
-LABEL maintainer=Langchain-Chatchat
+FROM python:3.12
+LABEL maintainer=yuehua-s
 WORKDIR /root
 
 # 环境变量
@@ -21,8 +21,8 @@ RUN pip install --index-url https://pypi.python.org/simple/ pipx && \
 # Add poetry to PATH
 ENV PATH="/root/.local/bin:${PATH}"
 
-# 下载 Langchain-Chatchat
-RUN git clone https://github.com/chatchat-space/Langchain-Chatchat.git
+# 下载 Keng
+RUN git clone https://github.com/chatchat-space/Keng.git
 
 # 安装依赖
 WORKDIR /root/Langchain-Chatchat/libs/chatchat-server
