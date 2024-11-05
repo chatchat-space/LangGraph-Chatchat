@@ -22,10 +22,10 @@ RUN pip install --index-url https://pypi.python.org/simple/ pipx && \
 ENV PATH="/root/.local/bin:${PATH}"
 
 # 下载 Keng
-RUN git clone https://github.com/chatchat-space/Keng.git
+RUN git clone https://github.com/chatchat-space/LangGraph-Chatchat.git
 
 # 安装依赖
-WORKDIR /root/Langchain-Chatchat/libs/chatchat-server
+WORKDIR /root/LangGraph-Chatchat/libs/chatchat-server
 RUN poetry config virtualenvs.create false
 RUN poetry install --with lint,test -E xinference
 
