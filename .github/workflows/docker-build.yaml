@@ -97,14 +97,14 @@ jobs:
       - name: Login To Docker Hub
         uses: docker/login-action@v2
         with:
-          username: ${{ secrets.DOCKERHUB_REGISTRY_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_REGISTRY_PASSWORD }}
-      - name: Login To Tencent CCR
-        uses: docker/login-action@v2
-        with:
-          registry: ccr.ccs.tencentyun.com
-          username: ${{ secrets.CCR_REGISTRY_USERNAME }}
-          password: ${{ secrets.CCR_REGISTRY_PASSWORD }}
+          username: ${{ var.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_SECRET }}
+#      - name: Login To Tencent CCR
+#        uses: docker/login-action@v2
+#        with:
+#          registry: ccr.ccs.tencentyun.com
+#          username: ${{ secrets.CCR_REGISTRY_USERNAME }}
+#          password: ${{ secrets.CCR_REGISTRY_PASSWORD }}
       - name: Show Runner Disk
         run: df -hT
       - name: Build and push Docker image
@@ -114,8 +114,7 @@ jobs:
           file: ./docker/Dockerfile
           push: true
           tags: |
-            chatimage/keng:${{ env.image_tag }}
-            ccr.ccs.tencentyun.com/langchain-chatchat/keng:${{ env.image_tag }}
+            chatchatspace/langgraph-chatchat:${{ env.image_tag }}
           platforms: |
             linux/amd64, linux/arm64
       - name: Logout from Docker Hub
@@ -125,8 +124,8 @@ jobs:
       - name: Update Doc and Create Pull Request
         run: |
           # 更新文件内容
-          sed -i -E "s|chatimage/chatchat:[a-zA-Z0-9._-]+|chatimage/keng:${{ env.image_tag }}|g" README.md README_en.md docker/docker-compose.yaml
-          sed -i -E "s|ccr.ccs.tencentyun.com/langchain-chatchat/keng:[a-zA-Z0-9._-]+|ccr.ccs.tencentyun.com/langchain-chatchat/keng:${{ env.image_tag }}|g" README.md README_en.md docker/docker-compose.yaml
+          sed -i -E "s|chatimage/chatchat:[a-zA-Z0-9._-]+|chatchatspace/langgraph-chatchat:${{ env.image_tag }}|g" README.md README_en.md docker/docker-compose.yaml
+          # sed -i -E "s|ccr.ccs.tencentyun.com/langchain-chatchat/langgraph-chatchat:[a-zA-Z0-9._-]+|ccr.ccs.tencentyun.com/langchain-chatchat/keng:${{ env.image_tag }}|g" README.md README_en.md docker/docker-compose.yaml
           # 配置 Git 用户信息
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
