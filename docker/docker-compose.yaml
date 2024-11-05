@@ -1,5 +1,16 @@
 version: '3.9'
 services:
+  chatchat:
+    image: chatchatspace/langgraph-chatchat:0.3.1.3-93e2c87-20240829
+    # image: ccr.ccs.tencentyun.com/chatchat/chatchat:0.3.1.2-2024-0720
+    restart: always
+    # ports: # 不使用 host network 时可打开.
+    #   - "7861:7861"
+    #   - "8501:8501"
+    network_mode: "host"
+    # 将本地路径(~/chatchat)挂载到容器默认数据路径($CHATCHAT_ROOT)中
+    # volumes:
+    #   - /root/chatchat:/root/chatchat_data
   xinference:
     image: xprobe/xinference:v0.12.3
     restart: always
@@ -24,14 +35,3 @@ services:
     # 模型源更改为 ModelScope, 默认为 HuggingFace
     # environment:
     #   - XINFERENCE_MODEL_SRC=modelscope
-  chatchat:
-    image: chatimage/chatchat:0.3.1.3-93e2c87-20240829
-    # image: ccr.ccs.tencentyun.com/chatchat/chatchat:0.3.1.2-2024-0720
-    restart: always
-    # ports: # 不使用 host network 时可打开.
-    #   - "7861:7861"
-    #   - "8501:8501"
-    network_mode: "host"
-    # 将本地路径(~/chatchat)挂载到容器默认数据路径($CHATCHAT_ROOT)中
-    # volumes:
-    #   - /root/chatchat:/root/chatchat_data
