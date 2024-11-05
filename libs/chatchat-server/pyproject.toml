@@ -48,7 +48,7 @@ python-multipart = "0.0.9"
 python-docx = "~1.1.2"
 
 # webui
-streamlit = "1.38.0"
+streamlit = "1.39.0"
 streamlit-option-menu = "0.3.12"
 streamlit-antd-components = "0.3.1"
 streamlit-chatbox = "1.1.12.post4"
