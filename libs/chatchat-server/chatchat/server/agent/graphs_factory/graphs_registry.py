@@ -6,7 +6,7 @@ from langchain_core.tools import BaseTool
 from langchain_openai import ChatOpenAI
 from langgraph.graph.message import add_messages
 from langchain_core.messages import BaseMessage, ToolMessage, AIMessage, filter_messages
-from langchain_core.pydantic_v1 import BaseModel
+from pydantic import BaseModel
 from langgraph.graph.state import CompiledStateGraph
 
 from chatchat.server.utils import build_logger
@@ -21,7 +21,6 @@ __all__ = [
     "State",
     "Response",
     "async_history_manager",
-    "serialize_content",
     "human_feedback",
     "break_point",
     "register_graph",
@@ -46,16 +45,6 @@ class State(TypedDict):
 class Response(TypedDict):
     node: str
     content: Any
-
-
-def serialize_content(content: Any) -> Any:
-    if isinstance(content, BaseModel):
-        return content.dict()
-    elif isinstance(content, list):
-        return [serialize_content(item) for item in content]
-    elif isinstance(content, dict):
-        return {key: serialize_content(value) for key, value in content.items()}
-    return content
 
 
 class Message(TypedDict):
@@ -233,7 +222,9 @@ class Graph:
         在知识库检索后, 将检索出来的知识文档提取出来.
         """
         state["docs"] = state["messages"][-1].content
-        rich.print(state["docs"])
+        # ToolMessage 默认不会往 history 队列中追加消息, 需要手动追加
+        if isinstance(state["messages"][-1], ToolMessage):
+            state["history"].append(state["messages"][-1])
         return state
 
 

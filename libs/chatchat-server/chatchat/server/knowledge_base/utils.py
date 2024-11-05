@@ -16,7 +16,7 @@ from chatchat.settings import Settings
 from chatchat.server.file_rag.text_splitter import (
     zh_title_enhance as func_zh_title_enhance,
 )
-from chatchat.server.utils import run_in_process_pool, run_in_thread_pool
+from chatchat.server.utils import run_in_thread_pool
 from chatchat.utils import build_logger
 
 

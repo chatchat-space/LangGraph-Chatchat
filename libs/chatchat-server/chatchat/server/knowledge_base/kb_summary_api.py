@@ -11,7 +11,7 @@ from chatchat.server.knowledge_base.kb_summary.base import KBSummaryService
 from chatchat.server.knowledge_base.kb_summary.summary_chunk import SummaryAdapter
 from chatchat.server.knowledge_base.model.kb_document_model import DocumentWithVSId
 from chatchat.server.knowledge_base.utils import list_files_from_folder
-from chatchat.server.utils import BaseResponse, get_ChatOpenAI, wrap_done, get_default_embedding
+from chatchat.server.utils import BaseResponse, get_ChatOpenAI, get_default_embedding
 from chatchat.utils import build_logger
 
 

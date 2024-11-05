@@ -4,13 +4,13 @@ from typing import List, Optional, Literal, Any
 from langchain_core.tools import BaseTool
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.messages import BaseMessage, AIMessage, ToolMessage
-from langchain_core.pydantic_v1 import BaseModel, Field
+from pydantic import BaseModel, Field
 from langgraph.prebuilt import ToolNode
 from langgraph.graph import END, StateGraph
 from langgraph.graph.graph import CompiledGraph
 from langchain_openai.chat_models import ChatOpenAI
 
-from chatchat.server.utils import get_graph_memory, build_logger, get_tool
+from chatchat.server.utils import get_graph_memory, build_logger
 from .graphs_registry import regist_graph, InputHandler, EventHandler, State, async_history_manager
 
 logger = build_logger()

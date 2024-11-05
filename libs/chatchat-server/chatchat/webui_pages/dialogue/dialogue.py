@@ -1,92 +1,92 @@
-import hashlib
-import io
-import random
-import uuid
-from datetime import datetime
-
-import rich
-from PIL import Image as PILImage
+# import hashlib
+# import io
+# import random
+# import uuid
+# from datetime import datetime
+#
+# import rich
+# from PIL import Image as PILImage
 from langchain_core.messages import BaseMessage
-from urllib.parse import urlencode
+# from urllib.parse import urlencode
 
 # from audio_recorder_streamlit import audio_recorder
-import openai
+# import openai
 import streamlit as st
-import streamlit_antd_components as sac
-from streamlit_chatbox import *
-from streamlit_extras.bottom_container import bottom
-from streamlit_paste_button import paste_image_button
+# import streamlit_antd_components as sac
+# from streamlit_chatbox import *
+# from streamlit_extras.bottom_container import bottom
+# from streamlit_paste_button import paste_image_button
 
-from chatchat.server.agent.graphs_factory import Response
-from chatchat.settings import Settings
-from chatchat.server.callback_handler.agent_callback_handler import AgentStatus
-from chatchat.server.knowledge_base.model.kb_document_model import DocumentWithVSId
-from chatchat.server.knowledge_base.utils import format_reference
-from chatchat.server.utils import MsgType, get_config_models, get_config_platforms, get_default_llm
+# from chatchat.server.agent.graphs_factory import Response
+# from chatchat.settings import Settings
+# from chatchat.server.callback_handler.agent_callback_handler import AgentStatus
+# from chatchat.server.knowledge_base.model.kb_document_model import DocumentWithVSId
+# from chatchat.server.knowledge_base.utils import format_reference
+# from chatchat.server.utils import MsgType, get_config_models, get_config_platforms, get_default_llm
 from chatchat.webui_pages.utils import *
-from .utils import get_title, process_content_by_graph
+# from .utils import get_title, process_content_by_graph
 
 
-chat_box = ChatBox(assistant_avatar=get_img_base64("chatchat_icon_blue_square_v2.png"))
+# chat_box = ChatBox(assistant_avatar=get_img_base64("chatchat_icon_blue_square_v2.png"))
 
 
-def save_session(conv_name: str = None):
-    """save session state to chat context"""
-    chat_box.context_from_session(
-        conv_name, exclude=["selected_page", "prompt", "cur_conv_name", "upload_image"]
-    )
+# def save_session(conv_name: str = None):
+#     """save session state to chat context"""
+#     chat_box.context_from_session(
+#         conv_name, exclude=["selected_page", "prompt", "cur_conv_name", "upload_image"]
+#     )
 
 
-def restore_session(conv_name: str = None):
-    """restore sesstion state from chat context"""
-    chat_box.context_to_session(
-        conv_name, exclude=["selected_page", "prompt", "cur_conv_name", "upload_image"]
-    )
+# def restore_session(conv_name: str = None):
+#     """restore sesstion state from chat context"""
+#     chat_box.context_to_session(
+#         conv_name, exclude=["selected_page", "prompt", "cur_conv_name", "upload_image"]
+#     )
 
 
-def rerun():
-    """
-    save chat context before rerun
-    """
-    save_session()
-    st.rerun()
+# def rerun():
+#     """
+#     save chat context before rerun
+#     """
+#     save_session()
+#     st.rerun()
 
 
-def get_messages_history(
-    history_len: int, content_in_expander: bool = False
-) -> List[Dict]:
-    """
-    返回消息历史。
-    content_in_expander控制是否返回expander元素中的内容，一般导出的时候可以选上，传入LLM的history不需要
-    """
+# def get_messages_history(
+#     history_len: int, content_in_expander: bool = False
+# ) -> List[Dict]:
+#     """
+#     返回消息历史。
+#     content_in_expander控制是否返回expander元素中的内容，一般导出的时候可以选上，传入LLM的history不需要
+#     """
+#
+#     def filter(msg):
+#         content = [
+#             x for x in msg["elements"] if x._output_method in ["markdown", "text"]
+#         ]
+#         if not content_in_expander:
+#             content = [x for x in content if not x._in_expander]
+#         content = [x.content for x in content]
+#
+#         return {
+#             "role": msg["role"],
+#             "content": "\n\n".join(content),
+#         }
+#
+#     messages = chat_box.filter_history(history_len=history_len, filter=filter)
+#     if sys_msg := chat_box.context.get("system_message"):
+#         messages = [{"role": "system", "content": sys_msg}] + messages
+#
+#     return messages
 
-    def filter(msg):
-        content = [
-            x for x in msg["elements"] if x._output_method in ["markdown", "text"]
-        ]
-        if not content_in_expander:
-            content = [x for x in content if not x._in_expander]
-        content = [x.content for x in content]
 
-        return {
-            "role": msg["role"],
-            "content": "\n\n".join(content),
-        }
-
-    messages = chat_box.filter_history(history_len=history_len, filter=filter)
-    if sys_msg := chat_box.context.get("system_message"):
-        messages = [{"role": "system", "content": sys_msg}] + messages
-
-    return messages
-
-
-@st.cache_data
-def upload_temp_docs(files, _api: ApiRequest) -> str:
-    """
-    将文件上传到临时目录，用于文件对话
-    返回临时向量库ID
-    """
-    return _api.upload_temp_docs(files).get("data", {}).get("id")
+# @st.cache_data
+# def upload_temp_docs(files, _api: ApiRequest) -> str:
+#     """
+#     将文件上传到临时目录，用于文件对话
+#     返回临时向量库ID
+#     """
+#     return _api.upload_temp_docs(files).get("data", {}).get("id")
 
 
 # @st.cache_data
@@ -144,7 +144,7 @@ def upload_temp_docs(files, _api: ApiRequest) -> str:
 #     chat_box.reset_history(name=name or None)
 
 
-# @st.cache_data
+@st.cache_data
 def list_tools(_api: ApiRequest):
     return _api.list_tools() or {}
 
@@ -168,22 +168,22 @@ def list_graphs(_api: ApiRequest):
 #                          state=state, **kwargs)
 
 
-def _to_serializable_dict(obj: Any) -> Union[dict, list, str, int, float, bool, None]:
-    if isinstance(obj, BaseMessage):
-        return {
-            "content": obj.content,
-            "additional_kwargs": _to_serializable_dict(obj.additional_kwargs),
-            "response_metadata": _to_serializable_dict(obj.response_metadata),
-            "type": obj.type,
-            "name": obj.name,
-            "id": obj.id,
-        }
-    elif isinstance(obj, dict):
-        return {key: _to_serializable_dict(value) for key, value in obj.items()}
-    elif isinstance(obj, list):
-        return [_to_serializable_dict(item) for item in obj]
-    else:
-        return obj
+# def _to_serializable_dict(obj: Any) -> Union[dict, list, str, int, float, bool, None]:
+#     if isinstance(obj, BaseMessage):
+#         return {
+#             "content": obj.content,
+#             "additional_kwargs": _to_serializable_dict(obj.additional_kwargs),
+#             "response_metadata": _to_serializable_dict(obj.response_metadata),
+#             "type": obj.type,
+#             "name": obj.name,
+#             "id": obj.id,
+#         }
+#     elif isinstance(obj, dict):
+#         return {key: _to_serializable_dict(value) for key, value in obj.items()}
+#     elif isinstance(obj, list):
+#         return [_to_serializable_dict(item) for item in obj]
+#     else:
+#         return obj
 
 
 # def dialogue_page(

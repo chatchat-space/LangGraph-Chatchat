@@ -1,18 +1,13 @@
-import asyncio
-import multiprocessing as mp
 import os
-import socket
-import sys
 import requests
 import httpx
 import openai
 
-from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from urllib.parse import urlparse
 from typing import (
     Any,
-    Awaitable,
     Callable,
     Dict,
     Generator,
@@ -21,14 +16,12 @@ from typing import (
     Optional,
     Tuple,
     Union,
-    Set,
 )
 
 from fastapi import FastAPI
 from langchain.tools import BaseTool
 from langchain_core.embeddings import Embeddings
 from langchain_openai.chat_models import ChatOpenAI
-from langchain_openai.llms import OpenAI
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
@@ -42,16 +35,16 @@ from chatchat.utils import build_logger
 logger = build_logger()
 
 
-async def wrap_done(fn: Awaitable, event: asyncio.Event):
-    """Wrap an awaitable with a event to signal when it's done or an exception is raised."""
-    try:
-        await fn
-    except Exception as e:
-        msg = f"Caught exception: {e}"
-        logger.error(f"{e.__class__.__name__}: {msg}")
-    finally:
-        # Signal the aiter to stop.
-        event.set()
+# async def wrap_done(fn: Awaitable, event: asyncio.Event):
+#     """Wrap an awaitable with a event to signal when it's done or an exception is raised."""
+#     try:
+#         await fn
+#     except Exception as e:
+#         msg = f"Caught exception: {e}"
+#         logger.error(f"{e.__class__.__name__}: {msg}")
+#     finally:
+#         # Signal the aiter to stop.
+#         event.set()
 
 
 def get_base_url(url):
@@ -245,8 +238,8 @@ def get_history_len() -> int:
             Settings.model_settings.LLM_MODEL_CONFIG["action_model"]["history_len"])
 
 
-def get_recursion_limit() -> int:
-    return Settings.tool_settings.RECURSION_LIMIT or 50
+# def get_recursion_limit() -> int:
+#     return Settings.tool_settings.RECURSION_LIMIT or 50
 
 
 def get_ChatOpenAI(
@@ -295,46 +288,46 @@ def get_ChatOpenAI(
     return model
 
 
-def get_OpenAI(
-        model_name: str,
-        temperature: float,
-        max_tokens: int = Settings.model_settings.MAX_TOKENS,
-        streaming: bool = True,
-        echo: bool = True,
-        callbacks: List[Callable] = [],
-        verbose: bool = True,
-        local_wrap: bool = False,  # use local wrapped api
-        **kwargs: Any,
-) -> OpenAI:
-    # TODO: 从API获取模型信息
-    model_info = get_model_info(model_name)
-    params = dict(
-        streaming=streaming,
-        verbose=verbose,
-        callbacks=callbacks,
-        model_name=model_name,
-        temperature=temperature,
-        max_tokens=max_tokens,
-        echo=echo,
-        **kwargs,
-    )
-    try:
-        if local_wrap:
-            params.update(
-                openai_api_base=f"{api_address()}/v1",
-                openai_api_key="EMPTY",
-            )
-        else:
-            params.update(
-                openai_api_base=model_info.get("api_base_url"),
-                openai_api_key=model_info.get("api_key"),
-                openai_proxy=model_info.get("api_proxy"),
-            )
-        model = OpenAI(**params)
-    except Exception as e:
-        logger.exception(f"failed to create OpenAI for model: {model_name}.")
-        model = None
-    return model
+# def get_OpenAI(
+#         model_name: str,
+#         temperature: float,
+#         max_tokens: int = Settings.model_settings.MAX_TOKENS,
+#         streaming: bool = True,
+#         echo: bool = True,
+#         callbacks: List[Callable] = [],
+#         verbose: bool = True,
+#         local_wrap: bool = False,  # use local wrapped api
+#         **kwargs: Any,
+# ) -> OpenAI:
+#     # TODO: 从API获取模型信息
+#     model_info = get_model_info(model_name)
+#     params = dict(
+#         streaming=streaming,
+#         verbose=verbose,
+#         callbacks=callbacks,
+#         model_name=model_name,
+#         temperature=temperature,
+#         max_tokens=max_tokens,
+#         echo=echo,
+#         **kwargs,
+#     )
+#     try:
+#         if local_wrap:
+#             params.update(
+#                 openai_api_base=f"{api_address()}/v1",
+#                 openai_api_key="EMPTY",
+#             )
+#         else:
+#             params.update(
+#                 openai_api_base=model_info.get("api_base_url"),
+#                 openai_api_key=model_info.get("api_key"),
+#                 openai_proxy=model_info.get("api_proxy"),
+#             )
+#         model = OpenAI(**params)
+#     except Exception as e:
+#         logger.exception(f"failed to create OpenAI for model: {model_name}.")
+#         model = None
+#     return model
 
 
 def get_Embeddings(
@@ -500,41 +493,41 @@ class ChatMessage(BaseModel):
         }
 
 
-def run_async(cor):
-    """
-    在同步环境中运行异步代码.
-    """
-    try:
-        loop = asyncio.get_event_loop()
-    except:
-        loop = asyncio.new_event_loop()
-    return loop.run_until_complete(cor)
+# def run_async(cor):
+#     """
+#     在同步环境中运行异步代码.
+#     """
+#     try:
+#         loop = asyncio.get_event_loop()
+#     except:
+#         loop = asyncio.new_event_loop()
+#     return loop.run_until_complete(cor)
 
 
-def iter_over_async(ait, loop=None):
-    """
-    将异步生成器封装成同步生成器.
-    """
-    ait = ait.__aiter__()
-
-    async def get_next():
-        try:
-            obj = await ait.__anext__()
-            return False, obj
-        except StopAsyncIteration:
-            return True, None
-
-    if loop is None:
-        try:
-            loop = asyncio.get_event_loop()
-        except:
-            loop = asyncio.new_event_loop()
-
-    while True:
-        done, obj = loop.run_until_complete(get_next())
-        if done:
-            break
-        yield obj
+# def iter_over_async(ait, loop=None):
+#     """
+#     将异步生成器封装成同步生成器.
+#     """
+#     ait = ait.__aiter__()
+#
+#     async def get_next():
+#         try:
+#             obj = await ait.__anext__()
+#             return False, obj
+#         except StopAsyncIteration:
+#             return True, None
+#
+#     if loop is None:
+#         try:
+#             loop = asyncio.get_event_loop()
+#         except:
+#             loop = asyncio.new_event_loop()
+#
+#     while True:
+#         done, obj = loop.run_until_complete(get_next())
+#         if done:
+#             break
+#         yield obj
 
 
 def MakeFastAPIOffline(
@@ -768,29 +761,29 @@ def run_in_thread_pool(
                 logger.exception(f"error in sub thread: {e}")
 
 
-def run_in_process_pool(
-        func: Callable,
-        params: List[Dict] = [],
-) -> Generator:
-    """
-    在线程池中批量运行任务，并将运行结果以生成器的形式返回。
-    请确保任务中的所有操作是线程安全的，任务函数请全部使用关键字参数。
-    """
-    tasks = []
-    max_workers = None
-    if sys.platform.startswith("win"):
-        max_workers = min(
-            mp.cpu_count(), 60
-        )  # max_workers should not exceed 60 on windows
-    with ProcessPoolExecutor(max_workers=max_workers) as pool:
-        for kwargs in params:
-            tasks.append(pool.submit(func, **kwargs))
-
-        for obj in as_completed(tasks):
-            try:
-                yield obj.result()
-            except Exception as e:
-                logger.exception(f"error in sub process: {e}")
+# def run_in_process_pool(
+#         func: Callable,
+#         params: List[Dict] = [],
+# ) -> Generator:
+#     """
+#     在线程池中批量运行任务，并将运行结果以生成器的形式返回。
+#     请确保任务中的所有操作是线程安全的，任务函数请全部使用关键字参数。
+#     """
+#     tasks = []
+#     max_workers = None
+#     if sys.platform.startswith("win"):
+#         max_workers = min(
+#             mp.cpu_count(), 60
+#         )  # max_workers should not exceed 60 on windows
+#     with ProcessPoolExecutor(max_workers=max_workers) as pool:
+#         for kwargs in params:
+#             tasks.append(pool.submit(func, **kwargs))
+#
+#         for obj in as_completed(tasks):
+#             try:
+#                 yield obj.result()
+#             except Exception as e:
+#                 logger.exception(f"error in sub process: {e}")
 
 
 def get_httpx_client(
@@ -931,37 +924,21 @@ def get_tool(name: str = None) -> Union[BaseTool, Dict[str, BaseTool]]:
         return tools_registry._TOOLS_REGISTRY.get(name)
 
 
-# def get_graph(
-#         name: str,
-#         llm: ChatOpenAI,
-#         tools: List[BaseTool],
-#         history_len: int,
-#         query: str,
-#         metadata: Dict[str, Any],
-# ) -> Dict[str, Any]:
-#     """
-#     获取已注册的图
-#     :param name: 选用 graph 的名称(工作流)
-#     :param llm: ChatOpenAI 对象
-#     :param tools: 需要调用的 tool 列表
-#     :param history_len: 默认历史对话轮数
-#     :param query: 用户输入
-#     :param metadata: 用户输入元信息
-#     :return: 包含已注册的 graph 实例, InputHandler 和 EventHandler
-#     """
-#     from chatchat.server.agent.graphs_factory import graphs_registry
-#     if name in graphs_registry._GRAPHS_REGISTRY:
-#         graph_info = graphs_registry._GRAPHS_REGISTRY[name]
-#         graph_instance = graph_info["func"](llm=llm, tools=tools, history_len=history_len)
-#         input_handler = graph_info["input_handler"](query=query, metadata=metadata)
-#         event_handler = graph_info["event_handler"]()
-#         return {
-#             "graph_instance": graph_instance,
-#             "input_handler": input_handler,
-#             "event_handler": event_handler
-#         }
-#     else:
-#         raise ValueError(f"Graph '{name}' is not registered.")
+def list_tools():
+    from chatchat.server.agent.tools_factory import tools_registry
+
+    data = {
+        t.name: {
+            "name": t.name,
+            "title": getattr(t, "_title", "".join([x.capitalize() for x in t.name.split("_")])),  # 动态获取 title
+            "description": t.description,
+            "args": t.args_schema.schema() if t.args_schema else {},
+            "config": {},  # Assuming get_tool_config is not defined, you can replace it with actual config retrieval logic
+        }
+        for t in tools_registry._TOOLS_REGISTRY.values()
+    }
+
+    return data
 
 
 def get_graph_instance(
@@ -1011,9 +988,9 @@ def get_tool_config(name: str = None) -> Dict:
         return Settings.tool_settings.model_dump().get(name, {})
 
 
-def is_port_in_use(port):
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-        return sock.connect_ex(("localhost", port)) == 0
+# def is_port_in_use(port):
+#     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+#         return sock.connect_ex(("localhost", port)) == 0
 
 
 # langgraph checkpointer 使用的全局 memory
@@ -1050,29 +1027,6 @@ def set_graph_memory(memory_type: Literal["memory", "sqlite", "postgres", None] 
 def get_graph_memory():
     global _AGENT_MEMORY  # 声明使用全局 memory
     return _AGENT_MEMORY
-
-
-# def get_st_graph_memory(memory_type: Literal["memory", "sqlite", "postgres", None] = None) -> Union[MemorySaver, AsyncSqliteSaver, PostgresSaver]:
-#     import sqlalchemy as sa
-#
-#     if memory_type is None:
-#         memory_type = Settings.tool_settings.GRAPH_MEMORY_TYPE
-#
-#     if memory_type == "memory":
-#         from langgraph.checkpoint.memory import MemorySaver
-#         return MemorySaver()
-#     elif memory_type == "sqlite":
-#         import aiosqlite
-#         from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
-#         conn = aiosqlite.connect("langgraph_checkpoints.sqlite")
-#         return AsyncSqliteSaver(conn)
-#     elif memory_type == "postgres":
-#         from langgraph.checkpoint.postgres import PostgresSaver
-#         engine = sa.create_engine(Settings.basic_settings.SQLALCHEMY_DATABASE_URI)
-#         conn = engine.connect().connection
-#         return PostgresSaver(conn)
-#
-#     raise ValueError("Invalid memory_type provided. Must be 'memory', 'sqlite', or 'postgres'.")
 
 
 def get_st_graph_memory(memory_type: Optional[Literal["memory", "sqlite", "postgres"]] = None) -> (
@@ -1149,6 +1103,16 @@ def add_tools_if_not_exists(
             tools_provides.append(tool)  # 追加工具
             tools_provides_list.append(tool)  # 更新列表
     return tools_provides
+
+
+def serialize_content_to_json(content: Any) -> Any:
+    if isinstance(content, BaseModel):
+        return content.dict()
+    elif isinstance(content, list):
+        return [serialize_content_to_json(item) for item in content]
+    elif isinstance(content, dict):
+        return {key: serialize_content_to_json(value) for key, value in content.items()}
+    return content
 
 
 if __name__ == "__main__":
