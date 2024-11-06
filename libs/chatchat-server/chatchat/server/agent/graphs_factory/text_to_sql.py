@@ -6,52 +6,28 @@ from langgraph.graph import StateGraph, END
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.prebuilt import ToolNode, tools_condition
 
-from chatchat.server.utils import build_logger, get_st_graph_memory
-from .graphs_registry import regist_graph, InputHandler, EventHandler, State, async_history_manager
+from chatchat.server.utils import build_logger, get_st_graph_memory, get_tool, add_tools_if_not_exists
+from .graphs_registry import State, register_graph, Graph
 
 logger = build_logger()
 
 
-class BaseGraphEventHandler(EventHandler):
-    def __init__(self):
-        pass
+@register_graph
+class TextToSQLGraph(Graph):
+    name = "text_to_sql"
+    label = "agent"
+    title = "数据库查询机器人"
 
-    def handle_event(self, node: str, event: State) -> BaseMessage:
-        """
-        event example:
-        {
-            'messages': [HumanMessage(
-                            content='The youtube video of Xiao Yixian in Fights Break Sphere?',
-                            id='b9c5468a-7340-425b-ae6f-2f584a961014')],
-            'history': [HumanMessage(
-                            content='The youtube video of Xiao Yixian in Fights Break Sphere?',
-                            id='b9c5468a-7340-425b-ae6f-2f584a961014')]
-        }
-        """
-        return event["messages"][0]
+    def __init__(self,
+                 llm: ChatOpenAI,
+                 tools: list[BaseTool],
+                 history_len: int):
+        super().__init__(llm, tools, history_len)
+        query_sql_data = get_tool(name="query_sql_data")
+        self.tools = add_tools_if_not_exists(tools_provides=self.tools, tools_need_append=[query_sql_data])
+        self.llm_with_tools = self.llm.bind_tools(self.tools)
 
-
-@regist_graph(name="text_to_sql",
-              input_handler=InputHandler,
-              event_handler=BaseGraphEventHandler)
-def text_to_sql(llm: ChatOpenAI, tools: list[BaseTool], history_len: int) -> CompiledStateGraph:
-    """
-    description: text to sql, only select
-    """
-    if not isinstance(llm, ChatOpenAI):
-        raise TypeError("llm must be an instance of ChatOpenAI")
-    if not all(isinstance(tool, BaseTool) for tool in tools):
-        raise TypeError("All items in tools must be instances of BaseTool")
-
-    memory = get_st_graph_memory()
-
-    graph_builder = StateGraph(State)
-
-    async def history_manager(state: State) -> State:
-        state = await async_history_manager(state, history_len)
-        return state
-
-    async def sql_executor(state: State) -> State:
+    async def sql_executor(self, state: State) -> State:
         # ToolNode 默认只将结果追加到 messages 队列中, 所以需要手动在 history 中追加 ToolMessage 结果, 否则报错如下:
         # Error code: 400 -
         # {
@@ -67,7 +43,7 @@ def text_to_sql(llm: ChatOpenAI, tools: list[BaseTool], history_len: int) -> Com
 
         sql_prompt = ChatPromptTemplate.from_template(
             """你是一个智能数据库查询助手, 负责将用户需求转换为 SQL 查询语句. 请根据数据库中表和字段的作用以及用户的需求, 生成准确高效的 SQL 查询语句.
-            
+
             以下是库表信息和核心字段的说明:
             # 库:作用
             yunzhi_docker_hub:储存了 yunzhi_docker_hub 平台的关系型数据
@@ -225,7 +201,7 @@ def text_to_sql(llm: ChatOpenAI, tools: list[BaseTool], history_len: int) -> Com
             |            9242 | tcs_public        | 2022-08-19 15:08:34  | 2022-08-19 15:08:34  |   10511 |    6620 | dickonliu   |
             |            9242 | tcs_public        | 2022-08-23 11:30:59  | 2022-08-23 11:30:59  |   10511 |   16832 | yuehuazhang |
             +-----------------+-------------------+----------------------+----------------------+---------+---------+-------------+
-            
+
             2.需求: 查询用户`yuehuazhang`的信息
             SQL: `SELECT * FROM user WHERE name='yuehuazhang';`
             返回:
@@ -237,15 +213,16 @@ def text_to_sql(llm: ChatOpenAI, tools: list[BaseTool], history_len: int) -> Com
             """
         )
 
-        llm_with_tools = sql_prompt | llm.bind_tools(tools)
+        llm_with_tools = sql_prompt | self.llm_with_tools
 
         messages = llm_with_tools.invoke(state)
         state["messages"] = [messages]
         # 因为 chatbot 执行依赖于 state["history"], 所以在同一次 workflow 没有执行结束前, 需要将每一次输出内容都追加到 state["history"] 队列中缓存起来
         state["history"].append(messages)
+
         return state
 
-    async def result_synthesizer(state: State) -> State:
+    async def result_synthesizer(self, state: State) -> State:
         # ToolNode 默认只将结果追加到 messages 队列中, 所以需要手动在 history 中追加 ToolMessage 结果, 否则报错如下:
         # Error code: 400 -
         # {
@@ -266,46 +243,59 @@ def text_to_sql(llm: ChatOpenAI, tools: list[BaseTool], history_len: int) -> Com
             """
         )
 
-        llm_result_synthesizer = result_synthesizer_prompt | llm
+        llm_result_synthesizer = result_synthesizer_prompt | self.llm
 
         messages = llm_result_synthesizer.invoke(state)
         state["messages"] = [messages]
         # 因为 chatbot 执行依赖于 state["history"], 所以在同一次 workflow 没有执行结束前, 需要将每一次输出内容都追加到 state["history"] 队列中缓存起来
         state["history"].append(messages)
+
         return state
 
-    # def tools_condition(
-    #         state: Union[list[AnyMessage], dict[str, Any], BaseModel],
-    # ) -> Literal["tools", "__end__"]:
-    #     if isinstance(state, list):
-    #         ai_message = state[-1]
-    #     elif isinstance(state, dict) and (messages := state.get("messages", [])):
-    #         ai_message = messages[-1]
-    #     elif messages := getattr(state, "messages", []):
-    #         ai_message = messages[-1]
-    #     else:
-    #         raise ValueError(f"No messages found in input state to tool_edge: {state}")
-    #     if hasattr(ai_message, "tool_calls") and len(ai_message.tool_calls) > 0:
-    #         return "tools"
-    #     return "__end__"
+    def get_graph(self) -> CompiledStateGraph:
+        """
+        description: text to sql, only select
+        """
+        if not isinstance(self.llm, ChatOpenAI):
+            raise TypeError("llm must be an instance of ChatOpenAI")
+        if not all(isinstance(tool, BaseTool) for tool in self.tools):
+            raise TypeError("All items in tools must be instances of BaseTool")
 
-    tool_node = ToolNode(tools=tools)
+        memory = get_st_graph_memory()
 
-    graph_builder.add_node("history_manager", history_manager)
-    graph_builder.add_node("sql_executor", sql_executor)
-    graph_builder.add_node("result_synthesizer", result_synthesizer)
-    graph_builder.add_node("tools", tool_node)
+        graph_builder = StateGraph(State)
 
-    graph_builder.set_entry_point("history_manager")
-    graph_builder.add_edge("history_manager", "sql_executor")
-    graph_builder.add_conditional_edges(
-        "sql_executor",
-        tools_condition,
-    )
-    # graph_builder.add_edge("sql_executor", "tools")
-    graph_builder.add_edge("tools", "result_synthesizer")
-    graph_builder.add_edge("result_synthesizer", END)
+        tool_node = ToolNode(tools=self.tools)
 
-    graph = graph_builder.compile(checkpointer=memory)
+        graph_builder.add_node("history_manager", self.async_history_manager)
+        graph_builder.add_node("sql_executor", self.sql_executor)
+        graph_builder.add_node("result_synthesizer", self.result_synthesizer)
+        graph_builder.add_node("tools", tool_node)
 
-    return graph
+        graph_builder.set_entry_point("history_manager")
+        graph_builder.add_edge("history_manager", "sql_executor")
+        graph_builder.add_conditional_edges(
+            "sql_executor",
+            tools_condition,
+        )
+        graph_builder.add_edge("tools", "result_synthesizer")
+        graph_builder.add_edge("result_synthesizer", END)
+
+        graph = graph_builder.compile(checkpointer=memory)
+
+        return graph
+
+    @staticmethod
+    async def handle_event(node: str, event: State) -> BaseMessage:
+        """
+        event example:
+        {
+            'messages': [HumanMessage(
+                            content='The youtube video of Xiao Yixian in Fights Break Sphere?',
+                            id='b9c5468a-7340-425b-ae6f-2f584a961014')],
+            'history': [HumanMessage(
+                            content='The youtube video of Xiao Yixian in Fights Break Sphere?',
+                            id='b9c5468a-7340-425b-ae6f-2f584a961014')]
+        }
+        """
+        return event["messages"][-1]
