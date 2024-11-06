@@ -23,7 +23,7 @@ on:
 #      - '.github/ISSUE_TEMPLATE/**'
 #      - 'docker/docker-compose.yaml'
 env:
-  TZ: Asia/Shanghais
+  TZ: Asia/Shanghai
 jobs:
   docker-build:
     runs-on: ubuntu-latest
