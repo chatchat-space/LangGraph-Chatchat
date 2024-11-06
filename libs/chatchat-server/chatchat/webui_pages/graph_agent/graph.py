@@ -240,10 +240,8 @@ async def handle_user_input(
                     node, response = extract_node_and_response(event)
                     # debug
                     print(f"--- node: {node} ---")
-                    # rich.print(response)
-                    # event_handler = get_graph_event_handler(graph_name)
-                    # # 获取 event
-                    # response = event_handler.handle_event(node=node, event=response)
+                    rich.print(response)
+
                     # 获取 event
                     response = await graph_class_instance.handle_event(node=node, event=response)
                     # 将 event 转化为 json
@@ -352,7 +350,7 @@ def graph_agent_page():
 
             tools_list = list_tools()
             # tool_names = ["None"] + list(tools_list)
-            if selected_graph == "text_to_sql":
+            if selected_graph == "数据库查询机器人":
                 selected_tools = st.multiselect(
                     label="选择工具",
                     options=["query_sql_data"],
@@ -390,7 +388,7 @@ def graph_agent_page():
         st.title("自媒体文章生成")
         with st.chat_message("assistant"):
             st.write("Hello 👋😊，我是自媒体文章生成 Agent，输入任意内容以启动工作流～")
-    elif selected_graph == "text_to_sql":
+    elif selected_graph == "数据库查询机器人":
         st.title("数据库查询")
         with st.chat_message("assistant"):
             st.write("Hello 👋😊，我是数据库查询机器人，输入你想查询的内容～")
@@ -407,11 +405,11 @@ def graph_agent_page():
             st.session_state["messages"] = []
             st.rerun()
         if selected_graph == "article_generation":
-            user_input = cols[2].chat_input("请你帮我生成一篇自媒体文章")
-        elif selected_graph == "text_to_sql":
-            user_input = cols[2].chat_input("请你帮忙使用工具, 查看组织`tcs_public`的成员有哪些？")
+            user_input = cols[2].chat_input("请你帮我生成一篇自媒体文章 (换行:Shift+Enter)")
+        elif selected_graph == "数据库查询机器人":
+            user_input = cols[2].chat_input("请你帮忙使用工具, 查看组织`tcs_public`的成员有哪些？(换行:Shift+Enter)")
         else:
-            user_input = cols[2].chat_input("尝试输入任何内容和我聊天呦")
+            user_input = cols[2].chat_input("尝试输入任何内容和我聊天呦 (换行:Shift+Enter)")
 
     # get_tool() 是所有工具的名称和对象的 dict 的列表
     all_tools = get_tool().values()
@@ -430,7 +428,6 @@ def graph_agent_page():
                               max_tokens=None,
                               temperature=st.session_state["temperature"],
                               stream=True)
-    rich.print(llm)
 
     # 创建 langgraph 实例
     graph_class = get_graph_class_by_label_and_title(label="agent", title=selected_graph)
@@ -443,7 +440,6 @@ def graph_agent_page():
     graph = graph_class.get_graph()
     if not graph:
         raise ValueError(f"Graph '{selected_graph}' is not registered.")
-    rich.print(graph)
 
     # langgraph 配置文件
     graph_config = {

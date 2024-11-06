@@ -57,7 +57,8 @@ async def handle_user_input(
                 node, response = extract_node_and_response(event)
                 # debug
                 print(f"--- node: {node} ---")
-                # rich.print(response)
+                rich.print(response)
+
                 # 获取 event
                 response = await graph_class_instance.handle_event(node=node, event=response)
                 # 将 event 转化为 json
@@ -233,7 +234,6 @@ def graph_rag_page(api: ApiRequest):
                               max_tokens=None,
                               temperature=st.session_state["temperature"],
                               stream=True)
-    rich.print(llm)
 
     # 创建 langgraph 实例
     graph_class = get_graph_class_by_label_and_title(label="rag", title=selected_graph)
@@ -248,7 +248,6 @@ def graph_rag_page(api: ApiRequest):
     graph = graph_class.get_graph()
     if not graph:
         raise ValueError(f"Graph '{selected_graph}' is not registered.")
-    rich.print(graph)
 
     # langgraph 配置文件
     graph_config = {

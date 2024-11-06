@@ -6,9 +6,9 @@
 
 🌍 [READ THIS IN ENGLISH](README_en.md)
 
-📃 **LangChain-Chatchat** (原 Langchain-ChatGLM)
+📃 **LangGraph-Chatchat** (原 Langchain-Chatchat)
 
-基于 ChatGLM 等大语言模型与 Langchain 等应用框架实现，开源、可离线部署的 RAG 与 Agent 应用项目。
+基于 ChatGLM 等大语言模型与 LangGraph 等应用框架实现，开源、可离线部署的 RAG 与 Agent 应用项目。
 
 ---
 
@@ -347,19 +347,19 @@ docker pull ccr.ccs.tencentyun.com/langchain-chatchat/chatchat:0.3.1.3-93e2c87-2
 
 <img src="docs/img/qr_code_116_2.jpg" alt="二维码" width="300" />
 
-🎉 Langchain-Chatchat 项目微信交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。
+🎉 LangGraph-Chatchat 项目微信交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。
 
 ## 引用
 
 如果本项目有帮助到您的研究，请引用我们：
 
 ```
-@software{langchain-chatchat/keng,
-    title        = {{langchain-chatchat/keng}},
+@software{LangGraph-Chatchat,
+    title        = {{LangGraph-Chatchat}},
     author       = {Liu, Qian and Zhang, Yuehua, and Song, Jinke, and Huang, Zhiguo, and Zhang, Yuxuan, and glide-the, and liunux4odoo},
     year         = 2024,
     journal      = {GitHub repository},
     publisher    = {GitHub},
-    howpublished = {\url{https://github.com/chatchat-space/Keng}}
+    howpublished = {\url{https://github.com/chatchat-space/LangGraph-Chatchat}}
 }
 ```
