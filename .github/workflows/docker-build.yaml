@@ -10,20 +10,20 @@ on:
       - '.github/actions/**'
       - '.github/ISSUE_TEMPLATE/**'
       - 'docker/docker-compose.yaml'
-  pull_request:
-    branches:
-      - master
-    types:
-      - closed
-    paths-ignore:
-      - 'README.md'
-      - 'README_en.md'
-      - 'docs/**'
-      - '.github/actions/**'
-      - '.github/ISSUE_TEMPLATE/**'
-      - 'docker/docker-compose.yaml'
+#  pull_request:
+#    branches:
+#      - master
+#    types:
+#      - closed
+#    paths-ignore:
+#      - 'README.md'
+#      - 'README_en.md'
+#      - 'docs/**'
+#      - '.github/actions/**'
+#      - '.github/ISSUE_TEMPLATE/**'
+#      - 'docker/docker-compose.yaml'
 env:
-  TZ: Asia/Shanghai
+  TZ: Asia/Shanghais
 jobs:
   docker-build:
     runs-on: ubuntu-latest
