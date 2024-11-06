@@ -1,12 +1,10 @@
 from typing import Callable, Any, Dict, Type, Annotated, List, Optional, TypedDict, TypeVar
 from abc import ABC, abstractmethod
 
-import rich
 from langchain_core.tools import BaseTool
 from langchain_openai import ChatOpenAI
 from langgraph.graph.message import add_messages
 from langchain_core.messages import BaseMessage, ToolMessage, AIMessage, filter_messages
-from pydantic import BaseModel
 from langgraph.graph.state import CompiledStateGraph
 
 from chatchat.server.utils import build_logger
@@ -19,7 +17,7 @@ __all__ = [
     "InputHandler",
     "EventHandler",
     "State",
-    "Response",
+    # "Response",
     "async_history_manager",
     "human_feedback",
     "break_point",
@@ -158,12 +156,11 @@ class Graph:
         self.tools = tools
         self.history_len = history_len
 
-    @abstractmethod
-    async def chatbot(self, state: Type[State]) -> Type[State]:
-        """
-        定义了 graph 中 llm 的消息处理逻辑, 子类必须实现.
-        """
-        pass
+    # async def chatbot(self, state: Type[State]) -> Type[State]:
+    #     """
+    #     定义了 graph 中 llm 的消息处理逻辑, 子类必须实现.
+    #     """
+    #     pass
 
     @abstractmethod
     def get_graph(self) -> CompiledStateGraph:
@@ -187,7 +184,6 @@ class Graph:
         todo: 目前 history_len 直接截取了 messages 长度, 希望通过 对话轮数 来限制.
         todo: 原因: 一轮对话会追加数个 message, 但是目前没有从 snapshot(graph.get_state) 中找到很好的办法来获取一轮对话.
         """
-        print("---HISTORY MANAGER---")
         try:
             filtered_messages = []
             for message in filter_messages(state["messages"], exclude_types=[ToolMessage]):
