@@ -59,6 +59,9 @@ async def handle_user_input(
                 print(f"--- node: {node} ---")
                 rich.print(response)
 
+                if node == "history_manager":  # history_manager node 为内部实现, 不外显
+                    continue
+
                 # 获取 event
                 response = await graph_class_instance.handle_event(node=node, event=response)
                 # 将 event 转化为 json
@@ -67,8 +70,6 @@ async def handle_user_input(
                 # rich.print(response)
                 response_last = response["content"]
 
-                if node == "history_manager":  # history_manager node 为内部实现, 不外显
-                    continue
                 with st.status(node, expanded=True) as status:
                     st.json(response, expanded=True)
                     status.update(
