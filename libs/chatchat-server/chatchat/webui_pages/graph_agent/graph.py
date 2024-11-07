@@ -240,17 +240,23 @@ async def handle_user_input(
                     node, response = extract_node_and_response(event)
                     # debug
                     print(f"--- node: {node} ---")
-                    rich.print(response)
+                    # rich.print(response)
+
+                    if node == "history_manager":  # history_manager node 为内部实现, 不外显
+                        continue
 
                     # 获取 event
                     response = await graph_class_instance.handle_event(node=node, event=response)
                     # 将 event 转化为 json
                     response = serialize_content_to_json(response)
-                    # rich.print(response)
-                    response_last = response["content"]
+                    rich.print(response)
 
-                    if node == "history_manager":  # history_manager node 为内部实现, 不外显
-                        continue
+                    # 检查 'content' 是否在响应中(因为我们只需要 AIMessage 的内容)
+                    if "content" in response:
+                        response_last = response["content"]
+                    elif "response" in response:  # plan_execute_agent
+                        response_last = response["response"]
+
                     with st.status(node, expanded=True) as status:
                         st.json(response, expanded=True)
                         status.update(
@@ -407,7 +413,7 @@ def graph_agent_page():
         if selected_graph == "article_generation":
             user_input = cols[2].chat_input("请你帮我生成一篇自媒体文章 (换行:Shift+Enter)")
         elif selected_graph == "数据库查询机器人":
-            user_input = cols[2].chat_input("请你帮忙使用工具, 查看组织`tcs_public`的成员有哪些？(换行:Shift+Enter)")
+            user_input = cols[2].chat_input("请你帮忙调用工具, 查看组织`tcs_public`的成员有哪些？(换行:Shift+Enter)")
         else:
             user_input = cols[2].chat_input("尝试输入任何内容和我聊天呦 (换行:Shift+Enter)")
 

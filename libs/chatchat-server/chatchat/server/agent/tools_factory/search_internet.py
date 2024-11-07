@@ -16,7 +16,7 @@ from chatchat.server.utils import get_tool_config
 from .tools_registry import BaseToolOutput, regist_tool, format_context
 
 
-def searx_search(text ,config, top_k: int):
+def searx_search(text, config, top_k: int):
     search = SearxSearchWrapper(
         searx_host=config["host"],
         engines=config["engines"],
@@ -26,7 +26,7 @@ def searx_search(text ,config, top_k: int):
     return search.results(text, top_k)
 
 
-def bing_search(text, config, top_k:int):
+def bing_search(text, config, top_k: int):
     search = BingSearchAPIWrapper(
         bing_subscription_key=config["bing_key"],
         bing_search_url=config["bing_search_url"],
@@ -115,7 +115,7 @@ def search_result2docs(search_results) -> List[Document]:
     return docs
 
 
-def search_engine(query: str, top_k:int=0, engine_name: str="", config: dict={}):
+def search_engine(query: str, top_k: int = 0, engine_name: str = "", config: dict = {}):
     config = config or get_tool_config("search_internet")
     if top_k <= 0:
         top_k = config.get("top_k", Settings.kb_settings.SEARCH_ENGINE_TOP_K)
@@ -131,4 +131,5 @@ def search_engine(query: str, top_k:int=0, engine_name: str="", config: dict={})
 @regist_tool(title="互联网搜索")
 def search_internet(query: str = Field(description="query for Internet search")):
     """Use this tool to use bing search engine to search the internet and get information."""
-    return BaseToolOutput(search_engine(query=query), format=format_context)
+    # return BaseToolOutput(search_engine(query=query), format=format_context)
+    return BaseToolOutput(search_engine(query=query))
