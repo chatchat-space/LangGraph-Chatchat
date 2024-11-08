@@ -3,8 +3,8 @@
 """
 import requests
 import re
+from pydantic import Field
 
-from chatchat.server.pydantic_v1 import Field
 from chatchat.server.agent.tools_factory.tools_registry import format_context
 from chatchat.server.utils import get_tool_config, build_logger
 

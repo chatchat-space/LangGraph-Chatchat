@@ -4,8 +4,8 @@ from langchain_core.prompts.prompt import PromptTemplate
 from langchain_experimental.sql import SQLDatabaseChain, SQLDatabaseSequentialChain
 from sqlalchemy import event
 from sqlalchemy.exc import OperationalError
+from pydantic import Field
 
-from chatchat.server.pydantic_v1 import Field
 from chatchat.server.utils import get_tool_config
 
 from .tools_registry import BaseToolOutput, regist_tool

@@ -15,7 +15,7 @@ logger = build_logger()
 class BaseAgentGraph(Graph):
     name = "base_agent"
     label = "agent"
-    title = "聊天机器人[纯净版]"
+    title = "聊天机器人"
 
     def __init__(self,
                  llm: ChatOpenAI,
