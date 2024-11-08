@@ -256,6 +256,8 @@ async def handle_user_input(
                         response_last = response["content"]
                     elif "response" in response:  # plan_execute_agent
                         response_last = response["response"]
+                    elif "answer" in response:  # reflexion
+                        response_last = response["answer"]
 
                     with st.status(node, expanded=True) as status:
                         st.json(response, expanded=True)
@@ -356,7 +358,7 @@ def graph_agent_page():
 
             tools_list = list_tools()
             # tool_names = ["None"] + list(tools_list)
-            if selected_graph == "数据库查询机器人":
+            if selected_graph == "数据库查询机器人[Beta]":
                 selected_tools = st.multiselect(
                     label="选择工具",
                     options=["query_sql_data"],
@@ -394,7 +396,7 @@ def graph_agent_page():
         st.title("自媒体文章生成")
         with st.chat_message("assistant"):
             st.write("Hello 👋😊，我是自媒体文章生成 Agent，输入任意内容以启动工作流～")
-    elif selected_graph == "数据库查询机器人":
+    elif selected_graph == "数据库查询机器人[Beta]":
         st.title("数据库查询")
         with st.chat_message("assistant"):
             st.write("Hello 👋😊，我是数据库查询机器人，输入你想查询的内容～")
@@ -412,7 +414,7 @@ def graph_agent_page():
             st.rerun()
         if selected_graph == "article_generation":
             user_input = cols[2].chat_input("请你帮我生成一篇自媒体文章 (换行:Shift+Enter)")
-        elif selected_graph == "数据库查询机器人":
+        elif selected_graph == "数据库查询机器人[Beta]":
             user_input = cols[2].chat_input("请你帮忙调用工具, 查看组织`tcs_public`的成员有哪些？(换行:Shift+Enter)")
         else:
             user_input = cols[2].chat_input("尝试输入任何内容和我聊天呦 (换行:Shift+Enter)")
@@ -434,6 +436,7 @@ def graph_agent_page():
                               max_tokens=None,
                               temperature=st.session_state["temperature"],
                               stream=True)
+    logger.info(f"Loaded llm: {llm}")
 
     # 创建 langgraph 实例
     graph_class = get_graph_class_by_label_and_title(label="agent", title=selected_graph)
@@ -446,6 +449,7 @@ def graph_agent_page():
     graph = graph_class.get_graph()
     if not graph:
         raise ValueError(f"Graph '{selected_graph}' is not registered.")
+    st.toast(f"已加载工作流: {selected_graph}")
 
     # langgraph 配置文件
     graph_config = {
@@ -453,8 +457,7 @@ def graph_agent_page():
             "thread_id": st.session_state["conversation_id"]
         },
     }
-
-    logger.info(f"graph: '{selected_graph}', configurable: '{graph_config}'")
+    logger.info(f"Loaded graph: '{selected_graph}', configurable: '{graph_config}'")
 
     # 绘制流程图并缓存
     graph_flow_image_name = f"{selected_graph}_flow_image"

@@ -235,6 +235,7 @@ def graph_rag_page(api: ApiRequest):
                               max_tokens=None,
                               temperature=st.session_state["temperature"],
                               stream=True)
+    logger.info(f"Loaded llm: {llm}")
 
     # 创建 langgraph 实例
     graph_class = get_graph_class_by_label_and_title(label="rag", title=selected_graph)
@@ -249,6 +250,7 @@ def graph_rag_page(api: ApiRequest):
     graph = graph_class.get_graph()
     if not graph:
         raise ValueError(f"Graph '{selected_graph}' is not registered.")
+    st.toast(f"已加载工作流: {selected_graph}")
 
     # langgraph 配置文件
     graph_config = {
@@ -256,8 +258,7 @@ def graph_rag_page(api: ApiRequest):
             "thread_id": st.session_state["conversation_id"]
         },
     }
-
-    logger.info(f"graph: '{selected_graph}', configurable: '{graph_config}'")
+    logger.info(f"Loaded graph: '{selected_graph}', configurable: '{graph_config}'")
 
     # 绘制流程图并缓存
     graph_flow_image_name = f"{selected_graph}_flow_image"

@@ -2,12 +2,12 @@ import requests
 from requests.auth import HTTPBasicAuth
 from urllib.parse import parse_qs
 from typing import Optional
+from pydantic import Field
 
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 
-from chatchat.server.pydantic_v1 import Field
 from chatchat.server.utils import (
     get_tool_config,
     get_default_llm,

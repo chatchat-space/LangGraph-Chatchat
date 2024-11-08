@@ -6,9 +6,9 @@ from typing import List, Literal
 
 import openai
 from PIL import Image
+from pydantic import Field
 
 from chatchat.settings import Settings
-from chatchat.server.pydantic_v1 import Field
 from chatchat.server.utils import MsgType, get_tool_config, get_model_info
 
 from .tools_registry import BaseToolOutput, regist_tool

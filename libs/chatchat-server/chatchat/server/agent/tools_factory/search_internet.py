@@ -1,22 +1,29 @@
 from typing import Dict, List
-
+from pydantic import Field
 from langchain.docstore.document import Document
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.utilities.bing_search import BingSearchAPIWrapper
-from langchain_community.utilities.duckduckgo_search import DuckDuckGoSearchAPIWrapper
-from langchain_community.utilities.searx_search import SearxSearchWrapper
-from langchain_community.utilities.tavily_search import TavilySearchAPIWrapper
-from markdownify import markdownify
-from strsimpy.normalized_levenshtein import NormalizedLevenshtein
 
 from chatchat.settings import Settings
-from chatchat.server.pydantic_v1 import Field
 from chatchat.server.utils import get_tool_config
 
-from .tools_registry import BaseToolOutput, regist_tool, format_context
+from .tools_registry import BaseToolOutput, regist_tool
+
+
+def duckduckgo_search(text, top_k: int):
+    from langchain_community.utilities.duckduckgo_search import DuckDuckGoSearchAPIWrapper
+    search = DuckDuckGoSearchAPIWrapper()
+    return search.results(text, top_k)
+
+
+def tavily_search(text, config, top_k: int):
+    from langchain_community.utilities.tavily_search import TavilySearchAPIWrapper
+    search = TavilySearchAPIWrapper(
+        tavily_api_key=config["tavily_key"],
+    )
+    return search.results(text, top_k)
 
 
 def searx_search(text, config, top_k: int):
+    from langchain_community.utilities.searx_search import SearxSearchWrapper
     search = SearxSearchWrapper(
         searx_host=config["host"],
         engines=config["engines"],
@@ -27,6 +34,7 @@ def searx_search(text, config, top_k: int):
 
 
 def bing_search(text, config, top_k: int):
+    from langchain_community.utilities.bing_search import BingSearchAPIWrapper
     search = BingSearchAPIWrapper(
         bing_subscription_key=config["bing_key"],
         bing_search_url=config["bing_search_url"],
@@ -34,24 +42,16 @@ def bing_search(text, config, top_k: int):
     return search.results(text, top_k)
 
 
-def tavily_search(text, config, top_k: int):
-    search = TavilySearchAPIWrapper(
-        tavily_api_key=config["tavily_key"],
-    )
-    return search.results(text, top_k)
-
-
-def duckduckgo_search(text, config, top_k: int):
-    search = DuckDuckGoSearchAPIWrapper()
-    return search.results(text, top_k)
-
-
 def metaphor_search(
     text: str,
     config: dict,
-    top_k:int
+    top_k: int
 ) -> List[Dict]:
     from metaphor_python import Metaphor
+    from langchain.text_splitter import RecursiveCharacterTextSplitter
+    from strsimpy.normalized_levenshtein import NormalizedLevenshtein
+
+    from markdownify import markdownify
 
     client = Metaphor(config["metaphor_api_key"])
     search = client.search(text, num_results=top_k, use_autoprompt=True)
@@ -101,20 +101,6 @@ SEARCH_ENGINES = {
 }
 
 
-def search_result2docs(search_results) -> List[Document]:
-    docs = []
-    for result in search_results:
-        doc = Document(
-            page_content=result["snippet"] if "snippet" in result.keys() else "",
-            metadata={
-                "source": result["link"] if "link" in result.keys() else "",
-                "filename": result["title"] if "title" in result.keys() else "",
-            },
-        )
-        docs.append(doc)
-    return docs
-
-
 def search_engine(query: str, top_k: int = 0, engine_name: str = "", config: dict = {}):
     config = config or get_tool_config("search_internet")
     if top_k <= 0:
@@ -124,12 +110,10 @@ def search_engine(query: str, top_k: int = 0, engine_name: str = "", config: dic
     results = search_engine_use(
         text=query, config=config["search_engine_config"][engine_name], top_k=top_k
     )
-    docs = [x for x in search_result2docs(results) if x.page_content and x.page_content.strip()]
-    return {"docs": docs, "search_engine": engine_name}
+    return results
 
 
 @regist_tool(title="互联网搜索")
 def search_internet(query: str = Field(description="query for Internet search")):
     """Use this tool to use bing search engine to search the internet and get information."""
-    # return BaseToolOutput(search_engine(query=query), format=format_context)
     return BaseToolOutput(search_engine(query=query))

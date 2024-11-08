@@ -1,6 +1,6 @@
 from langchain_community.tools.sql_database.tool import QuerySQLDataBaseTool
 from langchain_community.utilities.sql_database import SQLDatabase
-from chatchat.server.pydantic_v1 import Field
+from pydantic import Field
 from chatchat.server.utils import get_tool_config, build_logger
 from .tools_registry import BaseToolOutput, regist_tool
 

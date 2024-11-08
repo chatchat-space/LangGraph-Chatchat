@@ -16,7 +16,7 @@ logger = build_logger()
 class TextToSQLGraph(Graph):
     name = "text_to_sql"
     label = "agent"
-    title = "数据库查询机器人"
+    title = "数据库查询机器人[Beta]"
 
     def __init__(self,
                  llm: ChatOpenAI,
