@@ -2,8 +2,8 @@
 简单的单参数输入工具实现，用于查询现在天气的情况
 """
 import requests
+from pydantic import Field
 
-from chatchat.server.pydantic_v1 import Field
 from chatchat.server.utils import get_tool_config
 
 from .tools_registry import BaseToolOutput, regist_tool

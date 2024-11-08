@@ -1,10 +1,11 @@
 import requests
-from chatchat.server.pydantic_v1 import Field
+from pydantic import Field
 from .tools_registry import BaseToolOutput, regist_tool
 from chatchat.server.utils import get_tool_config
 
 BASE_DISTRICT_URL = "https://restapi.amap.com/v3/config/district"
 BASE_WEATHER_URL = "https://restapi.amap.com/v3/weather/weatherInfo"
+
 
 def get_adcode(city: str, config: dict) -> str:
     """Get the adcode"""
@@ -22,6 +23,7 @@ def get_adcode(city: str, config: dict) -> str:
     else:
         return None
 
+
 def get_weather(adcode: str, config: dict) -> dict:
     """Get  weather information."""
     API_KEY = config["api_key"]
@@ -35,6 +37,7 @@ def get_weather(adcode: str, config: dict) -> dict:
         return response.json()
     else:
         return {"error": "API request failed"}
+
 
 @regist_tool(title="高德地图天气查询")
 def amap_weather(city: str = Field(description="城市名")):

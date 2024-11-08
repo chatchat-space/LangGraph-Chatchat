@@ -1,4 +1,4 @@
-from chatchat.server.pydantic_v1 import Field
+from pydantic import Field
 
 from .tools_registry import BaseToolOutput, regist_tool
 

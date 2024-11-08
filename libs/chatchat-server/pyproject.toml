@@ -75,6 +75,7 @@ tiktoken = "^0.8.0"
 langchain-openai = "^0.2.5"
 langchain-community = "^0.3.5"
 mysqlclient = "^2.2.5"
+metaphor-python = "^0.1.23"
 [tool.poetry.extras]
 xinference = ["xinference_client"]
 zhipuai = ["zhipuai"]

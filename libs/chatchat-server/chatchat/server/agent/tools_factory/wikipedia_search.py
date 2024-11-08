@@ -1,10 +1,7 @@
 # LangChain 的 WikipediaQueryRun 工具
+from pydantic import Field
 from langchain_community.tools import WikipediaQueryRun
 from langchain_community.utilities import WikipediaAPIWrapper
-from chatchat.server.pydantic_v1 import Field
-
-
-
 from .tools_registry import BaseToolOutput, regist_tool
 
 

@@ -165,3 +165,24 @@ def format_context(self: BaseToolOutput) -> str:
             context += doc + "\n\n"
 
     return context
+
+
+def format_context(self: BaseToolOutput) -> str:
+    """
+    将包含知识库输出的ToolOutput格式化为 LLM 需要的字符串
+    """
+    context = ""
+    docs = self.data["docs"]
+    source_documents = []
+
+    for inum, doc in enumerate(docs):
+        doc = DocumentWithVSId.parse_obj(doc)
+        source_documents.append(doc.page_content)
+
+    if len(source_documents) == 0:
+        context = "没有找到相关文档,请更换关键词重试"
+    else:
+        for doc in source_documents:
+            context += doc + "\n\n"
+
+    return context
