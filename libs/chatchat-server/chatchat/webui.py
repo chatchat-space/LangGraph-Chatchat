@@ -11,11 +11,13 @@ from chatchat.webui_pages.utils import *
 
 api = ApiRequest(base_url=api_address())
 
+
 if __name__ == "__main__":
     is_lite = "lite" in sys.argv  # TODO: remove lite mode
+    # 设置默认头像
 
     st.set_page_config(
-        "Langchain-Chatchat",
+        "LangGraph-Chatchat",
         get_img_base64("chatchat_icon_blue_square_v2.png"),
         initial_sidebar_state="expanded",
         menu_items={
@@ -45,7 +47,7 @@ if __name__ == "__main__":
 
     with st.sidebar:
         st.image(
-            get_img_base64("logo-long-chatchat-trans-v2.png"), use_column_width=True
+            get_img_base64("logo-long-langraph-chatchat.jpg"), use_column_width=True
         )
         st.caption(
             f"""<p align="right">当前版本：{__version__}</p>""",

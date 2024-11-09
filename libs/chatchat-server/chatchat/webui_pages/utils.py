@@ -734,6 +734,24 @@ def get_img_base64(file_name: str) -> str:
     return f"data:image/png;base64,{base_str}"
 
 
+def create_chat_message(
+        role: Literal["user", "assistant"],
+        content: str,
+        node: Optional[str],
+        expanded: Optional[bool],
+        type: Literal["text", "json"],
+        is_last_message: bool
+):
+    return {
+        "role": role,
+        "content": content,
+        "node": node,
+        "expanded": expanded,
+        "type": type,
+        "is_last_message": is_last_message
+    }
+
+
 if __name__ == "__main__":
     api = ApiRequest()
     aapi = AsyncApiRequest()

@@ -28,6 +28,30 @@ logger = build_logger()
 def init_conversation_id():
     if "conversation_id" not in st.session_state:
         st.session_state["conversation_id"] = str(uuid.uuid4())
+    # 设置默认头像
+    if "assistant_avatar" not in st.session_state:
+        st.session_state["assistant_avatar"] = get_img_base64("chatchat_icon_blue_square_v2.png")
+    # 创建 streamlit 消息缓存
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+    # 初始化模型配置
+    if "platform" not in st.session_state:
+        st.session_state["platform"] = "所有"
+    if "llm_model" not in st.session_state:
+        st.session_state["llm_model"] = get_default_llm()
+        logger.info("default llm model: {}".format(st.session_state["llm_model"]))
+    if "temperature" not in st.session_state:
+        st.session_state["temperature"] = 0.01
+    if "prompt" not in st.session_state:
+        st.session_state["prompt"] = ""
+    if "selected_kb" not in st.session_state:
+        st.session_state["selected_kb"] = Settings.kb_settings.DEFAULT_KNOWLEDGE_BASE
+    if "history_len" not in st.session_state:
+        st.session_state["history_len"] = Settings.model_settings.HISTORY_LEN
+    if "kb_top_k" not in st.session_state:
+        st.session_state["kb_top_k"] = Settings.kb_settings.VECTOR_SEARCH_TOP_K
+    if "score_threshold" not in st.session_state:
+        st.session_state["score_threshold"] = Settings.kb_settings.SCORE_THRESHOLD
 
 
 def extract_node_and_response(data):
@@ -51,7 +75,7 @@ async def handle_user_input(
     events = graph.astream(input=graph_input, config=graph_config, stream_mode="updates")
     if events:
         # Display assistant response in chat message container
-        with st.chat_message(name="assistant", avatar=get_img_base64("chatchat_icon_blue_square_v2.png")):
+        with st.chat_message(name="assistant", avatar=st.session_state["assistant_avatar"]):
             response_last = ""
             async for event in events:
                 node, response = extract_node_and_response(event)
@@ -70,19 +94,30 @@ async def handle_user_input(
                 # rich.print(response)
                 response_last = response["content"]
 
+                # Add assistant response to chat history
+                st.session_state.messages.append(create_chat_message(
+                    role="assistant",
+                    content=response,
+                    node=node,
+                    expanded=False,
+                    type="json",
+                    is_last_message=False
+                ))
                 with st.status(node, expanded=True) as status:
                     st.json(response, expanded=True)
                     status.update(
                         label=node, state="complete", expanded=False
                     )
-                # Add assistant response to chat history
-                st.session_state.messages.append({
-                    "role": "assistant",
-                    "content": response,
-                    "node": node,
-                    "expanded": False,
-                    "type": "json"  # 标识为JSON类型
-                })
+
+            # Add assistant response_last to chat history
+            st.session_state.messages.append(create_chat_message(
+                role="assistant",
+                content=response_last,
+                node=None,
+                expanded=None,
+                type="text",
+                is_last_message=True
+            ))
             st.markdown(response_last)
 
 
@@ -133,28 +168,6 @@ def llm_model_setting():
 def graph_rag_page(api: ApiRequest):
     # 初始化会话 id
     init_conversation_id()
-
-    # 创建 streamlit 消息缓存
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
-    # 初始化模型配置
-    if "platform" not in st.session_state:
-        st.session_state["platform"] = "所有"
-    if "llm_model" not in st.session_state:
-        st.session_state["llm_model"] = get_default_llm()
-        logger.info("default llm model: {}".format(st.session_state["llm_model"]))
-    if "temperature" not in st.session_state:
-        st.session_state["temperature"] = 0.01
-    if "prompt" not in st.session_state:
-        st.session_state["prompt"] = ""
-    if "selected_kb" not in st.session_state:
-        st.session_state["selected_kb"] = Settings.kb_settings.DEFAULT_KNOWLEDGE_BASE
-    if "history_len" not in st.session_state:
-        st.session_state["history_len"] = Settings.model_settings.HISTORY_LEN
-    if "kb_top_k" not in st.session_state:
-        st.session_state["kb_top_k"] = Settings.kb_settings.VECTOR_SEARCH_TOP_K
-    if "score_threshold" not in st.session_state:
-        st.session_state["score_threshold"] = Settings.kb_settings.SCORE_THRESHOLD
 
     with st.sidebar:
         tabs_1 = st.tabs(["工作流设置"])
@@ -211,7 +224,7 @@ def graph_rag_page(api: ApiRequest):
     selected_tools_configs = list(selected_tool_configs)
 
     st.title("知识库聊天")
-    with st.chat_message(name="assistant", avatar=get_img_base64("chatchat_icon_blue_square_v2.png")):
+    with st.chat_message(name="assistant", avatar=st.session_state["assistant_avatar"]):
         st.write("Hello 👋😊，我是智能知识库问答机器人，试着输入任何内容和我聊天呦～（ps: 可尝试切换不同知识库）")
 
     with bottom():
@@ -228,7 +241,6 @@ def graph_rag_page(api: ApiRequest):
     tools = [tool for tool in all_tools if tool.name in selected_tools_configs]
 
     # 创建 llm 实例
-    # todo: max_tokens 这里有问题, None 应该是不限制, 但是目前 llm 结果为 4096
     llm_model = st.session_state["llm_model"]
     llm = create_agent_models(configs=None,
                               model=llm_model,
@@ -268,27 +280,51 @@ def graph_rag_page(api: ApiRequest):
     st.sidebar.image(st.session_state[graph_flow_image_name], use_column_width=True)
 
     # 前端存储历史消息(仅作为 st.rerun() 时的 UI 展示)
+    # 临时列表，用于收集 assistant 的消息
+    assistant_messages = []
+
+    # 遍历 st.session_state.messages 并展示消息
     for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            if message["type"] == "json":
-                with st.status(message["node"], expanded=message["expanded"]) as status:
-                    st.json(message["content"], expanded=message["expanded"])
-                    status.update(
-                        label=message["node"], state="complete", expanded=False
-                    )
-            elif message["type"] == "text":
-                st.markdown(message["content"])
+        role = message['role']
+        content = message['content']
+        is_last_message = message.get('is_last_message', False)
+
+        if role == 'user':
+            # 展示 user 消息
+            with st.chat_message("user"):
+                st.markdown(content)
+        elif role == 'assistant':
+            # 收集 assistant 消息
+            assistant_messages.append(message)
+            # 如果是最后一条 assistant 消息，立即展示
+            if is_last_message:
+                with st.chat_message(name="assistant", avatar=st.session_state["assistant_avatar"]):
+                    for msg in assistant_messages:
+                        if msg['is_last_message']:
+                            st.markdown(msg['content'])
+                        else:
+                            with st.status(msg['node'], expanded=True) as status:
+                                st.json(msg['content'], expanded=True)
+                                status.update(
+                                    label=msg['node'], state="complete", expanded=False
+                                )
+                # 清空临时列表
+                assistant_messages = []
 
     # 对话主流程
     if user_input:
+        st.session_state.messages.append(create_chat_message(
+            role="user",
+            content=user_input,
+            node=None,
+            expanded=None,
+            type="text",
+            is_last_message=True
+        ))
         with st.chat_message("user"):
             st.markdown(user_input)
-        st.session_state.messages.append({
-            "role": "user",
-            "content": user_input,
-            "type": "text"
-        })
 
         # Run the async function in a synchronous context
         graph_input = {"messages": [("user", user_input)]}
         asyncio.run(handle_user_input(graph=graph, graph_input=graph_input, graph_config=graph_config, graph_class_instance=graph_class))
+        st.rerun()  # Clear stale containers
