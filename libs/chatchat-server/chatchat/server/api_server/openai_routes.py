@@ -9,7 +9,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import AsyncGenerator, Iterable, Tuple
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter
 from fastapi.responses import FileResponse
 from openai import AsyncClient
 from sse_starlette.sse import EventSourceResponse

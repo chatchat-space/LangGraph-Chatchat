@@ -186,7 +186,7 @@ async def handle_user_input(
                 if node == "history_manager":  # history_manager node 为内部实现, 不外显
                     continue
                 if node == "article_generation_init_break_point":
-                    with st.chat_message("assistant"):
+                    with st.chat_message(name="assistant", avatar=get_img_base64("chatchat_icon_blue_square_v2.png")):
                         st.write("请进行初始化设置")
                         st.session_state.messages.append({
                             "role": "assistant",
@@ -196,7 +196,7 @@ async def handle_user_input(
                     article_generation_init_setting()
                     continue
                 if node == "article_generation_start_break_point":
-                    with st.chat_message("assistant"):
+                    with st.chat_message(name="assistant", avatar=get_img_base64("chatchat_icon_blue_square_v2.png")):
                         st.write("请开始下达指令")
                         st.session_state.messages.append({
                             "role": "assistant",
@@ -207,7 +207,7 @@ async def handle_user_input(
                     article_generation_start_setting()
                     continue
                 if node == "article_generation_repeat_break_point":
-                    with st.chat_message("assistant"):
+                    with st.chat_message(name="assistant", avatar=get_img_base64("chatchat_icon_blue_square_v2.png")):
                         st.write("请确认是否重写")
                         st.session_state.messages.append({
                             "role": "assistant",
@@ -218,7 +218,7 @@ async def handle_user_input(
                     article_generation_repeat_setting()
                     continue
                 # Display assistant response in chat message container
-                with st.chat_message("assistant"):
+                with st.chat_message(name="assistant", avatar=get_img_base64("chatchat_icon_blue_square_v2.png")):
                     with st.status(node, expanded=True) as status:
                         st.json(response, expanded=True)
                         status.update(
@@ -234,7 +234,7 @@ async def handle_user_input(
                     })
         else:
             # Display assistant response in chat message container
-            with st.chat_message("assistant"):
+            with st.chat_message(name="assistant", avatar=get_img_base64("chatchat_icon_blue_square_v2.png")):
                 response_last = ""
                 async for event in events:
                     node, response = extract_node_and_response(event)
@@ -394,16 +394,16 @@ def graph_agent_page():
 
     if selected_graph == "article_generation":
         st.title("自媒体文章生成")
-        with st.chat_message("assistant"):
+        with st.chat_message(name="assistant", avatar=get_img_base64("chatchat_icon_blue_square_v2.png")):
             st.write("Hello 👋😊，我是自媒体文章生成 Agent，输入任意内容以启动工作流～")
     elif selected_graph == "数据库查询机器人[Beta]":
         st.title("数据库查询")
-        with st.chat_message("assistant"):
+        with st.chat_message(name="assistant", avatar=get_img_base64("chatchat_icon_blue_square_v2.png")):
             st.write("Hello 👋😊，我是数据库查询机器人，输入你想查询的内容～")
     else:
-        st.title("智能聊天")
-        with st.chat_message("assistant"):
-            st.write("Hello 👋😊，我是智能聊天机器人，试着输入任何内容和我聊天呦～（ps: 可尝试选择多种工具）")
+        st.title("聊天")
+        with st.chat_message(name="assistant", avatar=get_img_base64("chatchat_icon_blue_square_v2.png")):
+            st.write("Hello 👋😊，我是聊天机器人，试着输入任何内容和我聊天呦～（ps: 可尝试选择多种工具）")
 
     with bottom():
         cols = st.columns([1, 0.2, 15, 1])

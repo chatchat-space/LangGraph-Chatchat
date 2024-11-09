@@ -1,4 +1,4 @@
-from sqlalchemy import JSON, Column, DateTime, Integer, String, func
+from sqlalchemy import Column, DateTime, String, func
 
 from chatchat.server.db.base import Base
 

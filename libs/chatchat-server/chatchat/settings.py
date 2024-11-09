@@ -180,7 +180,7 @@ class KBSettings(BaseFileSettings):
     这样可以避免 PDF 中一些小图片的干扰，提高非扫描版 PDF 处理速度
     """
 
-    KB_INFO: t.Dict[str, str] = {"samples": "关于本项目issue的解答"} # TODO: 都存在数据库了，这个配置项还有必要吗？
+    KB_INFO: t.Dict[str, str] = {"samples": "关于本项目issue的解答"}  # TODO: 都存在数据库了，这个配置项还有必要吗？
     """每个知识库的初始化介绍，用于在初始化知识库时显示和Agent调用，没写则没有介绍，不会被Agent调用。"""
 
     kbs_config: t.Dict[str, t.Dict] = {
@@ -325,9 +325,6 @@ class ApiModelSettings(BaseFileSettings):
     DEFAULT_EMBEDDING_MODEL: str = "bge-m3"
     """默认选用的 Embedding 名称"""
 
-    # Agent_MODEL: str = ""  # TODO: 似乎与 LLM_MODEL_CONFIG 重复了
-    # """AgentLM模型的名称 (可以不指定，指定之后就锁定进入Agent之后的Chain的模型，不指定就是 DEFAULT_LLM_MODEL)"""
-
     HISTORY_LEN: int = 10
     """默认历史对话轮数"""
     """LangGraph Agent 单轮对话可能包含 4 个 Node, 故默认设置为 6"""
@@ -337,27 +334,19 @@ class ApiModelSettings(BaseFileSettings):
 
     TEMPERATURE: float = 0.7
     """LLM通用对话参数"""
-    # 新增重排序模型
-    USE_RERANKER: bool = False
-    """是否使用重排模型"""
-    RERANKER_CONFIG: t.Dict[str, t.Any] = {
-            "model": "bge-reranker-v2-m3",
-            "topk": 5,
-            # "return_obj": "index",
-            "local_path":"./model_hub/bge-reranker-v2-m3",
-            "num_workers":1,
-            "device":"cpu",
-            "limit_concurrency": 100
-        }
-    SUPPORT_AGENT_MODELS: t.List[str] = [
-            "chatglm3-6b",
-            "glm-4",
-            "Qwen-2",
-            "qwen2-instruct",
-            "gpt-4o",
-            "gpt-4o-mini",
-        ]
-    """支持的Agent模型"""
+
+    # # 新增重排序模型
+    # USE_RERANKER: bool = False
+    # """是否使用重排模型"""
+    # RERANKER_CONFIG: t.Dict[str, t.Any] = {
+    #         "model": "bge-reranker-v2-m3",
+    #         "topk": 5,
+    #         # "return_obj": "index",
+    #         "local_path":"./model_hub/bge-reranker-v2-m3",
+    #         "num_workers":1,
+    #         "device":"cpu",
+    #         "limit_concurrency": 100
+    #     }
 
     LLM_MODEL_CONFIG: t.Dict[str, t.Dict] = {
             # 意图识别不需要输出，模型后台知道就行
@@ -510,18 +499,6 @@ class ToolSettings(BaseFileSettings):
                                       json_file=CHATCHAT_ROOT / "tool_settings.json",
                                       extra="allow")
 
-    """默认使用的 graph"""
-    DEFAULT_GRAPH: str = "chatbot"
-
-    """支持的 graph"""
-    SUPPORT_GRAPHS: t.List[str] = [
-        "chatbot",
-        "plan_and_execute",
-        "reflexion",
-        "article_generation",
-        "text_to_sql",
-    ]
-
     """
     工作流允许 agent 推理最大轮数, 设定数值 = 单次执行限制最大推理轮数 * 2
     如果不设置或设置为 0 则取 50 (25轮)
@@ -556,12 +533,19 @@ class ToolSettings(BaseFileSettings):
         "use": False,
         "search_engine_name": "duckduckgo",
         "search_engine_config": {
+            "duckduckgo": {},
+            "tavily": {
+                "tavily_key": "",
+            },
+            "searx": {
+                "host": "https://metasearx.com",
+                "engines": [],
+                "categories": [],
+                "language": "zh-CN",
+            },
             "bing": {
                 "bing_search_url": "https://api.bing.microsoft.com/v7.0/search",
                 "bing_key": "",
-            },
-            "tavily": {
-                "tavily_key": "",
             },
             "metaphor": {
                 "metaphor_api_key": "",
@@ -569,13 +553,6 @@ class ToolSettings(BaseFileSettings):
                 "chunk_size": 500,
                 "chunk_overlap": 0,
             },
-            "duckduckgo": {},
-            "searx": {
-                "host": "https://metasearx.com",
-                "engines": [],
-                "categories": [],
-                "language": "zh-CN",
-            }
         },
         "top_k": 5,
         "verbose": "Origin",

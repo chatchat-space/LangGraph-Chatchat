@@ -1,25 +1,18 @@
-import os
 import time
-from typing import Dict, Literal, Tuple
 
 import pandas as pd
 import streamlit as st
-import streamlit_antd_components as sac
 from st_aggrid import AgGrid, JsCode
 from st_aggrid.grid_options_builder import GridOptionsBuilder
-from streamlit_antd_components.utils import ParseItems
 
-from chatchat.settings import Settings
 from chatchat.server.knowledge_base.kb_service.base import (
     get_kb_details,
     get_kb_file_details,
 )
 from chatchat.server.knowledge_base.utils import LOADER_DICT, get_file_path
-from chatchat.server.utils import get_config_models, get_default_embedding
+from chatchat.server.utils import get_config_models
 
 from chatchat.webui_pages.utils import *
-
-# SENTENCE_SIZE = 100
 
 cell_renderer = JsCode(
     """function(params) {if(params.value==true){return '✓'}else{return '×'}}"""
