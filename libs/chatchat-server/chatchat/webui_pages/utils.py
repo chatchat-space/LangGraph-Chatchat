@@ -737,17 +737,3 @@ def get_img_base64(file_name: str) -> str:
 if __name__ == "__main__":
     api = ApiRequest()
     aapi = AsyncApiRequest()
-
-    # with api.chat_chat("你好") as r:
-    #     for t in r.iter_text(None):
-    #         print(t)
-
-    # r = api.chat_chat("你好", no_remote_api=True)
-    # for t in r:
-    #     print(t)
-
-    # r = api.duckduckgo_search_chat("室温超导最新研究进展", no_remote_api=True)
-    # for t in r:
-    #     print(t)
-
-    # print(api.list_knowledge_bases())

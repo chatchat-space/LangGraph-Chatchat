@@ -51,7 +51,7 @@ async def handle_user_input(
     events = graph.astream(input=graph_input, config=graph_config, stream_mode="updates")
     if events:
         # Display assistant response in chat message container
-        with st.chat_message("assistant"):
+        with st.chat_message(name="assistant", avatar=get_img_base64("chatchat_icon_blue_square_v2.png")):
             response_last = ""
             async for event in events:
                 node, response = extract_node_and_response(event)
@@ -211,7 +211,7 @@ def graph_rag_page(api: ApiRequest):
     selected_tools_configs = list(selected_tool_configs)
 
     st.title("知识库聊天")
-    with st.chat_message("assistant"):
+    with st.chat_message(name="assistant", avatar=get_img_base64("chatchat_icon_blue_square_v2.png")):
         st.write("Hello 👋😊，我是智能知识库问答机器人，试着输入任何内容和我聊天呦～（ps: 可尝试切换不同知识库）")
 
     with bottom():

@@ -451,57 +451,57 @@ def files2docs_in_thread(
         yield result
 
 
-def format_reference_kb(kb_name: str, docs: List[Dict], api_base_url: str="") -> List[Dict]:
-    '''
-    将知识库检索结果格式化为参考文档的格式
-    '''
-    from chatchat.server.utils import api_address
-    api_base_url = api_base_url or api_address(is_public=True)
-
-    source_documents = []
-    for inum, doc in enumerate(docs):
-        filename = doc.get("metadata", {}).get("source")
-        parameters = urlencode(
-            {
-                "knowledge_base_name": kb_name,
-                "file_name": filename,
-            }
-        )
-        api_base_url = api_base_url.strip(" /")
-        url = (
-            f"{api_base_url}/knowledge_base/download_doc?" + parameters
-        )
-        page_content = doc.get("page_content")
-        ref = f"""出处 [{inum + 1}] [{filename}]({url}) \n\n{page_content}\n\n"""
-        source_documents.append(ref)
-    
-    return source_documents
-
-
-
-def format_reference_se(docs:List[Dict]) -> List[Dict]:
-    """
-    将搜索引擎检索结果格式化为参考文档的格式
-    docs: 搜索引擎检索结果
-    doc_soruce: 文档来源，kb表示知识库，se表示搜索引擎
-    """
-
-    source_documents = [
-        f"""出处 [{i + 1}] [{d['metadata']['filename']}]({d['metadata']['source']}) \n\n{d['page_content']}\n\n""" 
-                        for i,d in enumerate(docs)
-                        ]
-
-    return source_documents
+# def format_reference_kb(kb_name: str, docs: List[Dict], api_base_url: str="") -> List[Dict]:
+#     '''
+#     将知识库检索结果格式化为参考文档的格式
+#     '''
+#     from chatchat.server.utils import api_address
+#     api_base_url = api_base_url or api_address(is_public=True)
+#
+#     source_documents = []
+#     for inum, doc in enumerate(docs):
+#         filename = doc.get("metadata", {}).get("source")
+#         parameters = urlencode(
+#             {
+#                 "knowledge_base_name": kb_name,
+#                 "file_name": filename,
+#             }
+#         )
+#         api_base_url = api_base_url.strip(" /")
+#         url = (
+#             f"{api_base_url}/knowledge_base/download_doc?" + parameters
+#         )
+#         page_content = doc.get("page_content")
+#         ref = f"""出处 [{inum + 1}] [{filename}]({url}) \n\n{page_content}\n\n"""
+#         source_documents.append(ref)
+#
+#     return source_documents
 
 
-def format_reference(kb_name: str, docs: List[Dict], api_base_url: str="", doc_source: str="kb") -> List[Dict]:
-    '''
-    将知识库检索结果格式化为参考文档的格式
-    '''
-    if doc_source == "kb":
-        return format_reference_kb(kb_name, docs, api_base_url)
-    elif doc_source == "se":
-        return format_reference_se(docs)
+
+# def format_reference_se(docs:List[Dict]) -> List[Dict]:
+#     """
+#     将搜索引擎检索结果格式化为参考文档的格式
+#     docs: 搜索引擎检索结果
+#     doc_soruce: 文档来源，kb表示知识库，se表示搜索引擎
+#     """
+#
+#     source_documents = [
+#         f"""出处 [{i + 1}] [{d['metadata']['filename']}]({d['metadata']['source']}) \n\n{d['page_content']}\n\n"""
+#                         for i,d in enumerate(docs)
+#                         ]
+#
+#     return source_documents
+
+
+# def format_reference(kb_name: str, docs: List[Dict], api_base_url: str="", doc_source: str="kb") -> List[Dict]:
+#     '''
+#     将知识库检索结果格式化为参考文档的格式
+#     '''
+#     if doc_source == "kb":
+#         return format_reference_kb(kb_name, docs, api_base_url)
+#     elif doc_source == "se":
+#         return format_reference_se(docs)
 
 
 if __name__ == "__main__":

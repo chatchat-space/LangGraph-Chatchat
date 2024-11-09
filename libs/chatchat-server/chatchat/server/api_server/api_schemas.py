@@ -13,7 +13,7 @@ from openai.types.chat import (
 )
 
 from chatchat.settings import Settings
-from chatchat.server.pydantic_v2 import AnyUrl, BaseModel, Field
+from pydantic import AnyUrl, BaseModel, Field
 from chatchat.server.utils import MsgType, get_default_llm
 
 

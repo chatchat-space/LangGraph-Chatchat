@@ -7,7 +7,6 @@ from starlette.responses import RedirectResponse
 
 from chatchat import __version__
 from chatchat.settings import Settings
-from chatchat.server.api_server.graph_routes import graph_router
 from chatchat.server.api_server.kb_routes import kb_router
 from chatchat.server.api_server.openai_routes import openai_router
 from chatchat.server.api_server.server_routes import server_router
@@ -34,12 +33,8 @@ def create_app(run_mode: str = None):
         return RedirectResponse(url="/docs")
 
     app.include_router(kb_router)
-    app.include_router(graph_router)
     app.include_router(openai_router)
     app.include_router(server_router)
-    if Settings.model_settings.USE_RERANKER:
-        from chatchat.server.api_server.reranker_routes import reranker_router
-        app.include_router(reranker_router)
 
     # 媒体文件
     app.mount("/media", StaticFiles(directory=Settings.basic_settings.MEDIA_PATH), name="media")
