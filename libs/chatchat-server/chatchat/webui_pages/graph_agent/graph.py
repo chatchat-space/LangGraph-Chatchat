@@ -415,7 +415,7 @@ def graph_agent_page():
         if selected_graph == "article_generation":
             user_input = cols[2].chat_input("请你帮我生成一篇自媒体文章 (换行:Shift+Enter)")
         elif selected_graph == "数据库查询机器人[Beta]":
-            user_input = cols[2].chat_input("请你帮忙调用工具, 查看组织`tcs_public`的成员有哪些？(换行:Shift+Enter)")
+            user_input = cols[2].chat_input("请你调用工具, 查看组织`tcs_public`的成员有哪些？(换行:Shift+Enter)")
         else:
             user_input = cols[2].chat_input("尝试输入任何内容和我聊天呦 (换行:Shift+Enter)")
 

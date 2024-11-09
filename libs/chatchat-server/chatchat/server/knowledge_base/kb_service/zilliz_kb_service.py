@@ -8,7 +8,6 @@ from chatchat.server.file_rag.utils import get_Retriever
 from chatchat.server.knowledge_base.kb_service.base import (
     KBService,
     SupportedVSType,
-    score_threshold_process,
 )
 from chatchat.server.knowledge_base.utils import KnowledgeFile
 from chatchat.server.utils import get_Embeddings

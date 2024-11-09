@@ -5,7 +5,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 import time
 
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, Response
 from typing import List,  Optional, Union
 
 from pydantic import BaseModel, Field

@@ -6,16 +6,8 @@ from dateutil.parser import parse
 
 from chatchat.settings import Settings
 from chatchat.server.db.base import Base, engine
-from chatchat.server.db.models.conversation_model import ConversationModel
-from chatchat.server.db.models.message_model import MessageModel
-from chatchat.server.db.repository.knowledge_file_repository import (
-    add_file_to_db,
-)
 
 # ensure Models are imported
-from chatchat.server.db.repository.knowledge_metadata_repository import (
-    add_summary_to_db,
-)
 from chatchat.server.db.session import session_scope
 from chatchat.server.knowledge_base.kb_service.base import (
     KBServiceFactory,

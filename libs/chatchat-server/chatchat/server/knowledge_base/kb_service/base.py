@@ -2,7 +2,7 @@ import operator
 import os
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Tuple, Union
 
 from langchain.docstore.document import Document
 
