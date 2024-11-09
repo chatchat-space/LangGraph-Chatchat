@@ -1,5 +1,4 @@
 import asyncio
-import logging
 import sys
 from typing import List, Optional
 
@@ -9,7 +8,6 @@ from langchain.chains.combine_documents.map_reduce import (
     ReduceDocumentsChain,
 )
 from langchain.docstore.document import Document
-from langchain.output_parsers.regex import RegexParser
 from langchain.prompts import PromptTemplate
 from langchain.schema.language_model import BaseLanguageModel
 

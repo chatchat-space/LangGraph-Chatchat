@@ -4,7 +4,6 @@ import os
 import urllib
 from typing import Dict, List
 
-import rich
 from fastapi import Body, File, Form, Query, UploadFile
 from fastapi.responses import FileResponse
 from langchain.docstore.document import Document
@@ -17,7 +16,6 @@ from chatchat.server.knowledge_base.kb_service.base import (
     KBServiceFactory,
     get_kb_file_details,
 )
-from chatchat.server.knowledge_base.model.kb_document_model import DocumentWithVSId
 from chatchat.server.knowledge_base.utils import (
     KnowledgeFile,
     files2docs_in_thread,
@@ -29,7 +27,6 @@ from chatchat.server.knowledge_base.kb_cache.faiss_cache import memo_faiss_pool
 from chatchat.server.utils import (
     BaseResponse,
     ListResponse,
-    check_embed_model,
     run_in_thread_pool,
     get_default_embedding,
 )

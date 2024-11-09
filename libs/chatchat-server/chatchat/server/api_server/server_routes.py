@@ -1,5 +1,3 @@
-from typing import Literal
-
 from fastapi import APIRouter, Body
 
 from chatchat.server.types.server.response.base import BaseResponse
