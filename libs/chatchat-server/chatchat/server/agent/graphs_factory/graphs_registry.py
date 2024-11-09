@@ -17,7 +17,6 @@ __all__ = [
     "InputHandler",
     "EventHandler",
     "State",
-    # "Response",
     "async_history_manager",
     "human_feedback",
     "break_point",
@@ -38,11 +37,6 @@ class State(TypedDict):
     """
     messages: Annotated[list[BaseMessage], add_messages]
     history: Optional[list[BaseMessage]]
-
-
-class Response(TypedDict):
-    node: str
-    content: Any
 
 
 class Message(TypedDict):
@@ -151,16 +145,10 @@ def register_graph(cls):
 
 
 class Graph:
-    def __init__(self, llm: ChatOpenAI, tools: list[BaseTool], history_len: int):
+    def __init__(self, llm: ChatOpenAI, tools: list[BaseTool], history_len: int, *args, **kwargs):
         self.llm = llm
         self.tools = tools
         self.history_len = history_len
-
-    # async def chatbot(self, state: Type[State]) -> Type[State]:
-    #     """
-    #     定义了 graph 中 llm 的消息处理逻辑, 子类必须实现.
-    #     """
-    #     pass
 
     @abstractmethod
     def get_graph(self) -> CompiledStateGraph:
