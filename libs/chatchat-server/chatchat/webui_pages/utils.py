@@ -780,6 +780,8 @@ def init_conversation_id():
         st.session_state["prompt"] = ""
     if "history_len" not in st.session_state:
         st.session_state["history_len"] = Settings.model_settings.HISTORY_LEN
+    if "graph_dict" not in st.session_state:
+        st.session_state["graph_dict"] = {}
 
 
 if __name__ == "__main__":
