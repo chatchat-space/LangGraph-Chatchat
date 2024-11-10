@@ -1,6 +1,5 @@
 from typing import List
 
-from langchain.embeddings.base import Embeddings
 from langchain.schema import Document
 
 from chatchat.server.knowledge_base.kb_service.base import KBService

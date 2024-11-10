@@ -7,14 +7,13 @@ import shutil
 from contextlib import asynccontextmanager
 from datetime import datetime
 from pathlib import Path
-from typing import AsyncGenerator, Dict, Iterable, Tuple
+from typing import AsyncGenerator, Iterable, Tuple
 
-from fastapi import APIRouter, Request, HTTPException
+from fastapi import APIRouter
 from fastapi.responses import FileResponse
 from openai import AsyncClient
-from sse_starlette.sse import EventSourceResponse, ServerSentEvent
+from sse_starlette.sse import EventSourceResponse
 
-from chatchat.settings import Settings
 from chatchat.server.utils import get_config_platforms, get_model_info, get_OpenAIClient
 from chatchat.utils import build_logger
 
@@ -156,7 +155,6 @@ async def create_chat_completions(
 
 @openai_router.post("/completions")
 async def create_completions(
-    request: Request,
     body: OpenAIChatInput,
 ):
     async with get_model_client(body.model) as client:
@@ -165,7 +163,6 @@ async def create_completions(
 
 @openai_router.post("/embeddings")
 async def create_embeddings(
-    request: Request,
     body: OpenAIEmbeddingsInput,
 ):
     params = body.model_dump(exclude_unset=True)
@@ -175,7 +172,6 @@ async def create_embeddings(
 
 @openai_router.post("/images/generations")
 async def create_image_generations(
-    request: Request,
     body: OpenAIImageGenerationsInput,
 ):
     async with get_model_client(body.model) as client:
@@ -184,7 +180,6 @@ async def create_image_generations(
 
 @openai_router.post("/images/variations")
 async def create_image_variations(
-    request: Request,
     body: OpenAIImageVariationsInput,
 ):
     async with get_model_client(body.model) as client:
@@ -193,7 +188,6 @@ async def create_image_variations(
 
 @openai_router.post("/images/edit")
 async def create_image_edit(
-    request: Request,
     body: OpenAIImageEditsInput,
 ):
     async with get_model_client(body.model) as client:
@@ -202,7 +196,6 @@ async def create_image_edit(
 
 @openai_router.post("/audio/translations", deprecated="暂不支持")
 async def create_audio_translations(
-    request: Request,
     body: OpenAIAudioTranslationsInput,
 ):
     async with get_model_client(body.model) as client:
@@ -211,7 +204,6 @@ async def create_audio_translations(
 
 @openai_router.post("/audio/transcriptions", deprecated="暂不支持")
 async def create_audio_transcriptions(
-    request: Request,
     body: OpenAIAudioTranscriptionsInput,
 ):
     async with get_model_client(body.model) as client:
@@ -220,7 +212,6 @@ async def create_audio_transcriptions(
 
 @openai_router.post("/audio/speech", deprecated="暂不支持")
 async def create_audio_speech(
-    request: Request,
     body: OpenAIAudioSpeechInput,
 ):
     async with get_model_client(body.model) as client:
@@ -260,7 +251,6 @@ def _get_file_path(file_id: str) -> str:
 
 @openai_router.post("/files")
 async def files(
-    request: Request,
     file: UploadFile,
     purpose: str = "assistants",
 ) -> Dict:

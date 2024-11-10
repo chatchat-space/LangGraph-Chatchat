@@ -5,7 +5,6 @@ import requests
 import re
 from pydantic import Field
 
-from chatchat.server.agent.tools_factory.tools_registry import format_context
 from chatchat.server.utils import get_tool_config, build_logger
 
 from .tools_registry import BaseToolOutput, regist_tool
@@ -42,9 +41,11 @@ def url_reader(
         response = requests.get(reader_url, timeout=timeout)
         if response.status_code == 200:
             return BaseToolOutput(
-                {"result": response.text,
-                 "docs": [{"page_content": response.text, "metadata": {'source': url, 'id': ''}}]},
-                format=format_context)
+                {
+                    "result": response.text,
+                    "docs": [{"page_content": response.text, "metadata": {'source': url, 'id': ''}}]
+                }
+            )
         else:
             return BaseToolOutput({"error": "Failed to fetch URL with status code: {response.status_code}"})
     except requests.exceptions.Timeout:

@@ -13,8 +13,7 @@ from openai.types.chat import (
 )
 
 from chatchat.settings import Settings
-# from chatchat.server.callback_handler.agent_callback_handler import AgentStatus  # noaq
-from chatchat.server.pydantic_v2 import AnyUrl, BaseModel, Field
+from pydantic import AnyUrl, BaseModel, Field
 from chatchat.server.utils import MsgType, get_default_llm
 
 
@@ -105,11 +104,6 @@ class OpenAIAudioSpeechInput(OpenAIBaseInput):
         Literal["mp3", "opus", "aac", "flac", "pcm", "wav"]
     ] = None
     speed: Optional[float] = None
-
-
-# class OpenAIFileInput(OpenAIBaseInput):
-#     file: UploadFile # FileTypes
-#     purpose: Literal["fine-tune", "assistants"] = "assistants"
 
 
 class OpenAIBaseOutput(BaseModel):

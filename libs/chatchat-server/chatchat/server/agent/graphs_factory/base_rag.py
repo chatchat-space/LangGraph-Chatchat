@@ -1,6 +1,4 @@
 from typing import List, Literal, Dict
-
-import rich
 from pydantic import BaseModel, Field
 
 from langchain_openai.chat_models import ChatOpenAI
@@ -17,7 +15,6 @@ from chatchat.server.utils import (
     get_st_graph_memory,
     get_tool,
     add_tools_if_not_exists,
-    get_prompt_template
 )
 from .graphs_registry import State, Graph, register_graph
 

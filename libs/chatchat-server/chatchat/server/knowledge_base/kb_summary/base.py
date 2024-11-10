@@ -1,6 +1,6 @@
 import os
 import shutil
-from abc import ABC, abstractmethod
+from abc import ABC
 from typing import List
 
 from langchain.docstore.document import Document

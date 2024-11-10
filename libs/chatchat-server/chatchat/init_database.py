@@ -3,11 +3,8 @@ from datetime import datetime
 import multiprocessing as mp
 import sys
 import time
-from typing import Dict
-
 import click
 
-from chatchat.settings import Settings
 from chatchat.server.knowledge_base.migrate import (
     create_tables,
     folder2db,

@@ -1,5 +1,4 @@
-import os
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 from langchain.schema import Document
 from langchain.vectorstores.milvus import Milvus
@@ -11,7 +10,6 @@ from chatchat.server.file_rag.utils import get_Retriever
 from chatchat.server.knowledge_base.kb_service.base import (
     KBService,
     SupportedVSType,
-    score_threshold_process,
 )
 from chatchat.server.knowledge_base.utils import KnowledgeFile
 

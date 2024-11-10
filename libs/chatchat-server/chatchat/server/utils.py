@@ -1,4 +1,6 @@
 import os
+import sqlite3
+
 import requests
 import httpx
 import openai
@@ -18,33 +20,22 @@ from typing import (
     Union,
 )
 
+import streamlit
 from fastapi import FastAPI
 from langchain.tools import BaseTool
 from langchain_core.embeddings import Embeddings
 from langchain_openai.chat_models import ChatOpenAI
-from langgraph.graph.state import CompiledStateGraph
 from langgraph.checkpoint.memory import MemorySaver
+from langgraph.checkpoint.sqlite import SqliteSaver
 from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 # from langgraph.checkpoint.postgres import PostgresSaver
 from memoization import cached, CachingAlgorithmFlag
 
 from chatchat.settings import Settings, XF_MODELS_TYPES
-from chatchat.server.pydantic_v2 import BaseModel, Field
+from pydantic import BaseModel, Field
 from chatchat.utils import build_logger
 
 logger = build_logger()
-
-
-# async def wrap_done(fn: Awaitable, event: asyncio.Event):
-#     """Wrap an awaitable with a event to signal when it's done or an exception is raised."""
-#     try:
-#         await fn
-#     except Exception as e:
-#         msg = f"Caught exception: {e}"
-#         logger.error(f"{e.__class__.__name__}: {msg}")
-#     finally:
-#         # Signal the aiter to stop.
-#         event.set()
 
 
 def get_base_url(url):
@@ -215,31 +206,9 @@ def get_default_embedding():
         return available_embeddings[0]
 
 
-def is_graph_enabled() -> bool:
-    try:
-        import langgraph
-        return True
-    except ImportError:
-        return False
-
-
-def get_default_graph() -> str:
-    available_graphs = Settings.tool_settings.SUPPORT_GRAPHS
-    if Settings.tool_settings.DEFAULT_GRAPH in available_graphs:
-        return Settings.tool_settings.DEFAULT_GRAPH
-    else:
-        logger.warning(f"default graph {Settings.model_settings.DEFAULT_LLM_MODEL} is not found in available graphs, "
-                       f"using {available_graphs[0]} instead")
-        return available_graphs[0]
-
-
 def get_history_len() -> int:
     return (Settings.model_settings.HISTORY_LEN or
             Settings.model_settings.LLM_MODEL_CONFIG["action_model"]["history_len"])
-
-
-# def get_recursion_limit() -> int:
-#     return Settings.tool_settings.RECURSION_LIMIT or 50
 
 
 def get_ChatOpenAI(
@@ -286,48 +255,6 @@ def get_ChatOpenAI(
         logger.exception(f"failed to create ChatOpenAI for model: {model_name}.")
         model = None
     return model
-
-
-# def get_OpenAI(
-#         model_name: str,
-#         temperature: float,
-#         max_tokens: int = Settings.model_settings.MAX_TOKENS,
-#         streaming: bool = True,
-#         echo: bool = True,
-#         callbacks: List[Callable] = [],
-#         verbose: bool = True,
-#         local_wrap: bool = False,  # use local wrapped api
-#         **kwargs: Any,
-# ) -> OpenAI:
-#     # TODO: 从API获取模型信息
-#     model_info = get_model_info(model_name)
-#     params = dict(
-#         streaming=streaming,
-#         verbose=verbose,
-#         callbacks=callbacks,
-#         model_name=model_name,
-#         temperature=temperature,
-#         max_tokens=max_tokens,
-#         echo=echo,
-#         **kwargs,
-#     )
-#     try:
-#         if local_wrap:
-#             params.update(
-#                 openai_api_base=f"{api_address()}/v1",
-#                 openai_api_key="EMPTY",
-#             )
-#         else:
-#             params.update(
-#                 openai_api_base=model_info.get("api_base_url"),
-#                 openai_api_key=model_info.get("api_key"),
-#                 openai_proxy=model_info.get("api_proxy"),
-#             )
-#         model = OpenAI(**params)
-#     except Exception as e:
-#         logger.exception(f"failed to create OpenAI for model: {model_name}.")
-#         model = None
-#     return model
 
 
 def get_Embeddings(
@@ -493,43 +420,6 @@ class ChatMessage(BaseModel):
         }
 
 
-# def run_async(cor):
-#     """
-#     在同步环境中运行异步代码.
-#     """
-#     try:
-#         loop = asyncio.get_event_loop()
-#     except:
-#         loop = asyncio.new_event_loop()
-#     return loop.run_until_complete(cor)
-
-
-# def iter_over_async(ait, loop=None):
-#     """
-#     将异步生成器封装成同步生成器.
-#     """
-#     ait = ait.__aiter__()
-#
-#     async def get_next():
-#         try:
-#             obj = await ait.__anext__()
-#             return False, obj
-#         except StopAsyncIteration:
-#             return True, None
-#
-#     if loop is None:
-#         try:
-#             loop = asyncio.get_event_loop()
-#         except:
-#             loop = asyncio.new_event_loop()
-#
-#     while True:
-#         done, obj = loop.run_until_complete(get_next())
-#         if done:
-#             break
-#         yield obj
-
-
 def MakeFastAPIOffline(
         app: FastAPI,
         static_dir=Path(__file__).parent / "api_server" / "static",
@@ -606,43 +496,6 @@ def MakeFastAPIOffline(
                 with_google_fonts=False,
                 redoc_favicon_url=favicon,
             )
-
-
-# 从model_config中获取模型信息
-# TODO: 移出模型加载后，这些功能需要删除或改变实现
-
-# def list_embed_models() -> List[str]:
-#     '''
-#     get names of configured embedding models
-#     '''
-#     return list(MODEL_PATH["embed_model"])
-
-
-# def get_model_path(model_name: str, type: str = None) -> Optional[str]:
-#     if type in MODEL_PATH:
-#         paths = MODEL_PATH[type]
-#     else:
-#         paths = {}
-#         for v in MODEL_PATH.values():
-#             paths.update(v)
-
-#     if path_str := paths.get(model_name):  # 以 "chatglm-6b": "THUDM/chatglm-6b-new" 为例，以下都是支持的路径
-#         path = Path(path_str)
-#         if path.is_dir():  # 任意绝对路径
-#             return str(path)
-
-#         root_path = Path(MODEL_ROOT_PATH)
-#         if root_path.is_dir():
-#             path = root_path / model_name
-#             if path.is_dir():  # use key, {MODEL_ROOT_PATH}/chatglm-6b
-#                 return str(path)
-#             path = root_path / path_str
-#             if path.is_dir():  # use value, {MODEL_ROOT_PATH}/THUDM/chatglm-6b-new
-#                 return str(path)
-#             path = root_path / path_str.split("/")[-1]
-#             if path.is_dir():  # use value split by "/", {MODEL_ROOT_PATH}/chatglm-6b-new
-#                 return str(path)
-#         return path_str  # THUDM/chatglm06b
 
 
 def api_address(is_public: bool = False) -> str:
@@ -759,31 +612,6 @@ def run_in_thread_pool(
                 yield obj.result()
             except Exception as e:
                 logger.exception(f"error in sub thread: {e}")
-
-
-# def run_in_process_pool(
-#         func: Callable,
-#         params: List[Dict] = [],
-# ) -> Generator:
-#     """
-#     在线程池中批量运行任务，并将运行结果以生成器的形式返回。
-#     请确保任务中的所有操作是线程安全的，任务函数请全部使用关键字参数。
-#     """
-#     tasks = []
-#     max_workers = None
-#     if sys.platform.startswith("win"):
-#         max_workers = min(
-#             mp.cpu_count(), 60
-#         )  # max_workers should not exceed 60 on windows
-#     with ProcessPoolExecutor(max_workers=max_workers) as pool:
-#         for kwargs in params:
-#             tasks.append(pool.submit(func, **kwargs))
-#
-#         for obj in as_completed(tasks):
-#             try:
-#                 yield obj.result()
-#             except Exception as e:
-#                 logger.exception(f"error in sub process: {e}")
 
 
 def get_httpx_client(
@@ -941,44 +769,6 @@ def list_tools():
     return data
 
 
-def get_graph_instance(
-        name: str,
-        llm: ChatOpenAI,
-        tools: List[BaseTool],
-        history_len: int,
-) -> CompiledStateGraph:
-    """
-    获取已注册的图
-    :param name: 选用 graph 的名称(工作流)
-    :param llm: ChatOpenAI 对象
-    :param tools: 需要调用的 tool 列表
-    :param history_len: 默认历史对话轮数
-    :return: 包含已注册的 graph 实例
-    """
-    from chatchat.server.agent.graphs_factory import graphs_registry
-    if name in graphs_registry._GRAPHS_REGISTRY:
-        graph_info = graphs_registry._GRAPHS_REGISTRY[name]
-        graph_instance = graph_info["func"](llm=llm, tools=tools, history_len=history_len)
-        return graph_instance
-    else:
-        raise ValueError(f"Graph '{name}' is not registered.")
-
-
-def get_graph_event_handler(name: str) -> Any:
-    """
-    获取已注册的图
-    :param name: 选用 graph 的名称(工作流)
-    :return: 包含已注册的 EventHandler
-    """
-    from chatchat.server.agent.graphs_factory import graphs_registry
-    if name in graphs_registry._GRAPHS_REGISTRY:
-        graph_info = graphs_registry._GRAPHS_REGISTRY[name]
-        event_handler = graph_info["event_handler"]()
-        return event_handler
-    else:
-        raise ValueError(f"Graph '{name}' have no event_handler.")
-
-
 def get_tool_config(name: str = None) -> Dict:
     from chatchat.settings import Settings
 
@@ -986,11 +776,6 @@ def get_tool_config(name: str = None) -> Dict:
         return Settings.tool_settings.model_dump()
     else:
         return Settings.tool_settings.model_dump().get(name, {})
-
-
-# def is_port_in_use(port):
-#     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-#         return sock.connect_ex(("localhost", port)) == 0
 
 
 # langgraph checkpointer 使用的全局 memory
@@ -1029,8 +814,7 @@ def get_graph_memory():
     return _AGENT_MEMORY
 
 
-def get_st_graph_memory(memory_type: Optional[Literal["memory", "sqlite", "postgres"]] = None) -> (
-        Union)[
+def get_st_graph_memory(memory_type: Optional[Literal["memory", "sqlite", "postgres"]] = None) -> (Union)[
     MemorySaver,
     AsyncSqliteSaver,
     # PostgresSaver
@@ -1038,6 +822,8 @@ def get_st_graph_memory(memory_type: Optional[Literal["memory", "sqlite", "postg
     """
     获取 graph 的 memory
     """
+    import sqlalchemy as sa
+
     if memory_type is None:
         memory_type = Settings.tool_settings.GRAPH_MEMORY_TYPE
 
@@ -1058,6 +844,7 @@ def get_st_graph_memory(memory_type: Optional[Literal["memory", "sqlite", "postg
     raise ValueError("Invalid memory_type provided. Must be 'memory', 'sqlite', or 'postgres'.")
 
 
+@streamlit.cache_resource
 def create_agent_models(
         configs: Any,
         model: str,
@@ -1119,8 +906,6 @@ if __name__ == "__main__":
     # for debug
     print(get_default_llm())
     print(get_default_embedding())
-    print(get_default_graph())
     platforms = get_config_platforms()
     models = get_config_models()
     model_info = get_model_info(platform_name="xinference-auto")
-    print(1)

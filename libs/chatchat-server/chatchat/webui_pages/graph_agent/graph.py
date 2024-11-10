@@ -1,6 +1,5 @@
-import rich
-import uuid
 import asyncio
+import rich
 
 import streamlit as st
 from langgraph.graph.state import CompiledStateGraph
@@ -16,7 +15,6 @@ from chatchat.server.utils import (
     build_logger,
     get_config_models,
     get_config_platforms,
-    get_default_llm,
     get_tool,
     list_tools,
     create_agent_models,
@@ -24,11 +22,6 @@ from chatchat.server.utils import (
 )
 
 logger = build_logger()
-
-
-def init_conversation_id():
-    if "conversation_id" not in st.session_state:
-        st.session_state["conversation_id"] = str(uuid.uuid4())
 
 
 @st.dialog("输入初始化内容", width="large")
@@ -180,13 +173,13 @@ async def handle_user_input(
                 node, response = extract_node_and_response(event)
 
                 # debug
-                print(f"--- node: {node} ---")
-                rich.print(response)
+                # print(f"--- node: {node} ---")
+                # rich.print(response)
 
                 if node == "history_manager":  # history_manager node 为内部实现, 不外显
                     continue
                 if node == "article_generation_init_break_point":
-                    with st.chat_message("assistant"):
+                    with st.chat_message(name="assistant", avatar=st.session_state["assistant_avatar"]):
                         st.write("请进行初始化设置")
                         st.session_state.messages.append({
                             "role": "assistant",
@@ -196,7 +189,7 @@ async def handle_user_input(
                     article_generation_init_setting()
                     continue
                 if node == "article_generation_start_break_point":
-                    with st.chat_message("assistant"):
+                    with st.chat_message(name="assistant", avatar=st.session_state["assistant_avatar"]):
                         st.write("请开始下达指令")
                         st.session_state.messages.append({
                             "role": "assistant",
@@ -207,7 +200,7 @@ async def handle_user_input(
                     article_generation_start_setting()
                     continue
                 if node == "article_generation_repeat_break_point":
-                    with st.chat_message("assistant"):
+                    with st.chat_message(name="assistant", avatar=st.session_state["assistant_avatar"]):
                         st.write("请确认是否重写")
                         st.session_state.messages.append({
                             "role": "assistant",
@@ -218,7 +211,7 @@ async def handle_user_input(
                     article_generation_repeat_setting()
                     continue
                 # Display assistant response in chat message container
-                with st.chat_message("assistant"):
+                with st.chat_message(name="assistant", avatar=st.session_state["assistant_avatar"]):
                     with st.status(node, expanded=True) as status:
                         st.json(response, expanded=True)
                         status.update(
@@ -234,12 +227,12 @@ async def handle_user_input(
                     })
         else:
             # Display assistant response in chat message container
-            with st.chat_message("assistant"):
+            with st.chat_message(name="assistant", avatar=st.session_state["assistant_avatar"]):
                 response_last = ""
                 async for event in events:
                     node, response = extract_node_and_response(event)
                     # debug
-                    print(f"--- node: {node} ---")
+                    # print(f"--- node: {node} ---")
                     # rich.print(response)
 
                     if node == "history_manager":  # history_manager node 为内部实现, 不外显
@@ -249,7 +242,7 @@ async def handle_user_input(
                     response = await graph_class_instance.handle_event(node=node, event=response)
                     # 将 event 转化为 json
                     response = serialize_content_to_json(response)
-                    rich.print(response)
+                    # rich.print(response)
 
                     # 检查 'content' 是否在响应中(因为我们只需要 AIMessage 的内容)
                     if "content" in response:
@@ -259,19 +252,28 @@ async def handle_user_input(
                     elif "answer" in response:  # reflexion
                         response_last = response["answer"]
 
+                    # Add assistant response to chat history
+                    st.session_state.messages.append(create_chat_message(
+                        role="assistant",
+                        content=response,
+                        node=node,
+                        expanded=False,
+                        type="json",
+                        is_last_message=False
+                    ))
                     with st.status(node, expanded=True) as status:
                         st.json(response, expanded=True)
-                        status.update(
-                            label=node, state="complete", expanded=False
-                        )
-                    # Add assistant response to chat history
-                    st.session_state.messages.append({
-                        "role": "assistant",
-                        "content": response,
-                        "node": node,
-                        "expanded": False,
-                        "type": "json"  # 标识为JSON类型
-                    })
+                        status.update(label=node, state="complete", expanded=False)
+
+                # Add assistant response_last to chat history
+                st.session_state.messages.append(create_chat_message(
+                    role="assistant",
+                    content=response_last,
+                    node=None,
+                    expanded=None,
+                    type="text",
+                    is_last_message=True
+                ))
                 st.markdown(response_last)
 
 
@@ -319,22 +321,8 @@ def llm_model_setting():
 
 
 def graph_agent_page():
-    # 初始化会话 id
+    # 初始化
     init_conversation_id()
-
-    # 创建 streamlit 消息缓存
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
-    # 初始化模型配置
-    if "platform" not in st.session_state:
-        st.session_state["platform"] = "所有"
-    if "llm_model" not in st.session_state:
-        st.session_state["llm_model"] = get_default_llm()
-        logger.info("default llm model: {}".format(st.session_state["llm_model"]))
-    if "temperature" not in st.session_state:
-        st.session_state["temperature"] = 0.01
-    if "prompt" not in st.session_state:
-        st.session_state["prompt"] = ""
     if "article_generation_init_break_point" not in st.session_state:
         st.session_state["article_generation_init_break_point"] = False
     if "article_generation_start_break_point" not in st.session_state:
@@ -394,16 +382,16 @@ def graph_agent_page():
 
     if selected_graph == "article_generation":
         st.title("自媒体文章生成")
-        with st.chat_message("assistant"):
+        with st.chat_message(name="assistant", avatar=st.session_state["assistant_avatar"]):
             st.write("Hello 👋😊，我是自媒体文章生成 Agent，输入任意内容以启动工作流～")
     elif selected_graph == "数据库查询机器人[Beta]":
         st.title("数据库查询")
-        with st.chat_message("assistant"):
+        with st.chat_message(name="assistant", avatar=st.session_state["assistant_avatar"]):
             st.write("Hello 👋😊，我是数据库查询机器人，输入你想查询的内容～")
     else:
-        st.title("智能聊天")
-        with st.chat_message("assistant"):
-            st.write("Hello 👋😊，我是智能聊天机器人，试着输入任何内容和我聊天呦～（ps: 可尝试选择多种工具）")
+        st.title("聊天")
+        with st.chat_message(name="assistant", avatar=st.session_state["assistant_avatar"]):
+            st.write("Hello 👋😊，我是聊天机器人，试着输入任何内容和我聊天呦～（ps: 可尝试选择多种工具）")
 
     with bottom():
         cols = st.columns([1, 0.2, 15, 1])
@@ -415,18 +403,13 @@ def graph_agent_page():
         if selected_graph == "article_generation":
             user_input = cols[2].chat_input("请你帮我生成一篇自媒体文章 (换行:Shift+Enter)")
         elif selected_graph == "数据库查询机器人[Beta]":
-            user_input = cols[2].chat_input("请你帮忙调用工具, 查看组织`tcs_public`的成员有哪些？(换行:Shift+Enter)")
+            user_input = cols[2].chat_input("请你调用工具, 查看组织`tcs_public`的成员有哪些？(换行:Shift+Enter)")
         else:
             user_input = cols[2].chat_input("尝试输入任何内容和我聊天呦 (换行:Shift+Enter)")
 
     # get_tool() 是所有工具的名称和对象的 dict 的列表
     all_tools = get_tool().values()
     tools = [tool for tool in all_tools if tool.name in selected_tools_configs]
-    # # 为保证调用效果, 如果用户没有选择任何 tool, 就默认选择互联网搜索工具
-    # if len(tools) == 0:
-    #     search_internet = get_tool(name="search_internet")
-    #     tools.append(search_internet)
-    # # rich.print(tools)
 
     # 创建 llm 实例
     # todo: max_tokens 这里有问题, None 应该是不限制, 但是目前 llm 结果为 4096
@@ -446,9 +429,19 @@ def graph_agent_page():
     else:
         graph_class = graph_class(llm=llm, tools=tools, history_len=history_len)
 
-    graph = graph_class.get_graph()
-    if not graph:
-        raise ValueError(f"Graph '{selected_graph}' is not registered.")
+    graph_instance = st.session_state["graph_dict"].get(selected_graph)
+    if graph_instance is None:
+        graph = graph_class.get_graph()
+        if not graph:
+            raise ValueError(f"Graph '{selected_graph}' is not registered.")
+        graph_png_image = get_img_base64(f"{selected_graph}.jpg")
+        if not graph_png_image:
+            graph_png_image = graph.get_graph().draw_mermaid_png()
+            logger.warning(f"The graph({selected_graph}) flowchart is not found in img, use graph.draw_mermaid_png() to get it.")
+        st.session_state["graph_dict"][selected_graph] = {
+            "graph": graph,
+            "graph_image": graph_png_image,
+        }
     st.toast(f"已加载工作流: {selected_graph}")
 
     # langgraph 配置文件
@@ -459,24 +452,7 @@ def graph_agent_page():
     }
     logger.info(f"Loaded graph: '{selected_graph}', configurable: '{graph_config}'")
 
-    # 绘制流程图并缓存
-    graph_flow_image_name = f"{selected_graph}_flow_image"
-    if graph_flow_image_name not in st.session_state:
-        graph_png_image = graph.get_graph().draw_mermaid_png()
-        st.session_state[graph_flow_image_name] = graph_png_image
-    st.sidebar.image(st.session_state[graph_flow_image_name], use_column_width=True)
-
-    # 前端存储历史消息(仅作为 st.rerun() 时的 UI 展示)
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            if message["type"] == "json":
-                with st.status(message["node"], expanded=message["expanded"]) as status:
-                    st.json(message["content"], expanded=message["expanded"])
-                    status.update(
-                        label=message["node"], state="complete", expanded=False
-                    )
-            elif message["type"] == "text":
-                st.markdown(message["content"])
+    st.sidebar.image(st.session_state["graph_dict"][selected_graph]["graph_image"], use_column_width=True)
 
     if selected_graph == "article_generation":
         # 初始化文章和图片信息
@@ -489,19 +465,58 @@ def graph_agent_page():
         if "image_links_list" not in st.session_state:
             st.session_state["image_links_list"] = []
 
+    # 前端存储历史消息(仅作为 st.rerun() 时的 UI 展示)
+    # 临时列表，用于收集 assistant 的消息
+    assistant_messages = []
+
+    # 遍历 st.session_state.messages 并展示消息
+    for message in st.session_state.messages:
+        role = message['role']
+        content = message['content']
+        is_last_message = message.get('is_last_message', False)
+
+        if role == 'user':
+            # 展示 user 消息
+            with st.chat_message("user"):
+                st.markdown(content)
+        elif role == 'assistant':
+            # 收集 assistant 消息
+            assistant_messages.append(message)
+            # 如果是最后一条 assistant 消息，立即展示
+            if is_last_message:
+                with st.chat_message(name="assistant", avatar=st.session_state["assistant_avatar"]):
+                    for msg in assistant_messages:
+                        if msg['is_last_message']:
+                            st.markdown(msg['content'])
+                        else:
+                            with st.status(msg['node'], expanded=True) as status:
+                                st.json(msg['content'], expanded=True)
+                                status.update(
+                                    label=msg['node'], state="complete", expanded=False
+                                )
+                # 清空临时列表
+                assistant_messages = []
+
     # 对话主流程
     if user_input:
+        st.session_state.messages.append(create_chat_message(
+            role="user",
+            content=user_input,
+            node=None,
+            expanded=None,
+            type="text",
+            is_last_message=True
+        ))
         with st.chat_message("user"):
             st.markdown(user_input)
-        st.session_state.messages.append({
-            "role": "user",
-            "content": user_input,
-            "type": "text"  # 标识为文本类型
-        })
 
         # Run the async function in a synchronous context
         graph_input = {"messages": [("user", user_input)]}
-        asyncio.run(handle_user_input(graph=graph, graph_input=graph_input, graph_config=graph_config, graph_class_instance=graph_class))
+        asyncio.run(handle_user_input(graph=st.session_state["graph_dict"][selected_graph]["graph"],
+                                      graph_input=graph_input,
+                                      graph_config=graph_config,
+                                      graph_class_instance=graph_class))
+        st.rerun()  # Clear stale containers
 
     if selected_graph == "article_generation":
         # debug
@@ -520,15 +535,17 @@ def graph_agent_page():
                 "article_links": st.session_state["article_links"],
                 "image_links": st.session_state["image_links"],
             }
-            asyncio.run(update_state(
-                graph=graph,
-                graph_config=graph_config,
-                update_message=update_message,
-                as_node="article_generation_init_break_point"
-            ))
-            asyncio.run(handle_user_input(graph=graph, graph_input=None, graph_config=graph_config, graph_class_instance=graph_class))
+            asyncio.run(update_state(graph=st.session_state["graph_dict"][selected_graph]["graph"],
+                                     graph_config=graph_config,
+                                     update_message=update_message,
+                                     as_node="article_generation_init_break_point"))
+            asyncio.run(handle_user_input(graph=st.session_state["graph_dict"][selected_graph]["graph"],
+                                          graph_input=None,
+                                          graph_config=graph_config,
+                                          graph_class_instance=graph_class))
             # 后续不再需要进行 爬虫动作, 将 article_generation_init_break_point 状态扭转为 False
             st.session_state["article_generation_init_break_point"] = False
+            st.rerun()  # Clear stale containers
         if st.session_state["article_generation_start_break_point"]:
             logger.info("--- article_generation_start_break_point ---")
             update_message = {
@@ -536,15 +553,17 @@ def graph_agent_page():
                 "temperature": st.session_state["temperature"],
                 "user_prompt": st.session_state["prompt"],
             }
-            asyncio.run(update_state(
-                graph=graph,
-                graph_config=graph_config,
-                update_message=update_message,
-                as_node="article_generation_start_break_point"
-            ))
-            asyncio.run(handle_user_input(graph=graph, graph_input=None, graph_config=graph_config, graph_class_instance=graph_class))
+            asyncio.run(update_state(graph=st.session_state["graph_dict"][selected_graph]["graph"],
+                                     graph_config=graph_config,
+                                     update_message=update_message,
+                                     as_node="article_generation_start_break_point"))
+            asyncio.run(handle_user_input(graph=st.session_state["graph_dict"][selected_graph]["graph"],
+                                          graph_input=None,
+                                          graph_config=graph_config,
+                                          graph_class_instance=graph_class))
             # 后续不再需要进行 爬虫动作, 将 article_generation_init_break_point 状态扭转为 False
             st.session_state["article_generation_start_break_point"] = False
+            st.rerun()  # Clear stale containers
         if st.session_state["article_generation_repeat_break_point"]:
             logger.info("--- article_generation_repeat_break_point ---")
             if st.session_state["is_article_generation_complete"]:
@@ -561,12 +580,14 @@ def graph_agent_page():
                     "user_prompt": st.session_state["prompt"],
                     "is_article_generation_complete": False,
                 }
-            asyncio.run(update_state(
-                graph=graph,
-                graph_config=graph_config,
-                update_message=update_message,
-                as_node="article_generation_repeat_break_point"
-            ))
-            asyncio.run(handle_user_input(graph=graph, graph_input=None, graph_config=graph_config, graph_class_instance=graph_class))
+            asyncio.run(update_state(graph=st.session_state["graph_dict"][selected_graph]["graph"],
+                                     graph_config=graph_config,
+                                     update_message=update_message,
+                                     as_node="article_generation_repeat_break_point"))
+            asyncio.run(handle_user_input(graph=st.session_state["graph_dict"][selected_graph]["graph"],
+                                          graph_input=None,
+                                          graph_config=graph_config,
+                                          graph_class_instance=graph_class))
             # 将 article_generation_repeat_break_point 状态扭转为 False
             st.session_state["article_generation_start_break_point"] = False
+            st.rerun()  # Clear stale containers

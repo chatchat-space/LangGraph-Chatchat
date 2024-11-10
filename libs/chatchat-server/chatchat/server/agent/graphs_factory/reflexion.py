@@ -17,7 +17,7 @@ logger = build_logger()
 
 num_iterations = 0
 # 设置反省轮数
-MAX_ITERATIONS = 1
+MAX_ITERATIONS = 2
 
 
 class Reflection(BaseModel):

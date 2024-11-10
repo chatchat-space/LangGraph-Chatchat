@@ -10,7 +10,7 @@ from memoization import cached, CachingAlgorithmFlag
 from pydantic import BaseModel, Field, ConfigDict, computed_field
 from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, YamlConfigSettingsSource, SettingsConfigDict
 import ruamel.yaml
-from ruamel.yaml.comments import CommentedBase, TaggedScalar
+from ruamel.yaml.comments import CommentedBase
 
 
 __all__ = ["YamlTemplate", "MyBaseModel", "BaseFileSettings", "Field",

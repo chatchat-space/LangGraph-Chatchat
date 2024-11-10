@@ -1,6 +1,7 @@
 from typing import Callable, Any, Dict, Type, Annotated, List, Optional, TypedDict, TypeVar
 from abc import ABC, abstractmethod
 
+import streamlit as st
 from langchain_core.tools import BaseTool
 from langchain_openai import ChatOpenAI
 from langgraph.graph.message import add_messages
@@ -17,7 +18,6 @@ __all__ = [
     "InputHandler",
     "EventHandler",
     "State",
-    # "Response",
     "async_history_manager",
     "human_feedback",
     "break_point",
@@ -38,11 +38,6 @@ class State(TypedDict):
     """
     messages: Annotated[list[BaseMessage], add_messages]
     history: Optional[list[BaseMessage]]
-
-
-class Response(TypedDict):
-    node: str
-    content: Any
 
 
 class Message(TypedDict):
@@ -151,16 +146,10 @@ def register_graph(cls):
 
 
 class Graph:
-    def __init__(self, llm: ChatOpenAI, tools: list[BaseTool], history_len: int):
+    def __init__(self, llm: ChatOpenAI, tools: list[BaseTool], history_len: int, *args, **kwargs):
         self.llm = llm
         self.tools = tools
         self.history_len = history_len
-
-    # async def chatbot(self, state: Type[State]) -> Type[State]:
-    #     """
-    #     定义了 graph 中 llm 的消息处理逻辑, 子类必须实现.
-    #     """
-    #     pass
 
     @abstractmethod
     def get_graph(self) -> CompiledStateGraph:
@@ -224,6 +213,7 @@ class Graph:
         return state
 
 
+@st.cache_data
 def list_graph_titles_by_label(label: str) -> list[str]:
     if label == "rag":
         return [info["title"] for info in rag_registry.values()]
@@ -233,6 +223,7 @@ def list_graph_titles_by_label(label: str) -> list[str]:
         raise ValueError(f"Unknown label '{label}'.")
 
 
+@st.cache_data
 def get_graph_class_by_label_and_title(label: str, title: str) -> Type[Graph]:
     if label == "rag":
         for info in rag_registry.values():

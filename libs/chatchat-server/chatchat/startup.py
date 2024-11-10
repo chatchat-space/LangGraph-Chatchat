@@ -18,7 +18,6 @@ except:
     pass
 
 import click
-from typing import Dict, List
 
 from fastapi import FastAPI
 
@@ -217,7 +216,6 @@ def dump_server_info(after_start=False, args=None):
 
 async def start_main_server(args):
     import signal
-    import time
 
     from chatchat.utils import (
         get_config_dict,
