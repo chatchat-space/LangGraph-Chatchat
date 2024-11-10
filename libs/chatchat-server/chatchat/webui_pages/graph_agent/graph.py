@@ -429,9 +429,19 @@ def graph_agent_page():
     else:
         graph_class = graph_class(llm=llm, tools=tools, history_len=history_len)
 
-    graph = graph_class.get_graph()
-    if not graph:
-        raise ValueError(f"Graph '{selected_graph}' is not registered.")
+    graph_instance = st.session_state["graph_dict"].get(selected_graph)
+    if graph_instance is None:
+        graph = graph_class.get_graph()
+        if not graph:
+            raise ValueError(f"Graph '{selected_graph}' is not registered.")
+        graph_png_image = get_img_base64(f"{selected_graph}.jpg")
+        if not graph_png_image:
+            graph_png_image = graph.get_graph().draw_mermaid_png()
+            logger.warning(f"The graph({selected_graph}) flowchart is not found in img, use graph.draw_mermaid_png() to get it.")
+        st.session_state["graph_dict"][selected_graph] = {
+            "graph": graph,
+            "graph_image": graph_png_image,
+        }
     st.toast(f"已加载工作流: {selected_graph}")
 
     # langgraph 配置文件
@@ -442,12 +452,7 @@ def graph_agent_page():
     }
     logger.info(f"Loaded graph: '{selected_graph}', configurable: '{graph_config}'")
 
-    # 绘制流程图并缓存
-    graph_flow_image_name = f"{selected_graph}_flow_image"
-    if graph_flow_image_name not in st.session_state:
-        graph_png_image = graph.get_graph().draw_mermaid_png()
-        st.session_state[graph_flow_image_name] = graph_png_image
-    st.sidebar.image(st.session_state[graph_flow_image_name], use_column_width=True)
+    st.sidebar.image(st.session_state["graph_dict"][selected_graph]["graph_image"], use_column_width=True)
 
     if selected_graph == "article_generation":
         # 初始化文章和图片信息
@@ -507,7 +512,10 @@ def graph_agent_page():
 
         # Run the async function in a synchronous context
         graph_input = {"messages": [("user", user_input)]}
-        asyncio.run(handle_user_input(graph=graph, graph_input=graph_input, graph_config=graph_config, graph_class_instance=graph_class))
+        asyncio.run(handle_user_input(graph=st.session_state["graph_dict"][selected_graph]["graph"],
+                                      graph_input=graph_input,
+                                      graph_config=graph_config,
+                                      graph_class_instance=graph_class))
         st.rerun()  # Clear stale containers
 
     if selected_graph == "article_generation":
@@ -527,8 +535,14 @@ def graph_agent_page():
                 "article_links": st.session_state["article_links"],
                 "image_links": st.session_state["image_links"],
             }
-            asyncio.run(update_state(graph=graph, graph_config=graph_config, update_message=update_message, as_node="article_generation_init_break_point"))
-            asyncio.run(handle_user_input(graph=graph, graph_input=None, graph_config=graph_config, graph_class_instance=graph_class))
+            asyncio.run(update_state(graph=st.session_state["graph_dict"][selected_graph]["graph"],
+                                     graph_config=graph_config,
+                                     update_message=update_message,
+                                     as_node="article_generation_init_break_point"))
+            asyncio.run(handle_user_input(graph=st.session_state["graph_dict"][selected_graph]["graph"],
+                                          graph_input=None,
+                                          graph_config=graph_config,
+                                          graph_class_instance=graph_class))
             # 后续不再需要进行 爬虫动作, 将 article_generation_init_break_point 状态扭转为 False
             st.session_state["article_generation_init_break_point"] = False
             st.rerun()  # Clear stale containers
@@ -539,8 +553,14 @@ def graph_agent_page():
                 "temperature": st.session_state["temperature"],
                 "user_prompt": st.session_state["prompt"],
             }
-            asyncio.run(update_state(graph=graph, graph_config=graph_config, update_message=update_message, as_node="article_generation_start_break_point"))
-            asyncio.run(handle_user_input(graph=graph, graph_input=None, graph_config=graph_config, graph_class_instance=graph_class))
+            asyncio.run(update_state(graph=st.session_state["graph_dict"][selected_graph]["graph"],
+                                     graph_config=graph_config,
+                                     update_message=update_message,
+                                     as_node="article_generation_start_break_point"))
+            asyncio.run(handle_user_input(graph=st.session_state["graph_dict"][selected_graph]["graph"],
+                                          graph_input=None,
+                                          graph_config=graph_config,
+                                          graph_class_instance=graph_class))
             # 后续不再需要进行 爬虫动作, 将 article_generation_init_break_point 状态扭转为 False
             st.session_state["article_generation_start_break_point"] = False
             st.rerun()  # Clear stale containers
@@ -560,8 +580,14 @@ def graph_agent_page():
                     "user_prompt": st.session_state["prompt"],
                     "is_article_generation_complete": False,
                 }
-            asyncio.run(update_state(graph=graph, graph_config=graph_config, update_message=update_message, as_node="article_generation_repeat_break_point"))
-            asyncio.run(handle_user_input(graph=graph, graph_input=None, graph_config=graph_config, graph_class_instance=graph_class))
+            asyncio.run(update_state(graph=st.session_state["graph_dict"][selected_graph]["graph"],
+                                     graph_config=graph_config,
+                                     update_message=update_message,
+                                     as_node="article_generation_repeat_break_point"))
+            asyncio.run(handle_user_input(graph=st.session_state["graph_dict"][selected_graph]["graph"],
+                                          graph_input=None,
+                                          graph_config=graph_config,
+                                          graph_class_instance=graph_class))
             # 将 article_generation_repeat_break_point 状态扭转为 False
             st.session_state["article_generation_start_break_point"] = False
             st.rerun()  # Clear stale containers

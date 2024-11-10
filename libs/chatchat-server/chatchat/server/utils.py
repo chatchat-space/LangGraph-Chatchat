@@ -1,4 +1,6 @@
 import os
+import sqlite3
+
 import requests
 import httpx
 import openai
@@ -24,6 +26,7 @@ from langchain.tools import BaseTool
 from langchain_core.embeddings import Embeddings
 from langchain_openai.chat_models import ChatOpenAI
 from langgraph.checkpoint.memory import MemorySaver
+from langgraph.checkpoint.sqlite import SqliteSaver
 from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 # from langgraph.checkpoint.postgres import PostgresSaver
 from memoization import cached, CachingAlgorithmFlag
@@ -811,8 +814,7 @@ def get_graph_memory():
     return _AGENT_MEMORY
 
 
-def get_st_graph_memory(memory_type: Optional[Literal["memory", "sqlite", "postgres"]] = None) -> (
-        Union)[
+def get_st_graph_memory(memory_type: Optional[Literal["memory", "sqlite", "postgres"]] = None) -> (Union)[
     MemorySaver,
     AsyncSqliteSaver,
     # PostgresSaver
@@ -820,6 +822,8 @@ def get_st_graph_memory(memory_type: Optional[Literal["memory", "sqlite", "postg
     """
     获取 graph 的 memory
     """
+    import sqlalchemy as sa
+
     if memory_type is None:
         memory_type = Settings.tool_settings.GRAPH_MEMORY_TYPE
 
