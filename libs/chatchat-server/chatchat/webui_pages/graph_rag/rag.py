@@ -1,6 +1,3 @@
-import asyncio
-import rich
-
 import streamlit as st
 from langgraph.graph.state import CompiledStateGraph
 from streamlit_extras.bottom_container import bottom
@@ -41,6 +38,7 @@ async def handle_user_input(
         graph_config: Dict,
         graph_class_instance: Any
 ):
+    import rich
     events = graph.astream(input=graph_input, config=graph_config, stream_mode="updates")
     if events:
         # Display assistant response in chat message container
