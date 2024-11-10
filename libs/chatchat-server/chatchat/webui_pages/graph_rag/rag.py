@@ -1,6 +1,3 @@
-import asyncio
-import rich
-
 import streamlit as st
 from langgraph.graph.state import CompiledStateGraph
 from streamlit_extras.bottom_container import bottom
@@ -41,6 +38,7 @@ async def handle_user_input(
         graph_config: Dict,
         graph_class_instance: Any
 ):
+    import rich
     events = graph.astream(input=graph_input, config=graph_config, stream_mode="updates")
     if events:
         # Display assistant response in chat message container
@@ -134,7 +132,7 @@ def llm_model_setting():
         st.rerun()
 
 
-def graph_rag_page(api: ApiRequest):
+async def graph_rag_page(api: ApiRequest):
     # 初始化
     init_conversation_id()
     if "selected_kb" not in st.session_state:
@@ -306,8 +304,8 @@ def graph_rag_page(api: ApiRequest):
 
         # Run the async function in a synchronous context
         graph_input = {"messages": [("user", user_input)]}
-        asyncio.run(handle_user_input(graph=st.session_state["graph_dict"][selected_graph]["graph"],
-                                      graph_input=graph_input,
-                                      graph_config=graph_config,
-                                      graph_class_instance=graph_class))
+        await handle_user_input(graph=st.session_state["graph_dict"][selected_graph]["graph"],
+                                graph_input=graph_input,
+                                graph_config=graph_config,
+                                graph_class_instance=graph_class)
         st.rerun()  # Clear stale containers

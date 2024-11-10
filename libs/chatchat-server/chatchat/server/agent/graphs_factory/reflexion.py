@@ -10,7 +10,7 @@ from langgraph.graph import END, StateGraph
 from langgraph.graph.graph import CompiledGraph
 from langchain_openai.chat_models import ChatOpenAI
 
-from chatchat.server.utils import get_graph_memory, build_logger, get_tool, add_tools_if_not_exists
+from chatchat.server.utils import build_logger, get_tool, add_tools_if_not_exists, get_st_graph_memory
 from .graphs_registry import State, register_graph, Graph
 
 logger = build_logger()
@@ -309,7 +309,7 @@ class ReflexionGraph(Graph):
         if not all(isinstance(tool, BaseTool) for tool in self.tools):
             raise TypeError("All items in tools must be instances of BaseTool")
 
-        memory = get_graph_memory()
+        memory = get_st_graph_memory()
 
         tool_node = ToolNode(tools=self.tools)
 
