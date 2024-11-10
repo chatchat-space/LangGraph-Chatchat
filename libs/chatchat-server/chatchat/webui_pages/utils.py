@@ -12,7 +12,8 @@ from typing import *
 import httpx
 
 from chatchat.settings import Settings
-from chatchat.server.utils import api_address, get_httpx_client, set_httpx_config, get_default_embedding
+from chatchat.server.utils import api_address, get_httpx_client, set_httpx_config, get_default_embedding, \
+    get_default_llm
 from chatchat.utils import build_logger
 
 
@@ -750,6 +751,35 @@ def create_chat_message(
         "type": type,
         "is_last_message": is_last_message
     }
+
+
+def init_conversation_id():
+    """
+    公共配置初始化
+    """
+    import streamlit as st
+    import uuid
+
+    if "conversation_id" not in st.session_state:
+        st.session_state["conversation_id"] = str(uuid.uuid4())
+    # 设置默认头像
+    if "assistant_avatar" not in st.session_state:
+        st.session_state["assistant_avatar"] = get_img_base64("chatchat_icon_blue_square_v2.png")
+    # 创建 streamlit 消息缓存
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+    # 初始化模型配置
+    if "platform" not in st.session_state:
+        st.session_state["platform"] = "所有"
+    if "llm_model" not in st.session_state:
+        st.session_state["llm_model"] = get_default_llm()
+        logger.info("default llm model: {}".format(st.session_state["llm_model"]))
+    if "temperature" not in st.session_state:
+        st.session_state["temperature"] = 0.01
+    if "prompt" not in st.session_state:
+        st.session_state["prompt"] = ""
+    if "history_len" not in st.session_state:
+        st.session_state["history_len"] = Settings.model_settings.HISTORY_LEN
 
 
 if __name__ == "__main__":

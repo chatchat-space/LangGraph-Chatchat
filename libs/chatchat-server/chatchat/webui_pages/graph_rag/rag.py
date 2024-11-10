@@ -1,6 +1,5 @@
-import rich
-import uuid
 import asyncio
+import rich
 
 import streamlit as st
 from langgraph.graph.state import CompiledStateGraph
@@ -15,7 +14,6 @@ from chatchat.server.utils import (
     build_logger,
     get_config_models,
     get_config_platforms,
-    get_default_llm,
     get_tool,
     create_agent_models,
     list_tools,
@@ -23,35 +21,6 @@ from chatchat.server.utils import (
 )
 
 logger = build_logger()
-
-
-def init_conversation_id():
-    if "conversation_id" not in st.session_state:
-        st.session_state["conversation_id"] = str(uuid.uuid4())
-    # 设置默认头像
-    if "assistant_avatar" not in st.session_state:
-        st.session_state["assistant_avatar"] = get_img_base64("chatchat_icon_blue_square_v2.png")
-    # 创建 streamlit 消息缓存
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
-    # 初始化模型配置
-    if "platform" not in st.session_state:
-        st.session_state["platform"] = "所有"
-    if "llm_model" not in st.session_state:
-        st.session_state["llm_model"] = get_default_llm()
-        logger.info("default llm model: {}".format(st.session_state["llm_model"]))
-    if "temperature" not in st.session_state:
-        st.session_state["temperature"] = 0.01
-    if "prompt" not in st.session_state:
-        st.session_state["prompt"] = ""
-    if "selected_kb" not in st.session_state:
-        st.session_state["selected_kb"] = Settings.kb_settings.DEFAULT_KNOWLEDGE_BASE
-    if "history_len" not in st.session_state:
-        st.session_state["history_len"] = Settings.model_settings.HISTORY_LEN
-    if "kb_top_k" not in st.session_state:
-        st.session_state["kb_top_k"] = Settings.kb_settings.VECTOR_SEARCH_TOP_K
-    if "score_threshold" not in st.session_state:
-        st.session_state["score_threshold"] = Settings.kb_settings.SCORE_THRESHOLD
 
 
 def extract_node_and_response(data):
@@ -166,8 +135,14 @@ def llm_model_setting():
 
 
 def graph_rag_page(api: ApiRequest):
-    # 初始化会话 id
+    # 初始化
     init_conversation_id()
+    if "selected_kb" not in st.session_state:
+        st.session_state["selected_kb"] = Settings.kb_settings.DEFAULT_KNOWLEDGE_BASE
+    if "kb_top_k" not in st.session_state:
+        st.session_state["kb_top_k"] = Settings.kb_settings.VECTOR_SEARCH_TOP_K
+    if "score_threshold" not in st.session_state:
+        st.session_state["score_threshold"] = Settings.kb_settings.SCORE_THRESHOLD
 
     with st.sidebar:
         tabs_1 = st.tabs(["工作流设置"])

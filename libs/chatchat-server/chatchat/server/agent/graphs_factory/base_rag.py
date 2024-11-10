@@ -1,5 +1,4 @@
 from typing import List, Literal, Dict
-
 from pydantic import BaseModel, Field
 
 from langchain_openai.chat_models import ChatOpenAI

@@ -1,6 +1,7 @@
 from typing import Callable, Any, Dict, Type, Annotated, List, Optional, TypedDict, TypeVar
 from abc import ABC, abstractmethod
 
+import streamlit as st
 from langchain_core.tools import BaseTool
 from langchain_openai import ChatOpenAI
 from langgraph.graph.message import add_messages
@@ -212,6 +213,7 @@ class Graph:
         return state
 
 
+@st.cache_data
 def list_graph_titles_by_label(label: str) -> list[str]:
     if label == "rag":
         return [info["title"] for info in rag_registry.values()]
@@ -221,6 +223,7 @@ def list_graph_titles_by_label(label: str) -> list[str]:
         raise ValueError(f"Unknown label '{label}'.")
 
 
+@st.cache_data
 def get_graph_class_by_label_and_title(label: str, title: str) -> Type[Graph]:
     if label == "rag":
         for info in rag_registry.values():

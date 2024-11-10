@@ -1,6 +1,5 @@
-import rich
-import uuid
 import asyncio
+import rich
 
 import streamlit as st
 from langgraph.graph.state import CompiledStateGraph
@@ -16,7 +15,6 @@ from chatchat.server.utils import (
     build_logger,
     get_config_models,
     get_config_platforms,
-    get_default_llm,
     get_tool,
     list_tools,
     create_agent_models,
@@ -24,35 +22,6 @@ from chatchat.server.utils import (
 )
 
 logger = build_logger()
-
-
-def init_conversation_id():
-    if "conversation_id" not in st.session_state:
-        st.session_state["conversation_id"] = str(uuid.uuid4())
-    # 设置默认头像
-    if "assistant_avatar" not in st.session_state:
-        st.session_state["assistant_avatar"] = get_img_base64("chatchat_icon_blue_square_v2.png")
-    # 创建 streamlit 消息缓存
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
-    # 初始化模型配置
-    if "platform" not in st.session_state:
-        st.session_state["platform"] = "所有"
-    if "llm_model" not in st.session_state:
-        st.session_state["llm_model"] = get_default_llm()
-        logger.info("default llm model: {}".format(st.session_state["llm_model"]))
-    if "temperature" not in st.session_state:
-        st.session_state["temperature"] = 0.01
-    if "prompt" not in st.session_state:
-        st.session_state["prompt"] = ""
-    if "article_generation_init_break_point" not in st.session_state:
-        st.session_state["article_generation_init_break_point"] = False
-    if "article_generation_start_break_point" not in st.session_state:
-        st.session_state["article_generation_start_break_point"] = False
-    if "article_generation_repeat_break_point" not in st.session_state:
-        st.session_state["article_generation_repeat_break_point"] = False
-    if "is_article_generation_complete" not in st.session_state:
-        st.session_state["is_article_generation_complete"] = False
 
 
 @st.dialog("输入初始化内容", width="large")
@@ -204,8 +173,8 @@ async def handle_user_input(
                 node, response = extract_node_and_response(event)
 
                 # debug
-                print(f"--- node: {node} ---")
-                rich.print(response)
+                # print(f"--- node: {node} ---")
+                # rich.print(response)
 
                 if node == "history_manager":  # history_manager node 为内部实现, 不外显
                     continue
@@ -352,8 +321,16 @@ def llm_model_setting():
 
 
 def graph_agent_page():
-    # 初始化会话 id
+    # 初始化
     init_conversation_id()
+    if "article_generation_init_break_point" not in st.session_state:
+        st.session_state["article_generation_init_break_point"] = False
+    if "article_generation_start_break_point" not in st.session_state:
+        st.session_state["article_generation_start_break_point"] = False
+    if "article_generation_repeat_break_point" not in st.session_state:
+        st.session_state["article_generation_repeat_break_point"] = False
+    if "is_article_generation_complete" not in st.session_state:
+        st.session_state["is_article_generation_complete"] = False
 
     with st.sidebar:
         tabs_1 = st.tabs(["工具设置"])
@@ -433,11 +410,6 @@ def graph_agent_page():
     # get_tool() 是所有工具的名称和对象的 dict 的列表
     all_tools = get_tool().values()
     tools = [tool for tool in all_tools if tool.name in selected_tools_configs]
-    # # 为保证调用效果, 如果用户没有选择任何 tool, 就默认选择互联网搜索工具
-    # if len(tools) == 0:
-    #     search_internet = get_tool(name="search_internet")
-    #     tools.append(search_internet)
-    # # rich.print(tools)
 
     # 创建 llm 实例
     # todo: max_tokens 这里有问题, None 应该是不限制, 但是目前 llm 结果为 4096
