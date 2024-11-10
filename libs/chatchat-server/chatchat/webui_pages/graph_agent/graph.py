@@ -320,7 +320,7 @@ def llm_model_setting():
         st.rerun()
 
 
-def graph_agent_page():
+async def graph_agent_page():
     # 初始化
     init_conversation_id()
     if "article_generation_init_break_point" not in st.session_state:
@@ -389,7 +389,7 @@ def graph_agent_page():
         with st.chat_message(name="assistant", avatar=st.session_state["assistant_avatar"]):
             st.write("Hello 👋😊，我是数据库查询机器人，输入你想查询的内容～")
     else:
-        st.title("聊天")
+        st.title("LLM 聊天")
         with st.chat_message(name="assistant", avatar=st.session_state["assistant_avatar"]):
             st.write("Hello 👋😊，我是聊天机器人，试着输入任何内容和我聊天呦～（ps: 可尝试选择多种工具）")
 
@@ -512,10 +512,14 @@ def graph_agent_page():
 
         # Run the async function in a synchronous context
         graph_input = {"messages": [("user", user_input)]}
-        asyncio.run(handle_user_input(graph=st.session_state["graph_dict"][selected_graph]["graph"],
-                                      graph_input=graph_input,
-                                      graph_config=graph_config,
-                                      graph_class_instance=graph_class))
+        # asyncio.run(handle_user_input(graph=st.session_state["graph_dict"][selected_graph]["graph"],
+        #                               graph_input=graph_input,
+        #                               graph_config=graph_config,
+        #                               graph_class_instance=graph_class))
+        await handle_user_input(graph=st.session_state["graph_dict"][selected_graph]["graph"],
+                                graph_input=graph_input,
+                                graph_config=graph_config,
+                                graph_class_instance=graph_class)
         st.rerun()  # Clear stale containers
 
     if selected_graph == "article_generation":

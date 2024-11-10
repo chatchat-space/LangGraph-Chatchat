@@ -10,7 +10,7 @@ from langgraph.graph import StateGraph, START
 from langgraph.graph.graph import CompiledGraph
 from langgraph.prebuilt import create_react_agent
 
-from chatchat.server.utils import get_graph_memory, build_logger
+from chatchat.server.utils import build_logger, get_st_graph_memory
 from .graphs_registry import State, register_graph, Graph
 
 logger = build_logger()
@@ -165,7 +165,7 @@ class PlanExecuteGraph(Graph):
         if not all(isinstance(tool, BaseTool) for tool in self.tools):
             raise TypeError("All items in tools must be instances of BaseTool")
 
-        memory = get_graph_memory()
+        memory = get_st_graph_memory()
 
         graph_builder = StateGraph(PlanExecute)
 

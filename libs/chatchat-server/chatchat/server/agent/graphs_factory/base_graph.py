@@ -1,3 +1,5 @@
+import asyncio
+
 from langchain_openai.chat_models import ChatOpenAI
 from langchain_core.tools import BaseTool
 from langchain_core.messages import BaseMessage, ToolMessage
@@ -54,6 +56,7 @@ class BaseAgentGraph(Graph):
             raise TypeError("All items in tools must be instances of BaseTool")
 
         memory = get_st_graph_memory()
+        # memory = asyncio.run(get_st_graph_memory())
 
         graph_builder = StateGraph(State)
 

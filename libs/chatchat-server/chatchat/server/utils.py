@@ -1,12 +1,11 @@
 import os
-import sqlite3
-
 import requests
 import httpx
 import openai
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
+from pydantic import BaseModel, Field
 from urllib.parse import urlparse
 from typing import (
     Any,
@@ -26,13 +25,11 @@ from langchain.tools import BaseTool
 from langchain_core.embeddings import Embeddings
 from langchain_openai.chat_models import ChatOpenAI
 from langgraph.checkpoint.memory import MemorySaver
-from langgraph.checkpoint.sqlite import SqliteSaver
 from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 # from langgraph.checkpoint.postgres import PostgresSaver
 from memoization import cached, CachingAlgorithmFlag
 
 from chatchat.settings import Settings, XF_MODELS_TYPES
-from pydantic import BaseModel, Field
 from chatchat.utils import build_logger
 
 logger = build_logger()
@@ -778,40 +775,32 @@ def get_tool_config(name: str = None) -> Dict:
         return Settings.tool_settings.model_dump().get(name, {})
 
 
-# langgraph checkpointer 使用的全局 memory
-_AGENT_MEMORY = None
-
-
-def set_graph_memory(memory_type: Literal["memory", "sqlite", "postgres", None] = None):
-    import sqlalchemy as sa
-    global _AGENT_MEMORY  # 声明使用全局 memory
-
-    if memory_type is None:
-        memory_type = Settings.tool_settings.GRAPH_MEMORY_TYPE
-
-    if hasattr(_AGENT_MEMORY, "conn"):
-        _AGENT_MEMORY.conn.close()
-
-    if memory_type == "memory":
-        from langgraph.checkpoint.memory import MemorySaver
-        _AGENT_MEMORY = MemorySaver()
-    elif memory_type == "sqlite":
-        from langgraph.checkpoint.sqlite import SqliteSaver
-
-        engine = sa.create_engine(Settings.basic_settings.SQLALCHEMY_DATABASE_URI)
-        conn = engine.connect().connection
-        _AGENT_MEMORY = SqliteSaver(conn)
-    # elif memory_type == "postgres":
-    #     from langgraph.checkpoint.postgres import PostgresSaver
-    #
-    #     engine = sa.create_engine(Settings.basic_settings.SQLALCHEMY_DATABASE_URI)
-    #     conn = engine.connect().connection
-    #     _AGENT_MEMORY = PostgresSaver(conn)
-
-
-def get_graph_memory():
-    global _AGENT_MEMORY  # 声明使用全局 memory
-    return _AGENT_MEMORY
+# def set_graph_memory(memory_type: Literal["memory", "sqlite", "postgres", None] = None):
+#     import sqlalchemy as sa
+#     global _AGENT_MEMORY  # 声明使用全局 memory
+#
+#     if memory_type is None:
+#         memory_type = Settings.tool_settings.GRAPH_MEMORY_TYPE
+#
+#     if hasattr(_AGENT_MEMORY, "conn"):
+#         _AGENT_MEMORY.conn.close()
+#
+#     if memory_type == "memory":
+#         from langgraph.checkpoint.memory import MemorySaver
+#         _AGENT_MEMORY = MemorySaver()
+#     elif memory_type == "sqlite":
+#         from langgraph.checkpoint.sqlite import SqliteSaver
+#
+#         engine = sa.create_engine(Settings.basic_settings.SQLALCHEMY_DATABASE_URI)
+#         conn = engine.connect().connection
+#         _AGENT_MEMORY = SqliteSaver(conn)
+#
+#     elif memory_type == "postgres":
+#         from langgraph.checkpoint.postgres import PostgresSaver
+#
+#         engine = sa.create_engine(Settings.basic_settings.SQLALCHEMY_DATABASE_URI)
+#         conn = engine.connect().connection
+#         _AGENT_MEMORY = PostgresSaver(conn)
 
 
 def get_st_graph_memory(memory_type: Optional[Literal["memory", "sqlite", "postgres"]] = None) -> (Union)[
