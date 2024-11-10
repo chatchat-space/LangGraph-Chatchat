@@ -18,6 +18,7 @@ from typing import (
     Union,
 )
 
+import streamlit
 from fastapi import FastAPI
 from langchain.tools import BaseTool
 from langchain_core.embeddings import Embeddings
@@ -839,6 +840,7 @@ def get_st_graph_memory(memory_type: Optional[Literal["memory", "sqlite", "postg
     raise ValueError("Invalid memory_type provided. Must be 'memory', 'sqlite', or 'postgres'.")
 
 
+@streamlit.cache_resource
 def create_agent_models(
         configs: Any,
         model: str,
