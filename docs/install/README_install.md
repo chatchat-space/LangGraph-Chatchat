@@ -48,7 +48,7 @@ poetry install --with lint,test -E xinference
 执行以下命令之前，请先设置当前目录和项目数据目录：
 ```shell
 cd LangGraph-Chatchat/libs/chatchat-server/chatchat
-export CHATCHAT_ROOT=/parth/to/chatchat_data
+export CHATCHAT_ROOT=/path/to/chatchat_data
 ```
 
 ## 3. 关于 chatchat 配置项
