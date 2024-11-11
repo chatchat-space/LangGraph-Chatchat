@@ -98,6 +98,9 @@ class BasicSettings(BaseFileSettings):
     SQLALCHEMY_DATABASE_URI: str = "sqlite:///" + str(CHATCHAT_ROOT / "data/knowledge_base/info.db")
     """知识库信息数据库连接URI"""
 
+    SQLITE_GRAPH_DATABASE_URI: str = str(CHATCHAT_ROOT / "data/graph.db")
+    """工作流 SQLITE CHECKPOINT 数据库连接URI"""
+
     OPEN_CROSS_DOMAIN: bool = False
     """API 是否开启跨域"""
 
@@ -257,15 +260,15 @@ class KBSettings(BaseFileSettings):
             },
         }
     """
-    TextSplitter配置项，如果你不明白其中的含义，就不要修改。
-    source 如果选择tiktoken则使用openai的方法 "huggingface"
+    TextSplitter 配置项，如果你不明白其中的含义，就不要修改。
+    source 如果选择 tiktoken 则使用 openai 的方法 "huggingface"
     """
 
     TEXT_SPLITTER_NAME: str = "ChineseRecursiveTextSplitter"
     """TEXT_SPLITTER 名称"""
 
     EMBEDDING_KEYWORD_FILE: str = "embedding_keywords.txt"
-    """Embedding模型定制词语的词表文件"""
+    """Embedding 模型定制词语的词表文件"""
 
 
 class PlatformConfig(MyBaseModel):

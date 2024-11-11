@@ -1,135 +1,63 @@
-import streamlit as st
-from langgraph.graph.state import CompiledStateGraph
+from langchain_core.tools import BaseTool
+from langchain_openai import ChatOpenAI
 from streamlit_extras.bottom_container import bottom
 
 from chatchat.webui_pages.utils import *
 from chatchat.server.agent.graphs_factory.graphs_registry import (
     list_graph_titles_by_label,
     get_graph_class_by_label_and_title,
+    Graph,
 )
 from chatchat.server.utils import (
     build_logger,
-    get_config_models,
-    get_config_platforms,
     get_tool,
     create_agent_models,
-    list_tools,
-    serialize_content_to_json
+    list_tools, get_checkpoint,
 )
 
 logger = build_logger()
 
 
-def extract_node_and_response(data):
-    # 获取第一个键值对，作为 node
-    if not data:
-        raise ValueError("数据为空")
-
-    # 获取第一个键及其对应的值
-    node = next(iter(data))
-    response = data[node]
-
-    return node, response
-
-
-async def handle_user_input(
-        graph: CompiledStateGraph,
+async def create_graph(
+        graph_class: Type[Graph],
         graph_input: Any,
-        graph_config: Dict,
-        graph_class_instance: Any
+        graph_config: dict,
+        graph_llm: ChatOpenAI,
+        graph_tools: list[BaseTool],
+        graph_history_len: int,
+        knowledge_base: str,
+        top_k: int,
+        score_threshold: float
 ):
-    import rich
-    events = graph.astream(input=graph_input, config=graph_config, stream_mode="updates")
-    if events:
-        # Display assistant response in chat message container
-        with st.chat_message(name="assistant", avatar=st.session_state["assistant_avatar"]):
-            response_last = ""
-            async for event in events:
-                node, response = extract_node_and_response(event)
-                # debug
-                print(f"--- node: {node} ---")
-                rich.print(response)
-
-                if node == "history_manager":  # history_manager node 为内部实现, 不外显
-                    continue
-
-                # 获取 event
-                response = await graph_class_instance.handle_event(node=node, event=response)
-                # 将 event 转化为 json
-                response = serialize_content_to_json(response)
-                # print("after serialize_content response:")
-                # rich.print(response)
-                response_last = response["content"]
-
-                # Add assistant response to chat history
-                st.session_state.messages.append(create_chat_message(
-                    role="assistant",
-                    content=response,
-                    node=node,
-                    expanded=False,
-                    type="json",
-                    is_last_message=False
-                ))
-                with st.status(node, expanded=True) as status:
-                    st.json(response, expanded=True)
-                    status.update(
-                        label=node, state="complete", expanded=False
-                    )
-
-            # Add assistant response_last to chat history
-            st.session_state.messages.append(create_chat_message(
-                role="assistant",
-                content=response_last,
-                node=None,
-                expanded=None,
-                type="text",
-                is_last_message=True
-            ))
-            st.markdown(response_last)
-
-
-@st.dialog("输入初始化内容", width="large")
-def article_generation_init_setting():
-    article_links = st.text_area("文章链接")
-    image_links = st.text_area("图片链接")
-
-    if st.button("确认"):
-        st.session_state["article_links"] = article_links
-        st.session_state["image_links"] = image_links
-        # 将 article_generation_init_break_point 状态扭转为 True, 后续将进行 update_state 动作
-        st.session_state["article_generation_init_break_point"] = True
-
-        user_input = (f"文章链接: {article_links}\n"
-                      f"图片链接: {image_links}")
-        with st.chat_message("user"):
-            st.markdown(user_input)
-        st.session_state.messages.append({
-            "role": "user",
-            "content": user_input,
-            "type": "text"  # 标识为文本类型
-        })
-
-        st.rerun()
-
-
-@st.dialog("模型配置", width="large")
-def llm_model_setting():
-    cols = st.columns(3)
-    platforms = ["所有"] + list(get_config_platforms())
-    platform = cols[0].selectbox("模型平台设置(Platform)", platforms)
-    llm_models = list(
-        get_config_models(
-            model_type="llm", platform_name=None if platform == "所有" else platform
-        )
-    )
-    llm_model = cols[1].selectbox("模型设置(LLM)", llm_models)
-    temperature = cols[2].slider("温度设置(Temperature)", 0.0, 1.0, value=st.session_state["temperature"])
-
-    if st.button("确认"):
-        st.session_state["platform"] = platform
-        st.session_state["llm_model"] = llm_model
-        st.session_state["temperature"] = temperature
-        st.rerun()
+    if st.session_state["checkpoint_type"] == "memory":
+        if "memory" not in st.session_state:
+            st.session_state["memory"] = get_checkpoint()
+        checkpoint = st.session_state["memory"]
+        graph_class = graph_class(llm=graph_llm,
+                                  tools=graph_tools,
+                                  history_len=graph_history_len,
+                                  checkpoint=checkpoint,
+                                  knowledge_base=knowledge_base,
+                                  top_k=top_k,
+                                  score_threshold=score_threshold)
+        graph = graph_class.get_graph()
+        if not graph:
+            raise ValueError(f"Graph '{graph_class}' is not registered.")
+        await process_graph(graph_class=graph_class, graph=graph, graph_input=graph_input, graph_config=graph_config)
+    elif st.session_state["checkpoint_type"] == "sqlite":
+        checkpoint_class = get_checkpoint()
+        async with checkpoint_class as checkpoint:
+            graph_class = graph_class(llm=graph_llm,
+                                      tools=graph_tools,
+                                      history_len=graph_history_len,
+                                      checkpoint=checkpoint,
+                                      knowledge_base=knowledge_base,
+                                      top_k=top_k,
+                                      score_threshold=score_threshold)
+            graph = graph_class.get_graph()
+            if not graph:
+                raise ValueError(f"Graph '{graph_class}' is not registered.")
+            await process_graph(graph_class=graph_class, graph=graph, graph_input=graph_input, graph_config=graph_config)
 
 
 async def graph_rag_page(api: ApiRequest):
@@ -225,24 +153,14 @@ async def graph_rag_page(api: ApiRequest):
     # 创建 langgraph 实例
     graph_class = get_graph_class_by_label_and_title(label="rag", title=selected_graph)
 
-    if graph_class.__name__ == "BaseRagGraph":
-        graph_class = graph_class(llm=llm, tools=tools, history_len=history_len, knowledge_base=selected_kb,
-                                  top_k=kb_top_k, score_threshold=score_threshold)
-    else:
-        graph_class = graph_class(llm=llm, tools=tools, history_len=history_len, knowledge_base=selected_kb,
-                                  top_k=kb_top_k, score_threshold=score_threshold)
-
     graph_instance = st.session_state["graph_dict"].get(selected_graph)
     if graph_instance is None:
-        graph = graph_class.get_graph()
-        if not graph:
-            raise ValueError(f"Graph '{selected_graph}' is not registered.")
         graph_png_image = get_img_base64(f"{selected_graph}.jpg")
-        if not graph_png_image:
-            graph_png_image = graph.get_graph().draw_mermaid_png()
-            logger.warning(f"The graph({selected_graph}) flowchart is not found in img, use graph.draw_mermaid_png() to get it.")
+        # if not graph_png_image:
+        #     graph_png_image = graph.get_graph().draw_mermaid_png()
+        #     logger.warning(f"The graph({selected_graph}) flowchart is not found in img, use graph.draw_mermaid_png() to get it.")
         st.session_state["graph_dict"][selected_graph] = {
-            "graph": graph,
+            "graph_class": graph_class,
             "graph_image": graph_png_image,
         }
     st.toast(f"已加载工作流: {selected_graph}")
@@ -304,8 +222,13 @@ async def graph_rag_page(api: ApiRequest):
 
         # Run the async function in a synchronous context
         graph_input = {"messages": [("user", user_input)]}
-        await handle_user_input(graph=st.session_state["graph_dict"][selected_graph]["graph"],
-                                graph_input=graph_input,
-                                graph_config=graph_config,
-                                graph_class_instance=graph_class)
+        await create_graph(graph_class=st.session_state["graph_dict"][selected_graph]["graph_class"],
+                           graph_input=graph_input,
+                           graph_config=graph_config,
+                           graph_llm=llm,
+                           graph_tools=tools,
+                           graph_history_len=history_len,
+                           knowledge_base=selected_kb,
+                           top_k=kb_top_k,
+                           score_threshold=score_threshold)
         st.rerun()  # Clear stale containers

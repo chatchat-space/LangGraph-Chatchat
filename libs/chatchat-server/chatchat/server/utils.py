@@ -2,7 +2,6 @@ import os
 import requests
 import httpx
 import openai
-
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from pydantic import BaseModel, Field
@@ -775,35 +774,7 @@ def get_tool_config(name: str = None) -> Dict:
         return Settings.tool_settings.model_dump().get(name, {})
 
 
-# def set_graph_memory(memory_type: Literal["memory", "sqlite", "postgres", None] = None):
-#     import sqlalchemy as sa
-#     global _AGENT_MEMORY  # 声明使用全局 memory
-#
-#     if memory_type is None:
-#         memory_type = Settings.tool_settings.GRAPH_MEMORY_TYPE
-#
-#     if hasattr(_AGENT_MEMORY, "conn"):
-#         _AGENT_MEMORY.conn.close()
-#
-#     if memory_type == "memory":
-#         from langgraph.checkpoint.memory import MemorySaver
-#         _AGENT_MEMORY = MemorySaver()
-#     elif memory_type == "sqlite":
-#         from langgraph.checkpoint.sqlite import SqliteSaver
-#
-#         engine = sa.create_engine(Settings.basic_settings.SQLALCHEMY_DATABASE_URI)
-#         conn = engine.connect().connection
-#         _AGENT_MEMORY = SqliteSaver(conn)
-#
-#     elif memory_type == "postgres":
-#         from langgraph.checkpoint.postgres import PostgresSaver
-#
-#         engine = sa.create_engine(Settings.basic_settings.SQLALCHEMY_DATABASE_URI)
-#         conn = engine.connect().connection
-#         _AGENT_MEMORY = PostgresSaver(conn)
-
-
-def get_st_graph_memory(memory_type: Optional[Literal["memory", "sqlite", "postgres"]] = None) -> (Union)[
+def get_checkpoint(memory_type: Optional[Literal["memory", "sqlite", "postgres"]] = None) -> (Union)[
     MemorySaver,
     AsyncSqliteSaver,
     # PostgresSaver
@@ -818,12 +789,8 @@ def get_st_graph_memory(memory_type: Optional[Literal["memory", "sqlite", "postg
 
     if memory_type == "memory":
         return MemorySaver()
-
     elif memory_type == "sqlite":
-        import aiosqlite
-        conn = aiosqlite.connect("langgraph_checkpoints.sqlite")
-        return AsyncSqliteSaver(conn)
-
+        return AsyncSqliteSaver.from_conn_string(Settings.basic_settings.SQLITE_GRAPH_DATABASE_URI)
     # elif memory_type == "postgres":
     #     import sqlalchemy as sa
     #     engine = sa.create_engine(Settings.basic_settings.SQLALCHEMY_DATABASE_URI)
@@ -879,16 +846,6 @@ def add_tools_if_not_exists(
             tools_provides.append(tool)  # 追加工具
             tools_provides_list.append(tool)  # 更新列表
     return tools_provides
-
-
-def serialize_content_to_json(content: Any) -> Any:
-    if isinstance(content, BaseModel):
-        return content.dict()
-    elif isinstance(content, list):
-        return [serialize_content_to_json(item) for item in content]
-    elif isinstance(content, dict):
-        return {key: serialize_content_to_json(value) for key, value in content.items()}
-    return content
 
 
 if __name__ == "__main__":

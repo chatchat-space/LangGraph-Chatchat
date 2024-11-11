@@ -4,13 +4,14 @@ from langchain import hub
 from langchain_openai.chat_models import ChatOpenAI
 from langchain_core.tools import BaseTool
 from langchain_core.prompts import ChatPromptTemplate
+from langgraph.checkpoint.base import BaseCheckpointSaver
 from pydantic import BaseModel, Field
 from langchain_core.messages import AIMessage
 from langgraph.graph import StateGraph, START
 from langgraph.graph.graph import CompiledGraph
 from langgraph.prebuilt import create_react_agent
 
-from chatchat.server.utils import build_logger, get_st_graph_memory
+from chatchat.server.utils import build_logger
 from .graphs_registry import State, register_graph, Graph
 
 logger = build_logger()
@@ -65,8 +66,9 @@ class PlanExecuteGraph(Graph):
     def __init__(self,
                  llm: ChatOpenAI,
                  tools: list[BaseTool],
-                 history_len: int):
-        super().__init__(llm, tools, history_len)
+                 history_len: int,
+                 checkpoint: BaseCheckpointSaver):
+        super().__init__(llm, tools, history_len, checkpoint)
 
     async def plan_step(self, state: PlanExecute) -> PlanExecute:
         planner_prompt = ChatPromptTemplate.from_messages(
@@ -77,12 +79,12 @@ class PlanExecuteGraph(Graph):
         This plan should involve individual tasks, that if executed correctly will yield the correct answer. Do not add any superfluous steps. \
         The result of the final step should be the final answer. Make sure that each step has all the information needed - do not skip steps.""",
                 ),
-                ("placeholder", "{messages}"),
+                ("placeholder", "{history}"),
             ]
         )
         planner = planner_prompt | self.llm.with_structured_output(Plan)
 
-        plan_steps = await planner.ainvoke({"messages": state["history"]})
+        plan_steps = await planner.ainvoke(state)
         plan = Plan(steps=plan_steps.steps)
         state["plan"] = plan
 
@@ -165,8 +167,6 @@ class PlanExecuteGraph(Graph):
         if not all(isinstance(tool, BaseTool) for tool in self.tools):
             raise TypeError("All items in tools must be instances of BaseTool")
 
-        memory = get_st_graph_memory()
-
         graph_builder = StateGraph(PlanExecute)
 
         graph_builder.add_node("history_manager", self.async_history_manager)
@@ -192,7 +192,7 @@ class PlanExecuteGraph(Graph):
         # Finally, we compile it!
         # This compiles it into a LangChain Runnable,
         # meaning you can use it as you would any other runnable
-        graph = graph_builder.compile(checkpointer=memory)
+        graph = graph_builder.compile(checkpointer=self.checkpoint)
 
         return graph
 
@@ -211,7 +211,7 @@ class PlanExecuteGraph(Graph):
         else:
             return event_data["response"]
 
-    async def handle_event(self, node: str, event: PlanExecute) -> Any:
+    def handle_event(self, node: str, event: PlanExecute) -> Any:
         """
         event example:
         {'planner': {'messages': [HumanMessage(content='what is the hometown of the 2024 Australia open winner?', id='09da28f6-56af-4362-bd8f-f31cd98a103d')], 'history': [HumanMessage(content='what is the hometown of the 2024 Australia open winner?', id='09da28f6-56af-4362-bd8f-f31cd98a103d')], 'plan':

@@ -4,13 +4,14 @@ from typing import List, Optional, Literal, Any
 from langchain_core.tools import BaseTool
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.messages import BaseMessage, AIMessage, ToolMessage
+from langgraph.checkpoint.base import BaseCheckpointSaver
 from pydantic import BaseModel, Field
 from langgraph.prebuilt import ToolNode
 from langgraph.graph import END, StateGraph
 from langgraph.graph.graph import CompiledGraph
 from langchain_openai.chat_models import ChatOpenAI
 
-from chatchat.server.utils import build_logger, get_tool, add_tools_if_not_exists, get_st_graph_memory
+from chatchat.server.utils import build_logger, get_tool, add_tools_if_not_exists
 from .graphs_registry import State, register_graph, Graph
 
 logger = build_logger()
@@ -101,8 +102,9 @@ class ReflexionGraph(Graph):
     def __init__(self,
                  llm: ChatOpenAI,
                  tools: list[BaseTool],
-                 history_len: int):
-        super().__init__(llm, tools, history_len)
+                 history_len: int,
+                 checkpoint: BaseCheckpointSaver):
+        super().__init__(llm, tools, history_len, checkpoint)
         # 担心用户没有选择任何 tool 而造成 agent 逻辑无效, 为保证效果, 强行追加一个 search_internet 工具, 如开发者不需要可注释此行代码.
         search_internet = get_tool(name="search_internet")
         self.tools = add_tools_if_not_exists(tools_provides=self.tools, tools_need_append=[search_internet])
@@ -309,8 +311,6 @@ class ReflexionGraph(Graph):
         if not all(isinstance(tool, BaseTool) for tool in self.tools):
             raise TypeError("All items in tools must be instances of BaseTool")
 
-        memory = get_st_graph_memory()
-
         tool_node = ToolNode(tools=self.tools)
 
         # Sub Graph
@@ -322,7 +322,7 @@ class ReflexionGraph(Graph):
         function_call_sub_graph_builder.add_edge("function_call", "tools")
         function_call_sub_graph_builder.add_edge("tools", "process_func_call_history")
         function_call_sub_graph_builder.add_edge("process_func_call_history", END)
-        function_call_sub_graph = function_call_sub_graph_builder.compile(checkpointer=memory)
+        function_call_sub_graph = function_call_sub_graph_builder.compile(checkpointer=self.checkpoint)
 
         # Construct Graph
         builder = StateGraph(ReflexionState)
@@ -343,12 +343,12 @@ class ReflexionGraph(Graph):
         # revise -> execute_tools OR end
         builder.add_conditional_edges("revise", self.event_loop)
 
-        graph = builder.compile(checkpointer=memory)
+        graph = builder.compile(checkpointer=self.checkpoint)
 
         return graph
 
     @staticmethod
-    async def handle_event(node: str, event: ReflexionState) -> Any:
+    def handle_event(node: str, event: ReflexionState) -> Any:
         """
         event example:
         """

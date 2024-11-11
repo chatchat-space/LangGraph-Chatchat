@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 import streamlit as st
 from langchain_core.tools import BaseTool
 from langchain_openai import ChatOpenAI
+from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.graph.message import add_messages
 from langchain_core.messages import BaseMessage, ToolMessage, AIMessage, filter_messages
 from langgraph.graph.state import CompiledStateGraph
@@ -146,10 +147,17 @@ def register_graph(cls):
 
 
 class Graph:
-    def __init__(self, llm: ChatOpenAI, tools: list[BaseTool], history_len: int, *args, **kwargs):
+    def __init__(self,
+                 llm: ChatOpenAI,
+                 tools: list[BaseTool],
+                 history_len: int,
+                 checkpoint: BaseCheckpointSaver,
+                 *args,
+                 **kwargs):
         self.llm = llm
         self.tools = tools
         self.history_len = history_len
+        self.checkpoint = checkpoint
 
     @abstractmethod
     def get_graph(self) -> CompiledStateGraph:
@@ -159,7 +167,7 @@ class Graph:
         pass
 
     @abstractmethod
-    async def handle_event(self, *args, **kwargs):
+    def handle_event(self, *args, **kwargs):
         """
         定义了 graph 的消息返回处理逻辑, 子类必须实现.
         """
