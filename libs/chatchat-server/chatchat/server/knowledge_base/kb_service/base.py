@@ -12,7 +12,6 @@ from chatchat.server.db.models.knowledge_base_model import KnowledgeBaseSchema
 from chatchat.server.db.repository.knowledge_base_repository import (
     add_kb_to_db,
     delete_kb_from_db,
-    get_kb_detail,
     kb_exists,
     list_kbs_from_db,
     load_kb_from_db,

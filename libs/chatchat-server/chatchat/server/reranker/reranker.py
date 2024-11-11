@@ -1,13 +1,13 @@
 import os
 import sys
+import numpy as np
+import httpx
 sys.path.append(os.path.dirname(__file__))
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from chatchat.utils import build_logger
 from chatchat.server.utils import api_address
 
 logger = build_logger()
-import numpy as np
-import httpx
 
 
 # def reranker_passage_local(pairs: list[list[str]],topk=1,return_obj="score"):

@@ -12,7 +12,8 @@ from chatchat.server.utils import (
     build_logger,
     get_tool,
     create_agent_models,
-    list_tools, get_checkpoint,
+    list_tools,
+    get_checkpoint,
 )
 
 logger = build_logger()
