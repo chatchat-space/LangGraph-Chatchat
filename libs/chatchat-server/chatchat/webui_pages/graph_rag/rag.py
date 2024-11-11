@@ -13,7 +13,7 @@ from chatchat.server.utils import (
     get_tool,
     create_agent_models,
     list_tools,
-    get_checkpoint,
+    get_checkpointer,
 )
 
 logger = build_logger()
@@ -32,7 +32,7 @@ async def create_graph(
 ):
     if st.session_state["checkpoint_type"] == "memory":
         if "memory" not in st.session_state:
-            st.session_state["memory"] = get_checkpoint()
+            st.session_state["memory"] = get_checkpointer()
         checkpoint = st.session_state["memory"]
         graph_class = graph_class(llm=graph_llm,
                                   tools=graph_tools,
@@ -46,8 +46,30 @@ async def create_graph(
             raise ValueError(f"Graph '{graph_class}' is not registered.")
         await process_graph(graph_class=graph_class, graph=graph, graph_input=graph_input, graph_config=graph_config)
     elif st.session_state["checkpoint_type"] == "sqlite":
-        checkpoint_class = get_checkpoint()
+        checkpoint_class = get_checkpointer()
         async with checkpoint_class as checkpoint:
+            graph_class = graph_class(llm=graph_llm,
+                                      tools=graph_tools,
+                                      history_len=graph_history_len,
+                                      checkpoint=checkpoint,
+                                      knowledge_base=knowledge_base,
+                                      top_k=top_k,
+                                      score_threshold=score_threshold)
+            graph = graph_class.get_graph()
+            if not graph:
+                raise ValueError(f"Graph '{graph_class}' is not registered.")
+            await process_graph(graph_class=graph_class, graph=graph, graph_input=graph_input, graph_config=graph_config)
+    elif st.session_state["checkpoint_type"] == "postgres":
+        from psycopg_pool import AsyncConnectionPool
+        from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
+        async with AsyncConnectionPool(
+            conninfo=Settings.basic_settings.POSTGRESQL_GRAPH_DATABASE_URI,
+            max_size=Settings.basic_settings.POSTGRESQL_GRAPH_CONNECTION_POOLS_MAX_SIZE,
+            kwargs=Settings.basic_settings.POSTGRESQL_GRAPH_CONNECTION_POOLS_KWARGS,
+        ) as pool:
+            checkpoint = AsyncPostgresSaver(pool)
+            # NOTE: you need to call .setup() the first time you're using your checkpointer
+            await checkpoint.setup()
             graph_class = graph_class(llm=graph_llm,
                                       tools=graph_tools,
                                       history_len=graph_history_len,
