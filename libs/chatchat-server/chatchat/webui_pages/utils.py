@@ -1,6 +1,5 @@
 # 该文件封装了对api.py的请求，可以被不同的webui使用
 # 通过ApiRequest和AsyncApiRequest支持同步/异步调用
-
 import base64
 import contextlib
 import json
@@ -8,12 +7,22 @@ import os
 from io import BytesIO
 from pathlib import Path
 from typing import *
-
 import httpx
+import uuid
 
+import streamlit as st
+from langgraph.graph.state import CompiledStateGraph
+from pydantic import BaseModel
+
+from chatchat.server.agent.graphs_factory.graphs_registry import Graph
 from chatchat.settings import Settings
-from chatchat.server.utils import api_address, get_httpx_client, set_httpx_config, get_default_embedding, \
-    get_default_llm
+from chatchat.server.utils import (
+    api_address,
+    get_httpx_client,
+    set_httpx_config,
+    get_default_embedding,
+    get_default_llm, get_config_platforms, get_config_models
+)
 from chatchat.utils import build_logger
 
 
@@ -757,9 +766,6 @@ def init_conversation_id():
     """
     公共配置初始化
     """
-    import streamlit as st
-    import uuid
-
     if "conversation_id" not in st.session_state:
         st.session_state["conversation_id"] = str(uuid.uuid4())
     # 设置默认头像
@@ -782,6 +788,208 @@ def init_conversation_id():
         st.session_state["history_len"] = Settings.model_settings.HISTORY_LEN
     if "graph_dict" not in st.session_state:
         st.session_state["graph_dict"] = {}
+    if "checkpoint_type" not in st.session_state:
+        st.session_state["checkpoint_type"] = Settings.tool_settings.GRAPH_MEMORY_TYPE
+
+
+def extract_node_and_response(data):
+    # 获取第一个键值对，作为 node
+    if not data:
+        raise ValueError("数据为空")
+
+    # 获取第一个键及其对应的值
+    node = next(iter(data))
+    response = data[node]
+
+    return node, response
+
+
+def serialize_content_to_json(content: Any) -> Any:
+    if isinstance(content, BaseModel):
+        return content.dict()
+    elif isinstance(content, list):
+        return [serialize_content_to_json(item) for item in content]
+    elif isinstance(content, dict):
+        return {key: serialize_content_to_json(value) for key, value in content.items()}
+    return content
+
+
+async def process_graph(graph_class: Graph, graph: CompiledStateGraph, graph_input: Any, graph_config: dict):
+    events = graph.astream(input=graph_input, config=graph_config, stream_mode="updates")
+    if events:
+        # Display assistant response in chat message container
+        with st.chat_message(name="assistant", avatar=st.session_state["assistant_avatar"]):
+            response_last = ""
+            async for event in events:
+                node, response = extract_node_and_response(event)
+                # debug
+                # print(f"--- node: {node} ---")
+                # rich.print(response)
+
+                if node == "history_manager":  # history_manager node 为内部实现, 不外显
+                    continue
+
+                # 获取 event
+                response = graph_class.handle_event(node=node, event=response)
+                # 将 event 转化为 json
+                response = serialize_content_to_json(response)
+                # rich.print(response)
+
+                # 检查 'content' 是否在响应中(因为我们只需要 AIMessage 的内容)
+                if "content" in response:
+                    response_last = response["content"]
+                elif "response" in response:  # plan_execute_agent
+                    response_last = response["response"]
+                elif "answer" in response:  # reflexion
+                    response_last = response["answer"]
+
+                # Add assistant response to chat history
+                st.session_state.messages.append(create_chat_message(
+                    role="assistant",
+                    content=response,
+                    node=node,
+                    expanded=False,
+                    type="json",
+                    is_last_message=False
+                ))
+                with st.status(node, expanded=True) as status:
+                    st.json(response, expanded=True)
+                    status.update(label=node, state="complete", expanded=False)
+
+            # Add assistant response_last to chat history
+            st.session_state.messages.append(create_chat_message(
+                role="assistant",
+                content=response_last,
+                node=None,
+                expanded=None,
+                type="text",
+                is_last_message=True
+            ))
+            st.markdown(response_last)
+
+        # if graph_class_instance.name == "article_generation":
+        #     async for event in events:
+        #         node, response = extract_node_and_response(event)
+        #
+        #         # debug
+        #         # print(f"--- node: {node} ---")
+        #         # rich.print(response)
+        #
+        #         if node == "history_manager":  # history_manager node 为内部实现, 不外显
+        #             continue
+        #         if node == "article_generation_init_break_point":
+        #             with st.chat_message(name="assistant", avatar=st.session_state["assistant_avatar"]):
+        #                 st.write("请进行初始化设置")
+        #                 st.session_state.messages.append({
+        #                     "role": "assistant",
+        #                     "content": "请进行初始化设置",
+        #                     "type": "text"  # 标识为文本类型
+        #                 })
+        #             article_generation_init_setting()
+        #             continue
+        #         if node == "article_generation_start_break_point":
+        #             with st.chat_message(name="assistant", avatar=st.session_state["assistant_avatar"]):
+        #                 st.write("请开始下达指令")
+        #                 st.session_state.messages.append({
+        #                     "role": "assistant",
+        #                     "content": "请开始下达指令",
+        #                     "type": "text"  # 标识为文本类型
+        #                 })
+        #             st.session_state["article_list"] = response["article_list"]
+        #             article_generation_start_setting()
+        #             continue
+        #         if node == "article_generation_repeat_break_point":
+        #             with st.chat_message(name="assistant", avatar=st.session_state["assistant_avatar"]):
+        #                 st.write("请确认是否重写")
+        #                 st.session_state.messages.append({
+        #                     "role": "assistant",
+        #                     "content": "请确认是否重写",
+        #                     "type": "text"  # 标识为文本类型
+        #                 })
+        #             st.session_state["article"] = response["article"]
+        #             article_generation_repeat_setting()
+        #             continue
+        #         # Display assistant response in chat message container
+        #         with st.chat_message(name="assistant", avatar=st.session_state["assistant_avatar"]):
+        #             with st.status(node, expanded=True) as status:
+        #                 st.json(response, expanded=True)
+        #                 status.update(
+        #                     label=node, state="complete", expanded=False
+        #                 )
+        #             # Add assistant response to chat history
+        #             st.session_state.messages.append({
+        #                 "role": "assistant",
+        #                 "content": response,
+        #                 "node": node,
+        #                 "expanded": False,
+        #                 "type": "json"  # 标识为JSON类型
+        #             })
+        # else:
+        #     # Display assistant response in chat message container
+        #     with st.chat_message(name="assistant", avatar=st.session_state["assistant_avatar"]):
+        #         response_last = ""
+        #         async for event in events:
+        #             node, response = extract_node_and_response(event)
+        #             # debug
+        #             # print(f"--- node: {node} ---")
+        #             # rich.print(response)
+        #
+        #             if node == "history_manager":  # history_manager node 为内部实现, 不外显
+        #                 continue
+        #
+        #             # 获取 event
+        #             response = graph_class_instance.handle_event(node=node, event=response)
+        #             # 将 event 转化为 json
+        #             response = serialize_content_to_json(response)
+        #             # rich.print(response)
+        #
+        #             # 检查 'content' 是否在响应中(因为我们只需要 AIMessage 的内容)
+        #             if "content" in response:
+        #                 response_last = response["content"]
+        #             elif "response" in response:  # plan_execute_agent
+        #                 response_last = response["response"]
+        #             elif "answer" in response:  # reflexion
+        #                 response_last = response["answer"]
+        #
+        #             # Add assistant response to chat history
+        #             st.session_state.messages.append(create_chat_message(
+        #                 role="assistant",
+        #                 content=response,
+        #                 node=node,
+        #                 expanded=False,
+        #                 type="json",
+        #                 is_last_message=False
+        #             ))
+        #             with st.status(node, expanded=True) as status:
+        #                 st.json(response, expanded=True)
+        #                 status.update(label=node, state="complete", expanded=False)
+        #
+        #         # Add assistant response_last to chat history
+        #         st.session_state.messages.append(create_chat_message(
+        #             role="assistant",
+        #             content=response_last,
+        #             node=None,
+        #             expanded=None,
+        #             type="text",
+        #             is_last_message=True
+        #         ))
+        #         st.markdown(response_last)
+
+
+@st.dialog("模型配置", width="large")
+def llm_model_setting():
+    cols = st.columns(3)
+    platforms = ["所有"] + list(get_config_platforms())
+    platform = cols[0].selectbox("模型平台设置(Platform)", platforms)
+    llm_models = list(get_config_models(model_type="llm", platform_name=None if platform == "所有" else platform))
+    llm_model = cols[1].selectbox("模型设置(LLM)", llm_models)
+    temperature = cols[2].slider("温度设置(Temperature)", 0.0, 1.0, value=st.session_state["temperature"])
+
+    if st.button("确认"):
+        st.session_state["platform"] = platform
+        st.session_state["llm_model"] = llm_model
+        st.session_state["temperature"] = temperature
+        st.rerun()
 
 
 if __name__ == "__main__":

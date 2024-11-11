@@ -49,7 +49,7 @@ def run_api_server(
 
     from chatchat.settings import Settings
     from chatchat.server.api_server.server_app import create_app
-    from chatchat.server.utils import set_httpx_config, set_graph_memory
+    from chatchat.server.utils import set_httpx_config
 
     logger.info(f"Api MODEL_PLATFORMS: {Settings.model_settings.MODEL_PLATFORMS}")
     set_httpx_config()
@@ -66,8 +66,6 @@ def run_api_server(
         1024 * 1024 * 1024 * 3,
     )
     logging.config.dictConfig(logging_conf)  # type: ignore
-
-    set_graph_memory()
 
     if Settings.basic_settings.LANG_SMITH["OPEN_LANGSMITH"] is True:
         os.environ["LANGCHAIN_TRACING_V2"] = "true"

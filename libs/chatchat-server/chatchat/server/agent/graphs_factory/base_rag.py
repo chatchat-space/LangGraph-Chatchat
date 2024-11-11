@@ -1,4 +1,6 @@
 from typing import List, Literal, Dict
+
+from langgraph.checkpoint.base import BaseCheckpointSaver
 from pydantic import BaseModel, Field
 
 from langchain_openai.chat_models import ChatOpenAI
@@ -12,7 +14,6 @@ from langgraph.prebuilt import ToolNode, tools_condition
 
 from chatchat.server.utils import (
     build_logger,
-    get_st_graph_memory,
     get_tool,
     add_tools_if_not_exists,
 )
@@ -46,10 +47,11 @@ class BaseRagGraph(Graph):
                  llm: ChatOpenAI,
                  tools: list[BaseTool],
                  history_len: int,
+                 checkpoint: BaseCheckpointSaver,
                  knowledge_base: str,
                  top_k: int,
                  score_threshold: float):
-        super().__init__(llm, tools, history_len)
+        super().__init__(llm, tools, history_len, checkpoint)
         search_local_knowledgebase = get_tool(name="search_local_knowledgebase")
         self.tools = add_tools_if_not_exists(tools_provides=self.tools, tools_need_append=[search_local_knowledgebase])
         self.llm_with_tools = self.llm.bind_tools(self.tools)
@@ -256,8 +258,6 @@ class BaseRagGraph(Graph):
         if not all(isinstance(tool, BaseTool) for tool in self.tools):
             raise TypeError("All items in tools must be instances of BaseTool")
 
-        memory = get_st_graph_memory()
-
         # Define a new graph
         graph_builder = StateGraph(BaseRagState)
 
@@ -296,11 +296,11 @@ class BaseRagGraph(Graph):
         graph_builder.add_edge("generate", END)
 
         # Compile
-        graph = graph_builder.compile(checkpointer=memory)
+        graph = graph_builder.compile(checkpointer=self.checkpoint)
         return graph
 
     @staticmethod
-    async def handle_event(node: str, event: BaseRagState) -> BaseMessage:
+    def handle_event(node: str, event: BaseRagState) -> BaseMessage:
         """
         event example:
         {

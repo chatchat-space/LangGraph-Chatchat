@@ -1,3 +1,4 @@
+import asyncio
 import sys
 
 import streamlit as st
@@ -12,7 +13,7 @@ from chatchat.webui_pages.utils import *
 api = ApiRequest(base_url=api_address())
 
 
-if __name__ == "__main__":
+async def main():
     is_lite = "lite" in sys.argv  # TODO: remove lite mode
     # 设置默认头像
 
@@ -69,6 +70,10 @@ if __name__ == "__main__":
     if selected_page == "知识库管理":
         knowledge_base_page(api=api, is_lite=is_lite)
     elif selected_page == "RAG 对话":
-        graph_rag_page(api=api)
+        await graph_rag_page(api=api)
     elif selected_page == "Agent 对话":
-        graph_agent_page()
+        await graph_agent_page()
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

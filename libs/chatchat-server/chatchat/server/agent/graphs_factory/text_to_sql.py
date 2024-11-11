@@ -2,11 +2,12 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai.chat_models import ChatOpenAI
 from langchain_core.tools import BaseTool
 from langchain_core.messages import BaseMessage, ToolMessage
+from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.graph import StateGraph, END
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.prebuilt import ToolNode, tools_condition
 
-from chatchat.server.utils import build_logger, get_st_graph_memory, get_tool, add_tools_if_not_exists
+from chatchat.server.utils import build_logger, get_tool, add_tools_if_not_exists
 from .graphs_registry import State, register_graph, Graph
 
 logger = build_logger()
@@ -21,8 +22,9 @@ class TextToSQLGraph(Graph):
     def __init__(self,
                  llm: ChatOpenAI,
                  tools: list[BaseTool],
-                 history_len: int):
-        super().__init__(llm, tools, history_len)
+                 history_len: int,
+                 checkpoint: BaseCheckpointSaver):
+        super().__init__(llm, tools, history_len, checkpoint)
         query_sql_data = get_tool(name="query_sql_data")
         self.tools = add_tools_if_not_exists(tools_provides=self.tools, tools_need_append=[query_sql_data])
         self.llm_with_tools = self.llm.bind_tools(self.tools)
@@ -261,8 +263,6 @@ class TextToSQLGraph(Graph):
         if not all(isinstance(tool, BaseTool) for tool in self.tools):
             raise TypeError("All items in tools must be instances of BaseTool")
 
-        memory = get_st_graph_memory()
-
         graph_builder = StateGraph(State)
 
         tool_node = ToolNode(tools=self.tools)
@@ -281,12 +281,12 @@ class TextToSQLGraph(Graph):
         graph_builder.add_edge("tools", "result_synthesizer")
         graph_builder.add_edge("result_synthesizer", END)
 
-        graph = graph_builder.compile(checkpointer=memory)
+        graph = graph_builder.compile(checkpointer=self.checkpoint)
 
         return graph
 
     @staticmethod
-    async def handle_event(node: str, event: State) -> BaseMessage:
+    def handle_event(node: str, event: State) -> BaseMessage:
         """
         event example:
         {
