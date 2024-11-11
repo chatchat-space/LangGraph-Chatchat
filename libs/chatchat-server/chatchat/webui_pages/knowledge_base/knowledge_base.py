@@ -1,7 +1,5 @@
 import time
-
 import pandas as pd
-import streamlit as st
 from st_aggrid import AgGrid, JsCode
 from st_aggrid.grid_options_builder import GridOptionsBuilder
 
@@ -10,7 +8,6 @@ from chatchat.server.knowledge_base.kb_service.base import (
     get_kb_file_details,
 )
 from chatchat.server.knowledge_base.utils import LOADER_DICT, get_file_path
-from chatchat.server.utils import get_config_models
 
 from chatchat.webui_pages.utils import *
 

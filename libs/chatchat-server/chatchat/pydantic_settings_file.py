@@ -1,15 +1,16 @@
 from __future__ import annotations
 
-from functools import cached_property
-from io import StringIO
 import os
-from pathlib import Path
+import ruamel.yaml
 import typing as t
 
+from functools import cached_property
+from io import StringIO
+from pathlib import Path
 from memoization import cached, CachingAlgorithmFlag
 from pydantic import BaseModel, Field, ConfigDict, computed_field
 from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, YamlConfigSettingsSource, SettingsConfigDict
-import ruamel.yaml
+
 from ruamel.yaml.comments import CommentedBase
 
 
@@ -238,6 +239,7 @@ def _lazy_load_key(settings: BaseSettings):
 
 
 _T = t.TypeVar("_T", bound=BaseFileSettings)
+
 
 @cached(max_size=1, algorithm=CachingAlgorithmFlag.LRU, thread_safe=True, custom_key_maker=_lazy_load_key)
 def _cached_settings(settings: _T) -> _T:
