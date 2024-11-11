@@ -101,6 +101,18 @@ class BasicSettings(BaseFileSettings):
     SQLITE_GRAPH_DATABASE_URI: str = str(CHATCHAT_ROOT / "data/graph.db")
     """工作流 SQLITE CHECKPOINT 数据库连接URI"""
 
+    POSTGRESQL_GRAPH_DATABASE_URI: str = "postgresql://username:password@localhost:5442/langgraph_chatchat"
+    """工作流 POSTGRESQL CHECKPOINT 数据库连接URI"""
+
+    POSTGRESQL_GRAPH_CONNECTION_POOLS_MAX_SIZE: int = 20
+    """工作流 POSTGRESQL CHECKPOINT 数据库连接池最大连接数限制"""
+
+    POSTGRESQL_GRAPH_CONNECTION_POOLS_KWARGS: dict = {
+        "autocommit": True,
+        "prepare_threshold": 0,
+    }
+    """工作流 POSTGRESQL CHECKPOINT 数据库连接池关键字参数配置"""
+
     OPEN_CROSS_DOMAIN: bool = False
     """API 是否开启跨域"""
 
