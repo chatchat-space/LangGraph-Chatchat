@@ -25,7 +25,7 @@ from langchain_core.embeddings import Embeddings
 from langchain_openai.chat_models import ChatOpenAI
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
-# from langgraph.checkpoint.postgres import PostgresSaver
+from langgraph.checkpoint.postgres import PostgresSaver
 from memoization import cached, CachingAlgorithmFlag
 
 from chatchat.settings import Settings, XF_MODELS_TYPES
@@ -774,16 +774,10 @@ def get_tool_config(name: str = None) -> Dict:
         return Settings.tool_settings.model_dump().get(name, {})
 
 
-def get_checkpoint(memory_type: Optional[Literal["memory", "sqlite", "postgres"]] = None) -> (Union)[
-    MemorySaver,
-    AsyncSqliteSaver,
-    # PostgresSaver
-]:
+def get_checkpointer(memory_type: Optional[Literal["memory", "sqlite", "postgres"]] = None) -> (Union)[MemorySaver, AsyncSqliteSaver]:
     """
-    获取 graph 的 memory
+    获取 graph 的 checkpointer(MemorySaver 和 AsyncSqliteSaver)
     """
-    import sqlalchemy as sa
-
     if memory_type is None:
         memory_type = Settings.tool_settings.GRAPH_MEMORY_TYPE
 
@@ -791,11 +785,6 @@ def get_checkpoint(memory_type: Optional[Literal["memory", "sqlite", "postgres"]
         return MemorySaver()
     elif memory_type == "sqlite":
         return AsyncSqliteSaver.from_conn_string(Settings.basic_settings.SQLITE_GRAPH_DATABASE_URI)
-    # elif memory_type == "postgres":
-    #     import sqlalchemy as sa
-    #     engine = sa.create_engine(Settings.basic_settings.SQLALCHEMY_DATABASE_URI)
-    #     conn = engine.connect().connection
-    #     return PostgresSaver(conn)
 
     raise ValueError("Invalid memory_type provided. Must be 'memory', 'sqlite', or 'postgres'.")
 
