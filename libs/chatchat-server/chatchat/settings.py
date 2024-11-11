@@ -342,7 +342,7 @@ class ApiModelSettings(BaseFileSettings):
 
     HISTORY_LEN: int = 10
     """默认历史对话轮数"""
-    """LangGraph Agent 单轮对话可能包含 4 个 Node, 故默认设置为 6"""
+    """LangGraph Agent 单轮对话可能包含多个 Node, 故默认设置为 10"""
 
     MAX_TOKENS: t.Optional[int] = None  # TODO: 似乎与 LLM_MODEL_CONFIG 重复了
     """大模型最长支持的长度，如果不填写，则使用模型默认的最大长度，如果填写，则为用户设定的最大长度"""
@@ -525,7 +525,7 @@ class ToolSettings(BaseFileSettings):
     默认为 memory, 无法持久化，仅在程序运行期间用于获取历史消息。
     如果设为 sqlite/postgres，则自动使用 SQLALCHEMY_DATABASE_URI
     """
-    GRAPH_MEMORY_TYPE: t.Literal["memory", "sqlite", "postgres"] = "memory"
+    GRAPH_MEMORY_TYPE: t.Literal["memory", "sqlite", "postgres"] = "sqlite"
 
     # """本地知识库工具配置项"""
     # search_local_knowledgebase: dict = {
