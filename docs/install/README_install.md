@@ -27,7 +27,7 @@ LangGraph-Chatchat 使用 Poetry 进行环境管理。
 
 ### 1.2 安装源代码/开发部署所需依赖库
 
-进入主项目目录，并安装 Langchain-Chatchat 依赖
+进入主项目目录，并安装 LangGraph-Chatchat 依赖
 
 ```shell
 cd  LangGraph-Chatchat/libs/chatchat-server
@@ -43,7 +43,7 @@ poetry install --with lint,test -E xinference
 
 ## 2. 设置源代码根目录
 
-如果您在开发时所使用的 IDE 需要指定项目源代码根目录，请将主项目目录(`Langchain-Chatchat/libs/chatchat-server/`)设置为源代码根目录。
+如果您在开发时所使用的 IDE 需要指定项目源代码根目录，请将主项目目录(`LangGraph-Chatchat/libs/chatchat-server/`)设置为源代码根目录。
 
 执行以下命令之前，请先设置当前目录和项目数据目录：
 ```shell
