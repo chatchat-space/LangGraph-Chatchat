@@ -520,6 +520,7 @@ class ToolSettings(BaseFileSettings):
     """
     RECURSION_LIMIT: int = 50
 
+    GRAPH_MEMORY_TYPE: t.Literal["memory", "sqlite", "postgres"] = "sqlite"
     """
     langgraph 历史记录类型。
     如果设为 memory, 无法持久化，仅在程序运行期间用于获取历史消息。
@@ -529,7 +530,6 @@ class ToolSettings(BaseFileSettings):
     POSTGRESQL_GRAPH_CONNECTION_POOLS_MAX_SIZE
     POSTGRESQL_GRAPH_CONNECTION_POOLS_KWARGS 等配置
     """
-    GRAPH_MEMORY_TYPE: t.Literal["memory", "sqlite", "postgres"] = "sqlite"
 
     # """本地知识库工具配置项"""
     # search_local_knowledgebase: dict = {
