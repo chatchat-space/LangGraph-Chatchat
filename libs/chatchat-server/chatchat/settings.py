@@ -525,7 +525,7 @@ class ToolSettings(BaseFileSettings):
     默认为 memory, 无法持久化，仅在程序运行期间用于获取历史消息。
     如果设为 sqlite/postgres，则自动使用 SQLALCHEMY_DATABASE_URI
     """
-    GRAPH_MEMORY_TYPE: t.Literal["memory", "sqlite", "postgres"] = "sqlite"
+    GRAPH_MEMORY_TYPE: t.Literal["memory", "sqlite", "postgres"] = "memory"
 
     # """本地知识库工具配置项"""
     # search_local_knowledgebase: dict = {
