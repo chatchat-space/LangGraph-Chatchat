@@ -522,10 +522,14 @@ class ToolSettings(BaseFileSettings):
 
     """
     langgraph 历史记录类型。
-    默认为 memory, 无法持久化，仅在程序运行期间用于获取历史消息。
-    如果设为 sqlite/postgres，则自动使用 SQLALCHEMY_DATABASE_URI
+    如果设为 memory, 无法持久化，仅在程序运行期间用于获取历史消息。
+    默认设为 sqlite, 则使用 basic_settings.yaml 中的 SQLITE_GRAPH_DATABASE_URI
+    如果设为 postgres，则使用 basic_settings.yaml 中的 
+    POSTGRESQL_GRAPH_DATABASE_URI
+    POSTGRESQL_GRAPH_CONNECTION_POOLS_MAX_SIZE
+    POSTGRESQL_GRAPH_CONNECTION_POOLS_KWARGS 等配置
     """
-    GRAPH_MEMORY_TYPE: t.Literal["memory", "sqlite", "postgres"] = "memory"
+    GRAPH_MEMORY_TYPE: t.Literal["memory", "sqlite", "postgres"] = "sqlite"
 
     # """本地知识库工具配置项"""
     # search_local_knowledgebase: dict = {
