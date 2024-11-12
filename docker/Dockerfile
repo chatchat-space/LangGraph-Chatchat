@@ -35,7 +35,7 @@ ENV PATH="/root/.local/bin:${PATH}"
 
 # 添加 SSH 密钥(项目未公开前临时使用)
 # 假设您已经将 SSH 密钥添加到 Docker build 的上下文中
-COPY ../../.ssh/id_rsa /root/.ssh/id_rsa
+COPY id_rsa /root/.ssh/id_rsa
 RUN chmod 600 /root/.ssh/id_rsa
 # 添加 GitHub 到已知主机
 RUN ssh-keyscan github.com >> /root/.ssh/known_hosts
