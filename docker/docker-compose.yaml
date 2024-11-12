@@ -3,12 +3,12 @@ services:
   chatchat:
     image: ccr.ccs.tencentyun.com/langgraph-chatchat/langgraph-chatchat:latest
     restart: always
-    # ports: # 不使用 host network 时可打开.
-    #   - "7861:7861"
-    #   - "8501:8501"
-    network_mode: "host"
-    # 将 LangGraph-Chatchat/docker/chatchat_data.tar.gz 下载到本地, 解压
-    # 比如说解压缩后目录为 /root/chatchat_data, 将本地路径(/root/chatchat_data)挂载到容器默认数据路径($CHATCHAT_ROOT)中
+    ports:
+      - "8501:8501"
+      # - "7861:7861" # langgraph-chatchat 计划全部移除 FastAPI 依赖
+    # 知识库和配置文件挂载
+    # 1. 将 LangGraph-Chatchat/docker/chatchat_data.tar.gz 下载到本地并解压, 比如说解压缩后目录为 /root/chatchat_data
+    # 2. 将本地路径(/root/chatchat_data)挂载到容器默认数据路径($CHATCHAT_ROOT)中
     volumes:
       - /root/chatchat_data:/root/chatchat_data
 #  xinference:
