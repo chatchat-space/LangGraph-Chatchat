@@ -1,7 +1,7 @@
 version: '3.9'
 services:
   chatchat:
-    image: ccr.ccs.tencentyun.com/langgraph-chatchat/langgraph-chatchat:latest
+    image: ccr.ccs.tencentyun.com/langgraph-chatchat/langgraph-chatchat:v0.0.1-1113
     restart: always
     ports:
       - "8501:8501"
