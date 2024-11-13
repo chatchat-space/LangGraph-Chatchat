@@ -272,7 +272,7 @@ async def graph_agent_page():
 
         tabs_2 = st.tabs(["聊天设置"])
         with tabs_2[0]:
-            history_len = st.number_input("历史对话轮数：", 0, 20, key="history_len")
+            history_len = st.number_input("历史对话轮数", 0, 20, key="history_len")
 
         st.tabs(["工作流流程图"])
 
@@ -317,6 +317,7 @@ async def graph_agent_page():
                               max_tokens=None,
                               temperature=st.session_state["temperature"],
                               stream=True)
+    st.toast(f"已加载 LLM: {llm_model}")
     logger.info(f"Loaded llm: {llm}")
 
     # 创建 langgraph 实例
