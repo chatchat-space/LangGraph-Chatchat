@@ -168,10 +168,10 @@ class KBSettings(BaseFileSettings):
     OVERLAP_SIZE: int = 150
     """知识库中相邻文本重合长度(不适用MarkdownHeaderTextSplitter)"""
 
-    VECTOR_SEARCH_TOP_K: int = 3 # TODO: 与 tool 配置项重复
+    VECTOR_SEARCH_TOP_K: int = 3  # TODO: 与 tool 配置项重复
     """知识库匹配向量数量"""
 
-    SCORE_THRESHOLD: float = 0.7
+    SCORE_THRESHOLD: float = 0.3
     """知识库匹配相关度阈值，取值范围在0-2之间，SCORE越小，相关度越高，取到2相当于不筛选，建议设置在0.5左右"""
 
     DEFAULT_SEARCH_ENGINE: t.Literal["bing", "duckduckgo", "metaphor", "searx"] = "duckduckgo"

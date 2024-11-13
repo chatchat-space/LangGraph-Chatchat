@@ -138,10 +138,10 @@ async def graph_rag_page(api: ApiRequest):
 
         tabs_2 = st.tabs(["问答设置"])
         with tabs_2[0]:
-            history_len = st.number_input("历史对话轮数：", 0, 20, key="history_len")
-            kb_top_k = st.number_input("匹配知识条数：", 1, 20, key="kb_top_k")
+            history_len = st.number_input("历史对话轮数", 0, 20, key="history_len")
+            kb_top_k = st.number_input("匹配知识条数", 1, 20, key="kb_top_k")
             # Bge 模型会超过 1
-            score_threshold = st.slider("知识匹配分数阈值：", 0.0, 2.0, step=0.01, key="score_threshold", help="分数越小匹配度越大")
+            score_threshold = st.slider("知识匹配分数阈值", 0.0, 2.0, step=0.01, key="score_threshold", help="分数越小匹配度越大")
 
         st.tabs(["工作流流程图"])
 
@@ -171,6 +171,7 @@ async def graph_rag_page(api: ApiRequest):
                               max_tokens=None,
                               temperature=st.session_state["temperature"],
                               stream=True)
+    st.toast(f"已加载 LLM: {llm_model}")
     logger.info(f"Loaded llm: {llm}")
 
     # 创建 langgraph 实例
