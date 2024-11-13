@@ -781,7 +781,7 @@ def init_conversation_id():
         st.session_state["llm_model"] = get_default_llm()
         logger.info("default llm model: {}".format(st.session_state["llm_model"]))
     if "temperature" not in st.session_state:
-        st.session_state["temperature"] = 0.01
+        st.session_state["temperature"] = Settings.model_settings.TEMPERATURE
     if "prompt" not in st.session_state:
         st.session_state["prompt"] = ""
     if "history_len" not in st.session_state:
