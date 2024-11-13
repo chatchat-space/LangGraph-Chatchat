@@ -1,8 +1,8 @@
-# chatchat 容器化部署指引
+# LangGraph-Chatchat 容器化部署指引
 
 > 提示: 此指引为在 Linux(CentOS) 环境下编写完成, 其他环境下暂未测试, 理论上可行.
 > 
-> LangGraph-Chatchat docker 镜像已支持多架构, 欢迎大家自行测试.
+> LangGraph-Chatchat docker 镜像已支持多架构(amd64/arm64).
 
 ## 一. LangGraph-Chatchat 部署
 
@@ -20,16 +20,15 @@ mv docker-compose-linux-x86_64 /usr/bin/docker-compose
 chmod +x /usr/bin/docker-compose
 which docker-compose
 ```
+```text
 /usr/bin/docker-compose
+```
 ```shell
 docker-compose -v
 ```
+```text
 Docker Compose version v2.27.3
-
-### 2. 安装 NVIDIA Container Toolkit
-寻找适合你环境的 NVIDIA Container Toolkit 版本, 请参考: [Installing the NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html).
-
-安装完成后记得按照刚刚文档中`Configuring Docker`章节对 docker 进行初始化.
+```
 
 ### 3. 下载 LangGraph-Chatchat
 ```shell
@@ -78,9 +77,15 @@ docker-compose logs -f chatchat
 浏览器访问 http://<你机器的ip>:8501
 
 ## 二. 本地模型推理部署(可选)
+### 1. 安装 NVIDIA Container Toolkit
+寻找适合你环境的 NVIDIA Container Toolkit 版本, 请参考: [Installing the NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html).
 
-### Xinference
+安装完成后记得按照刚刚文档中`Configuring Docker`章节对 docker 进行初始化.
+
+### 2.部署 LLM 推理服务服务
+
+#### Xinference
 参见 [Xinference Docker Image](https://inference.readthedocs.io/en/latest/getting_started/using_docker_image.html)
 
-### Ollama
+#### Ollama
 参见 [Download Ollama](https://ollama.com/download)
