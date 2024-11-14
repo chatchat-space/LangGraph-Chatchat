@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "langchain-chatchat"
+name = "langgraph-chatchat"
 version = "0.0.1"
-description = "Langchain-Chatchat (formerly langchain-ChatGLM), local knowledge based LLM (like ChatGLM, Qwen and Llama) RAG and Agent app with langchain"
+description = "Langgraph-Chatchat (successor of langchain-ChatChat), local knowledge based LLM (like ChatGLM, Qwen and Llama) RAG and Agent app with langgraph"
 authors = ["chatchat"]
 packages = [
     {include = "chatchat"},
@@ -78,6 +78,8 @@ mysqlclient = "^2.2.5"
 metaphor-python = "^0.1.23"
 psycopg-pool = "^3.2.3"
 langgraph-checkpoint-postgres = "^2.0.2"
+setuptools = {version = "^75.5.0", allow-prereleases = true}
+pymilvus = "^2.4.9"
 [tool.poetry.extras]
 xinference = ["xinference_client"]
 zhipuai = ["zhipuai"]
@@ -206,7 +208,7 @@ optional = true
 
 [tool.poetry.group.dev.dependencies]
 jupyter = "^1.0.0"
-setuptools = "^67.6.1"
+setuptools = "*"
 
 
 

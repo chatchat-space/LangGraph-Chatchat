@@ -822,7 +822,9 @@ async def process_graph(graph_class: Graph, graph: CompiledStateGraph, graph_inp
             response_last = ""
             async for event in events:
                 node, response = extract_node_and_response(event)
+
                 # debug
+                # import rich
                 # print(f"--- node: {node} ---")
                 # rich.print(response)
 
@@ -833,7 +835,11 @@ async def process_graph(graph_class: Graph, graph: CompiledStateGraph, graph_inp
                 response = graph_class.handle_event(node=node, event=response)
                 # 将 event 转化为 json
                 response = serialize_content_to_json(response)
-                # rich.print(response)
+
+                # debug
+                import rich
+                print(f"--- node: {node} ---")
+                rich.print(response)
 
                 # 检查 'content' 是否在响应中(因为我们只需要 AIMessage 的内容)
                 if "content" in response:
