@@ -172,6 +172,10 @@ class BaseRagGraph(Graph):
         scored_result = await referee.ainvoke(state)
         score = scored_result.binary_score
 
+        if score is None or score == "":
+            logger.warning(f"The score is not provided. Defaulting to 'yes'. Question: {state['question']}")
+            score = "yes"
+
         if score == "yes":
             return "generate"
         else:
