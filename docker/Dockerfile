@@ -9,13 +9,6 @@ ENV CHATCHAT_ROOT=/root/chatchat_data
 # 初始化环境
 RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     echo "Asia/Shanghai" > /etc/timezone
-#RUN apt-get update -y && \
-#    apt-get install -y git && \
-#    apt-get install -y --no-install-recommends libgl1 libglib2.0-0 && \
-#    apt-get install -y mysql-client mysql-server && \
-#    apt-get install -y libpq-dev python3-dev postgresql postgresql-contrib && \
-#    apt-get clean && \
-#    rm -rf /var/lib/apt/lists/*
 # 初始化环境
 RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     echo "Asia/Shanghai" > /etc/timezone && \
@@ -45,15 +38,15 @@ RUN #git clone https://github.com/chatchat-space/LangGraph-Chatchat.git
 RUN git clone git@github.com:chatchat-space/LangGraph-Chatchat.git
 
 # 安装依赖
-WORKDIR /root/LangGraph-Chatchat/libs/chatchat-server
+WORKDIR /root/LangGraph-Chatchat/chatchat-server
 RUN poetry config virtualenvs.create false
 RUN poetry install --with lint,test -E xinference
 
 ## 确保 Python 可以找到 chatchat 模块
-ENV PYTHONPATH="/root/LangGraph-Chatchat/libs/chatchat-server:${PYTHONPATH}"
+ENV PYTHONPATH="/root/LangGraph-Chatchat/chatchat-server:${PYTHONPATH}"
 
 # 初始化配置
-WORKDIR /root/LangGraph-Chatchat/libs/chatchat-server/chatchat
+WORKDIR /root/LangGraph-Chatchat/chatchat-server/chatchat
 RUN python cli.py init
 
 ## 初始化知识库文件
