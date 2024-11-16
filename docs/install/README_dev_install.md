@@ -30,7 +30,7 @@ LangGraph-Chatchat 使用 Poetry 进行环境管理。
 进入主项目目录，并安装 LangGraph-Chatchat 依赖
 
 ```shell
-cd  LangGraph-Chatchat/libs/chatchat-server
+cd  LangGraph-Chatchat/chatchat-server
 poetry install --with lint,test -E xinference
 ```
 
@@ -39,15 +39,15 @@ poetry install --with lint,test -E xinference
 
 ### 1.3 更新开发部署环境依赖库
 
-当开发环境中所需的依赖库发生变化时，一般按照更新主项目目录(`LangGraph-Chatchat/libs/chatchat-server/`)下的 pyproject.toml 再进行 poetry update 的顺序执行。
+当开发环境中所需的依赖库发生变化时，一般按照更新主项目目录(`LangGraph-Chatchat/chatchat-server/`)下的 pyproject.toml 再进行 poetry update 的顺序执行。
 
 ## 2. 设置源代码根目录
 
-如果您在开发时所使用的 IDE 需要指定项目源代码根目录，请将主项目目录(`LangGraph-Chatchat/libs/chatchat-server/`)设置为源代码根目录。
+如果您在开发时所使用的 IDE 需要指定项目源代码根目录，请将主项目目录(`LangGraph-Chatchat/chatchat-server/`)设置为源代码根目录。
 
 执行以下命令之前，请先设置当前目录和项目数据目录：
 ```shell
-cd LangGraph-Chatchat/libs/chatchat-server/chatchat
+cd LangGraph-Chatchat/chatchat-server/chatchat
 export CHATCHAT_ROOT=/path/to/chatchat_data
 ```
 
@@ -57,7 +57,7 @@ export CHATCHAT_ROOT=/path/to/chatchat_data
 
 执行以下命令初始化项目配置文件和数据目录：
 ```shell
-cd LangGraph-Chatchat/libs/chatchat-server
+cd LangGraph-Chatchat/chatchat-server
 python chatchat/cli.py init
 ```
 
@@ -67,7 +67,7 @@ python chatchat/cli.py init
 > 这个命令会清空数据库、删除已有的配置文件，如果您有重要数据，请备份。
 
 ```shell
-cd LangGraph-Chatchat/libs/chatchat-server
+cd LangGraph-Chatchat/chatchat-server
 python chatchat/cli.py kb --recreate-vs
 ```
 如需使用其它 Embedding 模型，或者重建特定的知识库，请查看 `python chatchat/cli.py kb --help` 了解更多的参数。
@@ -75,7 +75,7 @@ python chatchat/cli.py kb --recreate-vs
 ## 5. 启动服务
 
 ```shell
-cd LangGraph-Chatchat/libs/chatchat-server
+cd LangGraph-Chatchat/chatchat-server
 python chatchat/cli.py start -a
 ```
 
