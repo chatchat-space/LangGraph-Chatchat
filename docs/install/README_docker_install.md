@@ -1,36 +1,41 @@
-# LangGraph-Chatchat 容器化部署指引
+# `LangGraph-Chatchat` 容器化部署指引
 
-> 提示: 此指引为在 Linux(CentOS) 环境下编写完成, 其他环境下暂未测试, 理论上可行.
+> 提示: 此指引为在 `Linux(CentOS)` 环境下编写完成, 其他环境下暂未测试, 理论上可行.
 > 
-> LangGraph-Chatchat docker 镜像已支持多架构(amd64/arm64).
+> `LangGraph-Chatchat` `Docker` 镜像已支持 `amd64` 和 `arm64`.
+> 
+> 本项目默认提供的 `Xinference` `Docker` 镜像只支持 `amd64`.
 
-## 一. LangGraph-Chatchat 部署
+## 一、安装 `docker` 和 `docker-compose`
+- 安装 `docker` 文档参见: [Install Docker Engine](https://docs.docker.com/engine/install/).
 
-### 1. 安装 docker 和 docker-compose
-- 安装 docker 文档参见: [Install Docker Engine](https://docs.docker.com/engine/install/).
-
-- 安装 docker-compose 文档参见:
+- 安装 `docker-compose` 文档参见:
 - - [Install Compose standalone](https://docs.docker.com/compose/install/standalone/) 
 - - [版本列表](https://github.com/docker/compose/releases)
-- - 举例: Linux X86 环境 可下载 [docker-compose-linux-x86_64](https://github.com/docker/compose/releases/download/v2.27.3/docker-compose-linux-x86_64) 使用.
+- - 举例: `Linux` `x86` 环境 可下载 `docker-compose-linux-x86_64` 使用.
 ```shell
-cd ~
-wget https://github.com/docker/compose/releases/download/v2.27.3/docker-compose-linux-x86_64
-mv docker-compose-linux-x86_64 /usr/bin/docker-compose
-chmod +x /usr/bin/docker-compose
-which docker-compose
-```
-```text
-/usr/bin/docker-compose
-```
-```shell
-docker-compose -v
-```
-```text
-Docker Compose version v2.27.3
+(x) [root@VM-128-14-tencentos ~]$ cd ~
+(x) [root@VM-128-14-tencentos ~]$ curl -SL https://github.com/docker/compose/releases/download/v2.30.3/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+100 61.0M  100 61.0M    0     0  12.7M      0  0:00:04  0:00:04 --:--:-- 11.5M
+(x) [root@VM-128-14-tencentos ~]$ chmod +x /usr/local/bin/docker-compose
+(x) [root@VM-128-14-tencentos ~]$ sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+(x) [root@VM-128-14-tencentos ~]$ ls -l /usr/bin/docker-compose
+lrwxrwxrwx 1 root root 29 Nov 17 19:46 /usr/bin/docker-compose -> /usr/local/bin/docker-compose
+(x) [root@VM-128-14-tencentos ~]$ which docker-compose 
+/usr/local/bin/docker-compose
+(x) [root@VM-128-14-tencentos ~]$ docker-compose -v
+Docker Compose version v2.30.3
 ```
 
-### 3. 下载 LangGraph-Chatchat
+## 二、安装 `NVIDIA Container Toolkit`
+寻找适合你环境的 `NVIDIA Container Toolkit` 版本, 文档参见: [Installing the NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
+- `Installation` 必须执行
+- `Configuration` 必须执行
+
+## 三、下载 `LangGraph-Chatchat`
 ```shell
 cd ~
 git clone https://github.com/chatchat-space/LangGraph-Chatchat.git
@@ -39,12 +44,14 @@ tar -xvf chatchat_data.tar.gz -C /root/
 cp docker-compose.yaml /root/docker-compose.yaml
 ```
 
-### 4. 配置模型
-修改`model_settings.yaml`中`DEFAULT_LLM_MODEL`,`DEFAULT_EMBEDDING_MODEL`,`MODEL_PLATFORMS`,`api_key`等配置.
+## 四、配置模型
+`LangGraph-Chatchat` 使用本地 `yaml` 文件的方式进行配置, 用户可以直接查看并修改其中的内容.
+
+### 查看目录结构
 ```shell
-[root@VM-1-10-centos chatchat_data]# ls
+[root@VM-1-10-centos chatchat_data]$ ls
 basic_settings.yaml  data  kb_settings.yaml  model_settings.yaml  prompt_settings.yaml  tool_settings.yaml
-[root@VM-1-10-centos chatchat_data]# ll
+[root@VM-1-10-centos chatchat_data]$ ls -l
 total 28
 -rw-r--r-- 1 root root 2191 Nov 12 21:21 basic_settings.yaml
 drwxr-xr-x 6 root root 4096 Nov 13 01:49 data
@@ -54,38 +61,144 @@ drwxr-xr-x 6 root root 4096 Nov 13 01:49 data
 -rw-r--r-- 1 root root 3641 Nov 13 00:55 tool_settings.yaml
 ```
 
-### 5. 启动服务
+### 数据目录各文件作用解释:
+- `data` 项目知识库目录, 储存知识库数据, 体验时不需要修改;
+- `basic_settings.yaml` 项目基础配置, 涉及到一些数据目录、数据库地址、项目端口等配置, 体验时不需要修改;
+- `kb_settings.yaml` 知识库配置, 体验时不需要修改;
+- `model_settings.yaml` 模型配置, 涉及到默认 `LLM` 和 `Embedding Model` 等的配置, 体验时不需要修改;
+- `prompt_settings.yaml` 指令配置, 此配置后续可能会有调整, 暂时不需要修改;
+- `tool_settings.yaml` 工具配置, 部分工具需要配置 `api key` 等, 体验时不需要修改.
+
+### 如果需要修改, 可以参考如下:
+- 配置模型 `model_settings.yaml`  
+  需要根据选用的模型推理框架与加载的模型进行模型接入配置，具体参考 `model_settings.yaml` 中的注释。主要修改以下内容：
+  ```yaml
+  # 默认选用的 LLM 名称
+   DEFAULT_LLM_MODEL: qwen2.5-instruct
+
+   # 默认选用的 Embedding 名称
+   DEFAULT_EMBEDDING_MODEL: bge-large-zh-v1.5
+
+  # 将 `LLM_MODEL_CONFIG` 中 `llm_model, action_model` 的键改成对应的 LLM 模型
+  # 在 `MODEL_PLATFORMS` 中修改对应模型平台信息
+  ```
+  
+- 配置知识库路径 `basic_settings.yaml`
+  默认知识库位于 `CHATCHAT_ROOT/data/knowledge_base`，如果你想把知识库放在不同的位置，或者想连接现有的知识库，可以在这里修改对应目录即可。
+  ```yaml
+  # 知识库默认存储路径
+   KB_ROOT_PATH: D:\chatchat-test\data\knowledge_base
+
+   # 数据库默认存储路径。如果使用sqlite，可以直接修改DB_ROOT_PATH；如果使用其它数据库，请直接修改SQLALCHEMY_DATABASE_URI。
+   DB_ROOT_PATH: D:\chatchat-test\data\knowledge_base\info.db
+
+   # 知识库信息数据库连接URI
+   SQLALCHEMY_DATABASE_URI: sqlite:///D:\chatchat-test\data\knowledge_base\info.db
+  ```
+- 配置知识库 `kb_settings.yaml`
+  默认使用 `FAISS` 知识库，如果想连接其它类型的知识库，可以修改 `DEFAULT_VS_TYPE` 和 `kbs_config`。
+
+## 五、启动服务
 ```shell
-cd ~
-docker-compose up -d
+(x) [root@VM-128-14-tencentos ~]$ cd ~
+(x) [root@VM-128-14-tencentos ~]$ docker-compose up -d
+WARN[0000] /root/docker-compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion 
+[+] Running 36/36
+ ✔ chatchat Pulled                                                                                                                 65.4s 
+   ✔ b2b31b28ee3c Pull complete                                                                                                     6.0s 
+   ✔ c3cc7b6f0473 Pull complete                                                                                                     6.6s 
+   ✔ 2112e5e7c3ff Pull complete                                                                                                     8.8s 
+   ✔ af247aac0764 Pull complete                                                                                                    14.6s 
+   ✔ c7e62dc73b01 Pull complete                                                                                                    14.9s 
+   ✔ 35c3ce70330a Pull complete                                                                                                    15.7s 
+   ✔ f8af1611cc8d Pull complete                                                                                                    15.7s 
+   ✔ 4f4fb700ef54 Pull complete                                                                                                    15.7s 
+   ✔ 34b0f57bf8fd Pull complete                                                                                                    15.7s 
+   ✔ 68772c20eefa Pull complete                                                                                                    21.7s 
+   ✔ 440993804d8a Pull complete                                                                                                    22.3s 
+   ✔ c36ab007555d Pull complete                                                                                                    23.7s 
+   ✔ 263271c9adf4 Pull complete                                                                                                    23.7s 
+   ✔ b0a228e2ebf5 Pull complete                                                                                                    23.7s 
+   ✔ b93edade6bef Pull complete                                                                                                    24.6s 
+   ✔ 28da456bc223 Pull complete                                                                                                    24.6s 
+   ✔ 784bffb35044 Pull complete                                                                                                    63.9s 
+   ✔ 285b5ccd9d36 Pull complete                                                                                                    64.6s 
+ ✔ xinference Pulled                                                                                                                4.2s 
+   ✔ 43cfb69dbb46 Already exists                                                                                                    0.0s 
+   ✔ fbcd35dc5bc3 Already exists                                                                                                    0.0s 
+   ✔ c7232af9ae05 Already exists                                                                                                    0.0s 
+   ✔ db6cdef1932a Already exists                                                                                                    0.0s 
+   ✔ 56dc85502937 Already exists                                                                                                    0.0s 
+   ✔ 9f61b3db38d6 Already exists                                                                                                    0.0s 
+   ✔ 0bd39d0469a8 Already exists                                                                                                    0.0s 
+   ✔ d22ff5f4aac6 Already exists                                                                                                    0.0s 
+   ✔ d866993704f5 Already exists                                                                                                    0.0s 
+   ✔ b4918d864665 Already exists                                                                                                    0.0s 
+   ✔ e93cc01aab8b Already exists                                                                                                    0.0s 
+   ✔ fd30840e514d Already exists                                                                                                    0.0s 
+   ✔ 2bfc7deab716 Already exists                                                                                                    0.0s 
+   ✔ bd6dc6e560f7 Already exists                                                                                                    0.0s 
+   ✔ 0064ad513ab3 Already exists                                                                                                    0.0s 
+   ✔ eed6f1161030 Already exists                                                                                                    0.0s 
+[+] Running 3/3
+ ✔ Network root_default         Created                                                                                             0.1s 
+ ✔ Container root-xinference-1  Started                                                                                             0.5s 
+ ✔ Container root-chatchat-1    Started                                                                                             0.7s
 ```
-```text
-WARN[0000] /root/docker-compose.yaml: `version` is obsolete 
-[+] Running 2/2
- ✔ Container root-chatchat-1    Started
-```
+查看服务启动情况
 ```shell 
- docker-compose ps      
+(x) [root@VM-128-14-tencentos ~]$ docker-compose ps
+WARN[0000] /root/docker-compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion 
+NAME                IMAGE                                                               COMMAND                  SERVICE      CREATED          STATUS          PORTS
+root-chatchat-1     ccr.ccs.tencentyun.com/langgraph-chatchat/langgraph-chatchat:1116   "python cli.py start…"   chatchat     47 seconds ago   Up 47 seconds   7861/tcp, 0.0.0.0:80->8501/tcp, [::]:80->8501/tcp
+root-xinference-1   chatchatspace/xinference:qwen2.5-2024-1117                          "xinference-local -H…"   xinference   48 seconds ago   Up 47 seconds   0.0.0.0:9997->9997/tcp, :::9997->9997/tcp
 ```
 
-### 6. 查看服务日志
+## 六、启动模型
+- 登陆 `Xinference` 容器, 并启动 `LLM` (`qwen2.5-instruct`) 和 `Embedding Model` (`bge-large-zh-v1.5`)
 ```shell
-docker-compose logs -f chatchat
+(x) [root@VM-128-14-tencentos ~]$ docker-compose exec -ti xinference bash
+WARN[0000] /root/docker-compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion 
+root@fd17a68b7c33:/opt/inference$ xinference launch --model-engine Transformers --model-name qwen2.5-instruct --size-in-billions 7 --model-format pytorch --quantization none
+Launch model name: qwen2.5-instruct with kwargs: {}
+Model uid: qwen2.5-instruct
+root@fd17a68b7c33:/opt/inference$ xinference launch --model-name bge-large-zh-v1.5 --model-type embedding
+Launch model name: bge-large-zh-v1.5 with kwargs: {}
+Model uid: bge-large-zh-v1.5
+root@fd17a68b7c33:/opt/inference$ exit
+exit
 ```
 
-### 7. 打开浏览器
-浏览器访问 http://<你机器的ip>:8501
+- 浏览器访问 `http://<你机器的ip>:9997`
 
-## 二. 本地模型推理部署(可选)
-### 1. 安装 NVIDIA Container Toolkit
-寻找适合你环境的 NVIDIA Container Toolkit 版本, 请参考: [Installing the NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html).
 
-安装完成后记得按照刚刚文档中`Configuring Docker`章节对 docker 进行初始化.
+- 查看 `qwen2.5-instruct` 启动情况:
 
-### 2.部署 LLM 推理服务服务
+![查看llm启动情况](../../docs/img/xinference-qwen2.5-instruct.png)
 
-#### Xinference
-参见 [Xinference Docker Image](https://inference.readthedocs.io/en/latest/getting_started/using_docker_image.html)
+- 与 `qwen2.5-instruct` 进行对话:
 
-#### Ollama
-参见 [Download Ollama](https://ollama.com/download)
+![llm对话](../../docs/img/xinference-llm-chat.png)
+
+- 查看 `bge-large-zh-v1.5` 启动情况:
+
+![查看embedding启动情况](../../docs/img/xinference-bge-large-zh-v1.5.png)
+
+## 七、访问 `LangGraph-Chatchat` 前端
+
+浏览器访问 `http://<你机器的ip>`
+
+出现以下界面即为启动成功:
+
+![WebUI界面](../../docs/img/Langgraph-Chatchat-ui.png)
+
+## 八、新建并初始化数据库
+
+
+## 九、查看服务日志
+```shell
+(x) [root@VM-128-14-tencentos ~]$ docker-compose logs -f chatchat
+```
+```shell
+(x) [root@VM-128-14-tencentos ~]$ docker-compose logs -f xinference
+```

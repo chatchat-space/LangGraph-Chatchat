@@ -1,37 +1,34 @@
 version: '3.9'
 services:
+  xinference:
+    # DockerHub
+    image: chatchatspace/xinference:qwen2.5-2024-1117
+    # 阿里云
+    # image: registry.cn-beijing.aliyuncs.com/chatchat/xinference:qwen2.5-2024-1117
+    restart: no # 异常退出后需要手动拉起, 并进入容器内启动模型, 命令见 README_docker_install.md
+    command: xinference-local -H 0.0.0.0
+    ports:
+      - "9997:9997"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    runtime: nvidia
+    # 模型源更改为 ModelScope, 默认为 HuggingFace
+    # environment:
+    #   - XINFERENCE_MODEL_SRC=modelscope
   chatchat:
-    image: ccr.ccs.tencentyun.com/langgraph-chatchat/langgraph-chatchat:v0.0.1-1113
+    image: ccr.ccs.tencentyun.com/langgraph-chatchat/langgraph-chatchat:v0.0.1-1117
     restart: always
     ports:
-      - "8501:8501"
-      # - "7861:7861" # langgraph-chatchat 计划全部移除 FastAPI 依赖
+      - "80:8501"
+    depends_on: # 可选
+      - xinference
     # 知识库和配置文件挂载
     # 1. 将 LangGraph-Chatchat/docker/chatchat_data.tar.gz 下载到本地并解压, 比如说解压缩后目录为 /root/chatchat_data
     # 2. 将本地路径(/root/chatchat_data)挂载到容器默认数据路径($CHATCHAT_ROOT)中
     volumes:
       - /root/chatchat_data:/root/chatchat_data
-#  xinference:
-#    image: xprobe/xinference:v0.12.3
-#    restart: always
-#    command: xinference-local -H 0.0.0.0
-#    # ports: # 不使用 host network 时可打开.
-#    #  - "9997:9997"
-#    network_mode: "host"
-#    # 将本地路径(~/xinference)挂载到容器路径(/root/.xinference)中,
-#    # 详情见: https://inference.readthedocs.io/zh-cn/latest/getting_started/using_docker_image.html
-#    volumes:
-#      - ~/xinference:/root/.xinference
-#      # - ~/xinference/cache/huggingface:/root/.cache/huggingface
-#      # - ~/xinference/cache/modelscope:/root/.cache/modelscope
-#    deploy:
-#      resources:
-#        reservations:
-#          devices:
-#            - driver: nvidia
-#              count: all
-#              capabilities: [gpu]
-#    runtime: nvidia
-#    # 模型源更改为 ModelScope, 默认为 HuggingFace
-#    # environment:
-#    #   - XINFERENCE_MODEL_SRC=modelscope

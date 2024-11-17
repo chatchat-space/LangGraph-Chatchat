@@ -1,4 +1,7 @@
 # LangGraph-Chatchat 源代码部署/开发部署指南
+> [!WARNING]  
+> 为避免依赖冲突，请将 LangGraph-Chatchat 和模型部署框架如 Xinference 等放在不同的 Python 虚拟环境中, 比如 conda, venv,
+> virtualenv 等。
 
 ## 0. 拉取项目代码
 
@@ -71,6 +74,31 @@ cd LangGraph-Chatchat/chatchat-server
 python chatchat/cli.py kb --recreate-vs
 ```
 如需使用其它 Embedding 模型，或者重建特定的知识库，请查看 `python chatchat/cli.py kb --help` 了解更多的参数。
+
+> [!WARNING]  
+> 进行知识库初始化前，请确保已经启动模型推理框架及对应 `embedding` 模型，且已按照上述**步骤3**完成模型接入配置。
+> Docker 部署推荐在 UI 操作, 源码部署可用命令行操作。
+```shell
+chatchat kb -r
+```
+
+出现以下日志即为成功:
+
+```text 
+
+----------------------------------------------------------------------------------------------------
+知识库名称      ：samples
+知识库类型      ：faiss
+向量模型：      ：bge-large-zh-v1.5
+知识库路径      ：/root/anaconda3/envs/chatchat/lib/python3.11/site-packages/chatchat/data/knowledge_base/samples
+文件总数量      ：47
+入库文件数      ：42
+知识条目数      ：740
+用时            ：0:02:29.701002
+----------------------------------------------------------------------------------------------------
+
+总计用时        ：0:02:33.414425
+```
 
 ## 5. 启动服务
 
