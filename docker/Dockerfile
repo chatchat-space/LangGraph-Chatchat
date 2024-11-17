@@ -41,13 +41,14 @@ RUN git clone git@github.com:chatchat-space/LangGraph-Chatchat.git
 WORKDIR /root/LangGraph-Chatchat/chatchat-server
 RUN poetry config virtualenvs.create false
 RUN poetry install --with lint,test -E xinference
+RUN pip pip install -e .
 RUN pip install xinference-client
 
-## 确保 Python 可以找到 chatchat 模块
-ENV PYTHONPATH="/root/LangGraph-Chatchat/chatchat-server:${PYTHONPATH}"
+### 确保 Python 可以找到 chatchat 模块
+#ENV PYTHONPATH="/root/LangGraph-Chatchat/chatchat-server:${PYTHONPATH}"
 
 ## 初始化配置
-#WORKDIR /root/LangGraph-Chatchat/chatchat-server/chatchat
+WORKDIR /root/LangGraph-Chatchat/chatchat-server/chatchat
 #RUN python cli.py init
 
 ## 初始化知识库文件
