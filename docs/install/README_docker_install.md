@@ -104,25 +104,6 @@ drwxr-xr-x 6 root root 4096 Nov 13 01:49 data
 (x) [root@VM-128-14-tencentos ~]$ docker-compose up -d
 WARN[0000] /root/docker-compose.yaml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion 
 [+] Running 36/36
- ✔ chatchat Pulled                                                                                                                 65.4s 
-   ✔ b2b31b28ee3c Pull complete                                                                                                     6.0s 
-   ✔ c3cc7b6f0473 Pull complete                                                                                                     6.6s 
-   ✔ 2112e5e7c3ff Pull complete                                                                                                     8.8s 
-   ✔ af247aac0764 Pull complete                                                                                                    14.6s 
-   ✔ c7e62dc73b01 Pull complete                                                                                                    14.9s 
-   ✔ 35c3ce70330a Pull complete                                                                                                    15.7s 
-   ✔ f8af1611cc8d Pull complete                                                                                                    15.7s 
-   ✔ 4f4fb700ef54 Pull complete                                                                                                    15.7s 
-   ✔ 34b0f57bf8fd Pull complete                                                                                                    15.7s 
-   ✔ 68772c20eefa Pull complete                                                                                                    21.7s 
-   ✔ 440993804d8a Pull complete                                                                                                    22.3s 
-   ✔ c36ab007555d Pull complete                                                                                                    23.7s 
-   ✔ 263271c9adf4 Pull complete                                                                                                    23.7s 
-   ✔ b0a228e2ebf5 Pull complete                                                                                                    23.7s 
-   ✔ b93edade6bef Pull complete                                                                                                    24.6s 
-   ✔ 28da456bc223 Pull complete                                                                                                    24.6s 
-   ✔ 784bffb35044 Pull complete                                                                                                    63.9s 
-   ✔ 285b5ccd9d36 Pull complete                                                                                                    64.6s 
  ✔ xinference Pulled                                                                                                                4.2s 
    ✔ 43cfb69dbb46 Already exists                                                                                                    0.0s 
    ✔ fbcd35dc5bc3 Already exists                                                                                                    0.0s 
@@ -140,9 +121,28 @@ WARN[0000] /root/docker-compose.yaml: the attribute `version` is obsolete, it wi
    ✔ bd6dc6e560f7 Already exists                                                                                                    0.0s 
    ✔ 0064ad513ab3 Already exists                                                                                                    0.0s 
    ✔ eed6f1161030 Already exists                                                                                                    0.0s 
+ ✔ chatchat Pulled                                                                                                                 66.1s 
+   ✔ b2b31b28ee3c Pull complete                                                                                                     4.0s 
+   ✔ c3cc7b6f0473 Pull complete                                                                                                     4.6s 
+   ✔ 2112e5e7c3ff Pull complete                                                                                                     6.8s 
+   ✔ af247aac0764 Pull complete                                                                                                    13.8s 
+   ✔ c7e62dc73b01 Pull complete                                                                                                    14.1s 
+   ✔ 35c3ce70330a Pull complete                                                                                                    14.9s 
+   ✔ f8af1611cc8d Pull complete                                                                                                    14.9s 
+   ✔ 4f4fb700ef54 Pull complete                                                                                                    14.9s 
+   ✔ 15ba5fa89d26 Pull complete                                                                                                    14.9s 
+   ✔ 171d663ed6b1 Pull complete                                                                                                    20.9s 
+   ✔ 610e110dc8b4 Pull complete                                                                                                    21.5s 
+   ✔ cbae71cc51a5 Pull complete                                                                                                    22.9s 
+   ✔ 8ce54b4ac1ec Pull complete                                                                                                    22.9s 
+   ✔ 52e73fdb4aa1 Pull complete                                                                                                    23.0s 
+   ✔ 4c44c5875d2a Pull complete                                                                                                    23.8s 
+   ✔ 2dbc458f4d0f Pull complete                                                                                                    23.9s 
+   ✔ 4a6a450176d2 Pull complete                                                                                                    64.5s 
+   ✔ c8e428217519 Pull complete                                                                                                    64.5s 
 [+] Running 3/3
  ✔ Network root_default         Created                                                                                             0.1s 
- ✔ Container root-xinference-1  Started                                                                                             0.5s 
+ ✔ Container root-xinference-1  Started                                                                                             0.4s 
  ✔ Container root-chatchat-1    Started                                                                                             0.7s
 ```
 查看服务启动情况
