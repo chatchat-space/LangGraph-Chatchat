@@ -43,12 +43,13 @@ class TextToSQLGraph(Graph):
         if isinstance(state["messages"][-1], ToolMessage):
             state["history"].append(state["messages"][-1])
 
+        # 下面涉及的库表信息均为测试构造, 仅做参考, 请开发者自行修改.
         sql_prompt = ChatPromptTemplate.from_template(
             """你是一个智能数据库查询助手, 负责将用户需求转换为 SQL 查询语句. 请根据数据库中表和字段的作用以及用户的需求, 生成准确高效的 SQL 查询语句.
 
             以下是库表信息和核心字段的说明:
             # 库:作用
-            yunzhi_docker_hub:储存了 yunzhi_docker_hub 平台的关系型数据
+            docker_hub:储存了 docker_hub 平台的关系型数据
 
             ## 表:作用
             auth:储存了用户密码和加密数据
@@ -188,29 +189,29 @@ class TextToSQLGraph(Graph):
             注意与要求:
             1. 只允许生成查询（SELECT）语句，其他涉及改数据的 SQL 不允许被执行。
             2. 请严格审视提供的 SQL 是否正确，数据类问题的结果在实际生产环境下非常重要，不容有失。
-            3. 在 yunzhi_docker_hub 库中，organization 和 team 是两个维度的概念，请不要将 organization 表的 id 等同于 team 表的 id 或 organization 表的 team_id。
+            3. 在 docker_hub 库中，organization 和 team 是两个维度的概念，请不要将 organization 表的 id 等同于 team 表的 id 或 organization 表的 team_id。
             4. 答案尽可能以表格的形式返回，表格格式应清晰易读。
             5. 如果用户的问题与数据库表查询无关，可以友好地引导用户提出与数据库相关的问题。
             6. 对于无效查询或无法识别的请求，返回一条友好的提示信息。
 
             示例:
-            1.需求: 查询组织`tcs_public`的用户都有谁?
-            SQL: `SELECT o.id AS organization_id, o.name AS organization_name, tu.created_at AS team_user_created_at, tu.updated_at AS team_user_updated_at, tu.team_id AS team_id, u.id AS user_id, u.name AS user_name FROM organization o JOIN team_user tu ON o.team_id = tu.team_id JOIN user u ON tu.user_id = u.id WHERE o.name = 'tcs_public';`
+            1.需求: 查询组织`docker_test_org`的用户都有谁?
+            SQL: `SELECT o.id AS organization_id, o.name AS organization_name, tu.created_at AS team_user_created_at, tu.updated_at AS team_user_updated_at, tu.team_id AS team_id, u.id AS user_id, u.name AS user_name FROM organization o JOIN team_user tu ON o.team_id = tu.team_id JOIN user u ON tu.user_id = u.id WHERE o.name = 'docker_test_org';`
             返回:
             +-----------------+-------------------+----------------------+----------------------+---------+---------+-------------+
             | organization_id | organization_name | team_user_created_at | team_user_updated_at | team_id | user_id | user_name   |
             +-----------------+-------------------+----------------------+----------------------+---------+---------+-------------+
-            |            9242 | tcs_public        | 2022-08-19 15:08:34  | 2022-08-19 15:08:34  |   10511 |    6620 | dickonliu   |
-            |            9242 | tcs_public        | 2022-08-23 11:30:59  | 2022-08-23 11:30:59  |   10511 |   16832 | yuehuazhang |
+            |      11111      | docker_test_org   | 1969-08-19 15:08:34  | 1969-08-19 15:08:34  |   2222  |   1212  |  test_user  |
+            |      11111      | docker_test_org   | 1969-08-23 11:30:59  | 1969-08-23 11:30:59  |   2222  |   2323  |  yuehua-s   |
             +-----------------+-------------------+----------------------+----------------------+---------+---------+-------------+
 
-            2.需求: 查询用户`yuehuazhang`的信息
-            SQL: `SELECT * FROM user WHERE name='yuehuazhang';`
+            2.需求: 查询用户`yuehua-s`的信息
+            SQL: `SELECT * FROM user WHERE name='yuehua-s';`
             返回:
             +-------+---------------------+---------------------+-------------+
             | id    | created_at          | updated_at          | name        |
             +-------+---------------------+---------------------+-------------+
-            | 16832 | 2022-03-08 17:32:03 | 2022-03-08 17:32:03 | yuehuazhang |
+            | 2323  | 1969-03-08 17:32:03 | 1969-03-08 17:32:03 |   yuehua-s  |
             +-------+---------------------+---------------------+-------------+
             """
         )
