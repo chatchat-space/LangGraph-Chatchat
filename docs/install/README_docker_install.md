@@ -65,11 +65,21 @@ drwxr-xr-x 6 root root 4096 Nov 13 01:49 data
 - `data` 项目知识库目录, 储存知识库数据, 体验时不需要修改;
 - `basic_settings.yaml` 项目基础配置, 涉及到一些数据目录、数据库地址、项目端口等配置, 体验时不需要修改;
 - `kb_settings.yaml` 知识库配置, 体验时不需要修改;
-- `model_settings.yaml` 模型配置, 涉及到默认 `LLM` 和 `Embedding Model` 等的配置, 体验时不需要修改;
+- `model_settings.yaml` 模型配置, 涉及到默认 `LLM` 和 `Embedding Model` 等的配置, 容器启动体验时需要检查 `xinference` 的 `api_base_url` 参数, 将 `api_base_url: http://127.0.0.1:9997/v1` 修改成 `api_base_url: http://xinference:9997/v1`;
+```text
+修改后如下:
+...
+MODEL_PLATFORMS:
+  - platform_name: xinference
+    platform_type: xinference
+    api_base_url: http://xinference:9997/v1
+    api_key: EMPTY
+    ...
+```
 - `prompt_settings.yaml` 指令配置, 此配置后续可能会有调整, 暂时不需要修改;
 - `tool_settings.yaml` 工具配置, 部分工具需要配置 `api key` 等, 体验时不需要修改.
 
-### 如果需要修改, 可以参考如下:
+### 其他参数如果需要修改, 可以参考如下:
 - 配置模型 `model_settings.yaml`  
   需要根据选用的模型推理框架与加载的模型进行模型接入配置，具体参考 `model_settings.yaml` 中的注释。主要修改以下内容：
   ```yaml
@@ -192,10 +202,7 @@ exit
 
 ![WebUI界面](../../docs/img/Langgraph-Chatchat-ui.png)
 
-## 八、新建并初始化数据库
-
-
-## 九、查看服务日志
+## 八、查看服务日志
 ```shell
 (x) [root@VM-128-14-tencentos ~]$ docker-compose logs -f chatchat
 ```

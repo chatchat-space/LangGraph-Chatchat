@@ -411,7 +411,7 @@ class ApiModelSettings(BaseFileSettings):
             PlatformConfig(**{
                 "platform_name": "xinference",
                 "platform_type": "xinference",
-                "api_base_url": "http://127.0.0.1:9997/v1",
+                "api_base_url": "http://xinference:9997/v1",
                 "api_key": "EMPTY",
                 "api_concurrencies": 5,
                 "auto_detect_model": True,
