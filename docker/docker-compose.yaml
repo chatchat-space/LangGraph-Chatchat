@@ -1,10 +1,10 @@
 version: '3.9'
 services:
   xinference:
-    # DockerHub
-    image: chatchatspace/xinference:qwen2.5-2024-1117
     # 阿里云
-    # image: registry.cn-beijing.aliyuncs.com/chatchat/xinference:qwen2.5-2024-1117
+    image: registry.cn-beijing.aliyuncs.com/chatchat/xinference:qwen2.5-2024-1117
+    # DockerHub
+    # image: chatchatspace/xinference:qwen2.5-2024-1117
     restart: no # 异常退出后需要手动拉起, 并进入容器内启动模型, 命令见 README_docker_install.md
     command: xinference-local -H 0.0.0.0
     ports:
@@ -17,11 +17,11 @@ services:
               count: all
               capabilities: [gpu]
     runtime: nvidia
-    # 模型源更改为 ModelScope, 默认为 HuggingFace
-    # environment:
-    #   - XINFERENCE_MODEL_SRC=modelscope
+    # 模型源更改为 ModelScope, 注释掉即为 HuggingFace
+    environment:
+      - XINFERENCE_MODEL_SRC=modelscope
   chatchat:
-    image: ccr.ccs.tencentyun.com/langgraph-chatchat/langgraph-chatchat:v0.0.1-1117
+    image: ccr.ccs.tencentyun.com/langgraph-chatchat/langgraph-chatchat:v0.0.1-1118
     restart: always
     ports:
       - "80:8501"
