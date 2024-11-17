@@ -35,6 +35,7 @@ LangGraph-Chatchat 使用 Poetry 进行环境管理。
 ```shell
 cd  LangGraph-Chatchat/chatchat-server
 poetry install --with lint,test -E xinference
+pip install -e .
 ```
 
 > [!Note]

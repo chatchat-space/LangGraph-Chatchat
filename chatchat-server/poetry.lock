@@ -7912,13 +7912,13 @@ files = [
 
 [[package]]
 name = "xinference-client"
-version = "0.13.3"
+version = "1.0.0"
 description = "Client for Xinference"
-optional = true
+optional = false
 python-versions = "*"
 files = [
-    {file = "xinference-client-0.13.3.tar.gz", hash = "sha256:822b722100affdff049c27760be7d62ac92de58c87a40d3361066df446ba648f"},
-    {file = "xinference_client-0.13.3-py3-none-any.whl", hash = "sha256:f0eff3858b1ebcef2129726f82b09259c177e11db466a7ca23def3d4849c419f"},
+    {file = "xinference-client-1.0.0.tar.gz", hash = "sha256:9abad5623dbfd82bd3c12f7263f4da914b14c3c19c81a97373a5e7552157ae67"},
+    {file = "xinference_client-1.0.0-py3-none-any.whl", hash = "sha256:e4bd011b2d447bc44bf8589f04a6ab3ba543b6d127b88e6c1a64b1a1094d8722"},
 ]
 
 [package.dependencies]
@@ -8087,4 +8087,4 @@ zhipuai = ["zhipuai"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.9.7 || >3.9.7,<3.13"
-content-hash = "474e2e7aed93ecaca5e7b5f1f5bb04798adb6d17cfc5118a3c90043780f6b4cf"
+content-hash = "e1d7e6fa6aef79154c261b000ac32b8f0a2156e71904af657c474c139ec6a1b0"

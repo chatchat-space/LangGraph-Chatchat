@@ -25,7 +25,6 @@ from langchain_core.embeddings import Embeddings
 from langchain_openai.chat_models import ChatOpenAI
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
-from langgraph.checkpoint.postgres import PostgresSaver
 from memoization import cached, CachingAlgorithmFlag
 
 from chatchat.settings import Settings, XF_MODELS_TYPES
