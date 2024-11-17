@@ -158,7 +158,7 @@ async def graph_rag_page(api: ApiRequest):
         if cols[-1].button(":wastebasket:", help="清空对话"):
             st.session_state["messages"] = []
             st.rerun()
-        user_input = cols[2].chat_input("如何给 tcr 实例开启公网访问？(换行:Shift+Enter)")
+        user_input = cols[2].chat_input("尝试输入任何内容和我聊天呦 (换行:Shift+Enter)")
 
     # get_tool() 是所有工具的名称和对象的 dict 的列表
     all_tools = get_tool().values()
