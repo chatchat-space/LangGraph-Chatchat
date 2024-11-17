@@ -1,10 +1,7 @@
 ![](libs/chatchat-server/chatchat/img/logo-long-langraph-chatchat.jpg)
 <a href="https://trendshift.io/repositories/329" target="_blank"><img src="https://trendshift.io/api/badge/repositories/329" alt="chatchat-space%2FLangchain-Chatchat | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
 
-[![pypi badge](https://img.shields.io/pypi/v/langchain-chatchat.svg)](https://shields.io/)
-[![Generic badge](https://img.shields.io/badge/python-3.8%7C3.9%7C3.10%7C3.11-blue.svg)](https://pypi.org/project/pypiserver/)
-
-🌍 [READ THIS IN ENGLISH](README_en.md)
+[![Generic badge](https://img.shields.io/badge/python-3.9%7C3.10%7C3.11%7C3.12-blue.svg)](https://pypi.org/project/pypiserver/)
 
 📃 **LangGraph-Chatchat**
 
@@ -12,22 +9,9 @@
 
 ---
 
-## 目录
-
-* [概述](README.md#概述)
-* [功能介绍](README.md#功能介绍)
-    * [0.3.x 功能一览](README.md#03x-版本功能一览)
-    * [已支持的模型推理框架与模型](README.md#已支持的模型部署框架与模型)
-* [快速上手](README.md#快速上手)
-    * [pip 安装部署](README.md#pip-安装部署)
-    * [源码安装部署/开发部署](README.md#源码安装部署开发部署)
-    * [Docker 部署](README.md#docker-部署)
-* [项目里程碑](README.md#项目里程碑)
-* [联系我们](README.md#联系我们)
-
 ## 概述
 
-🤖️ 一种利用 [langgraph](https://langchain-ai.github.io/langgraph/)
+🤖️ 一种利用 [LangGraph](https://langchain-ai.github.io/langgraph/)
 思想实现的基于本地知识库的问答应用，目标期望建立一套对中文场景与开源模型支持友好、可离线运行的知识库问答解决方案。
 
 💡 受 [GanymedeNil](https://github.com/GanymedeNil) 的项目 [document.ai](https://github.com/GanymedeNil/document.ai)
@@ -57,147 +41,20 @@ OpenAI GPT API 的调用，并将在后续持续扩充对各类模型及模型 A
 
 🧑‍💻 如果你想对本项目做出贡献，欢迎提交 pr。
 
-## 功能介绍
-
 ## 快速上手
 
-### pip 安装部署
+### Docker 安装部署 (一定要看)
 
-#### 0. 软硬件要求
-
-💡 软件方面，本项目已支持在 Python 3.8-3.11 环境中进行使用，并已在 Windows、macOS、Linux 操作系统中进行测试。
-
-💻 硬件方面，因 0.3.0 版本已修改为支持不同模型部署框架接入，因此可在 CPU、GPU、NPU、MPS 等不同硬件条件下使用。
-
-#### 1. 安装 LangGraph-Chatchat
-
-推荐使用 docker 启动服务, 查看 [Docker 安装指南](docs/install/README_docker_install.md)
-
-#### 2. 模型推理框架并加载模型
-
-LangGraph-Chatchat 不会根据用户输入的本地模型路径直接进行模型加载，涉及到的模型种类包括
-LLM、Embedding、Reranker
-及后续会提供支持的多模态模型等，均改为支持市面常见的各大模型推理框架接入，如 [Xinference](https://github.com/xorbitsai/inference)、[Ollama](https://github.com/ollama/ollama)、[LocalAI](https://github.com/mudler/LocalAI)、[FastChat](https://github.com/lm-sys/FastChat)、[One API](https://github.com/songquanpeng/one-api)
-等。
-
-因此，请确认在启动 LangGraph-Chatchat 项目前，首先进行模型推理框架的运行，并加载所需使用的模型。
-
-这里以 Xinference 举例,
-请参考 [Xinference文档](https://inference.readthedocs.io/zh-cn/latest/getting_started/installation.html) 进行框架部署与模型加载。
-
-> [!WARNING]  
-> 为避免依赖冲突，请将 LangGraph-Chatchat 和模型部署框架如 Xinference 等放在不同的 Python 虚拟环境中, 比如 conda, venv,
-> virtualenv 等。
-
-#### 3. 初始化项目配置与数据目录
-
-LangGraph-Chatchat 使用本地 `yaml` 文件的方式进行配置，用户可以直接查看并修改其中的内容。
-
-1. 修改配置文件
-
-- 配置模型（model_settings.yaml）  
-  需要根据步骤 **2. 模型推理框架并加载模型**
-  中选用的模型推理框架与加载的模型进行模型接入配置，具体参考 `model_settings.yaml` 中的注释。主要修改以下内容：
-  ```yaml
-  # 默认选用的 LLM 名称
-   DEFAULT_LLM_MODEL: qwen1.5-chat
-
-   # 默认选用的 Embedding 名称
-   DEFAULT_EMBEDDING_MODEL: bge-large-zh-v1.5
-
-  # 将 `LLM_MODEL_CONFIG` 中 `llm_model, action_model` 的键改成对应的 LLM 模型
-  # 在 `MODEL_PLATFORMS` 中修改对应模型平台信息
-  ```
-- 配置知识库路径（basic_settings.yaml）（可选）  
-  默认知识库位于 `CHATCHAT_ROOT/data/knowledge_base`，如果你想把知识库放在不同的位置，或者想连接现有的知识库，可以在这里修改对应目录即可。
-  ```yaml
-  # 知识库默认存储路径
-   KB_ROOT_PATH: D:\chatchat-test\data\knowledge_base
-
-   # 数据库默认存储路径。如果使用sqlite，可以直接修改DB_ROOT_PATH；如果使用其它数据库，请直接修改SQLALCHEMY_DATABASE_URI。
-   DB_ROOT_PATH: D:\chatchat-test\data\knowledge_base\info.db
-
-   # 知识库信息数据库连接URI
-   SQLALCHEMY_DATABASE_URI: sqlite:///D:\chatchat-test\data\knowledge_base\info.db
-  ```
-- 配置知识库（kb_settings.yaml）（可选）
-
-  默认使用 `FAISS` 知识库，如果想连接其它类型的知识库，可以修改 `DEFAULT_VS_TYPE` 和 `kbs_config`。
-
-#### 4. 初始化知识库
-
-> [!WARNING]  
-> 进行知识库初始化前，请确保已经启动模型推理框架及对应 `embedding` 模型，且已按照上述**步骤3**完成模型接入配置。
-> Docker 部署推荐在 UI 操作, 源码部署可用命令行操作。
-```shell
-chatchat kb -r
-```
-
-出现以下日志即为成功:
-
-```text 
-
-----------------------------------------------------------------------------------------------------
-知识库名称      ：samples
-知识库类型      ：faiss
-向量模型：      ：bge-large-zh-v1.5
-知识库路径      ：/root/anaconda3/envs/chatchat/lib/python3.11/site-packages/chatchat/data/knowledge_base/samples
-文件总数量      ：47
-入库文件数      ：42
-知识条目数      ：740
-用时            ：0:02:29.701002
-----------------------------------------------------------------------------------------------------
-
-总计用时        ：0:02:33.414425
-
-```
-
-> [!Note]
-> 知识库初始化的常见问题
->
-> <details>
->
-> ##### 1. Windows 下重建知识库或添加知识文件时卡住不动
-> 此问题常出现于新建虚拟环境中，可以通过以下方式确认：
->
-> `from unstructured.partition.auto import partition`
->
-> 如果该语句卡住无法执行，可以执行以下命令：
-> ```shell
-> pip uninstall python-magic-bin
-> # check the version of the uninstalled package
-> pip install 'python-magic-bin=={version}'
-> ```
-> 然后按照本节指引重新创建知识库即可。
->
-> </details>
-
-#### 5. 启动项目
-
-```shell
-chatchat start -a
-```
-
-出现以下界面即为启动成功:
-
-![WebUI界面](docs/img/langchain_chatchat_webui.png)
-
-> [!WARNING]  
-> 由于 chatchat 配置默认监听地址 `DEFAULT_BIND_HOST` 为 127.0.0.1, 所以无法通过其他 ip 进行访问。
->
-> 如需通过机器ip 进行访问(如 Linux 系统), 需要到 `basic_settings.yaml` 中将监听地址修改为 0.0.0.0。
-> </details>
+查看 [Docker 安装指南](docs/install/README_docker_install.md)
 
 ### 源码安装部署/开发部署
 
-源码安装部署请参考 [开发指南](docs/install/README_dev_install.md)
+查看 [开发部署指南](docs/install/README_dev_install.md)
 
 ### 旧版本迁移
 
-* 0.3.x 结构改变很大,强烈建议您按照文档重新部署. 以下指南不保证100%兼容和成功. 记得提前备份重要数据!
-
 - 首先按照 `安装部署` 中的步骤配置运行环境，修改配置文件
-- 将 0.2.x 项目的 knowledge_base 目录拷贝到配置的 `DATA` 目录下
+- 将 `Langchain-Chatchat` 项目的 `knowledge_base` 目录拷贝到配置的 `DATA` 目录下
 
 ---
 
@@ -227,7 +84,7 @@ chatchat start -a
 
 ### 项目交流群
 
-<img src="docs/img/qr_code_116_2.jpg" alt="二维码" width="300" />
+<img src="docs/img/qr_code_116_3.jpg" alt="二维码" width="300" />
 
 🎉 LangGraph-Chatchat 项目微信交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。
 
@@ -238,7 +95,7 @@ chatchat start -a
 ```
 @software{LangGraph-Chatchat,
     title        = {{LangGraph-Chatchat}},
-    author       = {Liu, Qian and Zhang, Yuehua, and Song, Jinke, and Huang, Zhiguo, and Zhang, Yuxuan, and glide-the, and liunux4odoo},
+    author       = {Liu, Qian and Zhang, Yuehua, and Song, Jinke, and liunux4odoo, and glide-the, and Huang, Zhiguo, and Zhang, Yuxuan},
     year         = 2024,
     journal      = {GitHub repository},
     publisher    = {GitHub},
