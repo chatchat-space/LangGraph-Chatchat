@@ -61,7 +61,7 @@ class PlanExecute(State):
 class PlanExecuteGraph(Graph):
     name = "plan_execute_agent"
     label = "agent"
-    title = "计划执行机器人"
+    title = "计划执行机器人[Beta]"
 
     def __init__(self,
                  llm: ChatOpenAI,
@@ -138,6 +138,11 @@ class PlanExecuteGraph(Graph):
         replanner = replanner_prompt | self.llm.with_structured_output(Act)
 
         output = await replanner.ainvoke(state)
+
+        # Check if 'action' is in the output
+        if not hasattr(output, 'action'):
+            raise ValueError("The output does not contain the 'action' attribute. This indicates that the replan_step \
+            execution encountered an issue. Please try again or consider using a more powerful LLM.")
 
         # 检查 output.action 是否是 Response 类型
         if isinstance(output.action, Response):
