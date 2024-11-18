@@ -790,6 +790,8 @@ def init_conversation_id():
         st.session_state["graph_dict"] = {}
     if "checkpoint_type" not in st.session_state:
         st.session_state["checkpoint_type"] = Settings.tool_settings.GRAPH_MEMORY_TYPE
+    if "streaming" not in st.session_state:
+        st.session_state["streaming"] = False
 
 
 def extract_node_and_response(data):
@@ -982,6 +984,18 @@ async def process_graph(graph_class: Graph, graph: CompiledStateGraph, graph_inp
         #         st.markdown(response_last)
 
 
+def check_model_supports_streaming(llm_model: str):
+    """
+    这里实现检查模型是否支持流式传输的逻辑
+    返回 True 或 False
+    """
+    # todo: 需要实现更精细的"关于模型是否支持流式输出"的判断逻辑
+    if llm_model == "qwen2.5-instruct":
+        return False
+    else:
+        return True
+
+
 @st.dialog("模型配置", width="large")
 def llm_model_setting():
     cols = st.columns(3)
@@ -990,11 +1004,15 @@ def llm_model_setting():
     llm_models = list(get_config_models(model_type="llm", platform_name=None if platform == "所有" else platform))
     llm_model = cols[1].selectbox("模型设置(LLM)", llm_models)
     temperature = cols[2].slider("温度设置(Temperature)", 0.0, 1.0, value=st.session_state["temperature"])
+    # 检查所选模型是否支持流式传输
+    supports_streaming = check_model_supports_streaming(llm_model)  # 需要实现此函数
+    streaming = st.checkbox("启用流式传输(Streaming)", value=supports_streaming, help="不支持流式输出的模型勾选后会报错")
 
     if st.button("确认"):
         st.session_state["platform"] = platform
         st.session_state["llm_model"] = llm_model
         st.session_state["temperature"] = temperature
+        st.session_state["streaming"] = streaming
         st.rerun()
 
 
