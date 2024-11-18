@@ -316,7 +316,7 @@ async def graph_agent_page():
                               model=llm_model,
                               max_tokens=None,
                               temperature=st.session_state["temperature"],
-                              stream=True)
+                              stream=st.session_state["streaming"])
     st.toast(f"已加载 LLM: {llm_model}")
     logger.info(f"Loaded llm: {llm}")
 
