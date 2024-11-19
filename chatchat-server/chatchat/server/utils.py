@@ -185,20 +185,23 @@ def get_default_llm():
     available_llms = list(get_config_models(model_type="llm").keys())
     if Settings.model_settings.DEFAULT_LLM_MODEL in available_llms:
         return Settings.model_settings.DEFAULT_LLM_MODEL
-    else:
+    elif available_llms:
         logger.warning(f"default llm model {Settings.model_settings.DEFAULT_LLM_MODEL} is not found in available llms, "
                        f"using {available_llms[0]} instead")
         return available_llms[0]
-
+    else:
+        logger.error("can not find an available llm model")
 
 def get_default_embedding():
     available_embeddings = list(get_config_models(model_type="embed").keys())
     if Settings.model_settings.DEFAULT_EMBEDDING_MODEL in available_embeddings:
         return Settings.model_settings.DEFAULT_EMBEDDING_MODEL
-    else:
+    elif available_embeddings:
         logger.warning(f"default embedding model {Settings.model_settings.DEFAULT_EMBEDDING_MODEL} is not found in "
                        f"available embeddings, using {available_embeddings[0]} instead")
         return available_embeddings[0]
+    else:
+        logger.error("can not find an available embedding model")
 
 
 def get_history_len() -> int:

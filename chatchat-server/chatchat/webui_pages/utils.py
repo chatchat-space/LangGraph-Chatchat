@@ -990,7 +990,7 @@ def check_model_supports_streaming(llm_model: str):
     返回 True 或 False
     """
     # todo: 需要实现更精细的"关于模型是否支持流式输出"的判断逻辑
-    if llm_model == "qwen2.5-instruct":
+    if llm_model.startswith("qwen"):
         return False
     else:
         return True
