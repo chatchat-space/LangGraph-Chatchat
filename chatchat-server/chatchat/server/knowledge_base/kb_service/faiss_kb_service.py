@@ -70,12 +70,18 @@ class FaissKBService(KBService):
         score_threshold: float = Settings.kb_settings.SCORE_THRESHOLD,
     ) -> List[Tuple[Document, float]]:
         with self.load_vector_store().acquire() as vs:
+            import time
+            start_time = time.time()
             retriever = get_Retriever("ensemble").from_vectorstore(
                 vs,
                 top_k=top_k,
                 score_threshold=score_threshold,
             )
+            print(f" ✅ yuehua test. faiss_retriever do_search in {time.time() - start_time:.4f} seconds")
+
+            start_time = time.time()
             docs = retriever.get_relevant_documents(query)
+            print(f" ✅ yuehua test. faiss_retriever get_relevant_documents in {time.time() - start_time:.4f} seconds")
         return docs
 
     def do_add_doc(

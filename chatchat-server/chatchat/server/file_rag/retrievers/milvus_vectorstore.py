@@ -14,6 +14,7 @@ from langchain_core.callbacks.manager import (
 
 from typing import List
 
+
 class MilvusRetriever(VectorStoreRetriever):
     def _get_relevant_documents(
         self, query: str, *, run_manager: CallbackManagerForRetrieverRun
@@ -94,6 +95,7 @@ class MilvusRetriever(VectorStoreRetriever):
         else:
             raise ValueError(f"search_type of {self.search_type} not allowed.")
         return docs 
+
 
 class MilvusVectorstoreRetrieverService(BaseRetrieverService):
     def do_init(

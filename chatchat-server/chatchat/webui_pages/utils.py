@@ -839,9 +839,9 @@ async def process_graph(graph_class: Graph, graph: CompiledStateGraph, graph_inp
                 response = serialize_content_to_json(response)
 
                 # debug
-                import rich
-                print(f"--- node: {node} ---")
-                rich.print(response)
+                # import rich
+                # print(f"--- node: {node} ---")
+                # rich.print(response)
 
                 # 检查 'content' 是否在响应中(因为我们只需要 AIMessage 的内容)
                 if "content" in response:

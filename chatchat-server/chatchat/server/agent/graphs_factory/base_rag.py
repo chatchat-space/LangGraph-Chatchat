@@ -170,9 +170,8 @@ class BaseRagGraph(Graph):
         # Chain
         referee = prompt | self.llm.with_structured_output(Grade)
         scored_result = await referee.ainvoke(state)
-        score = scored_result.binary_score
-
-        if score is None or score == "":
+        score = getattr(scored_result, 'binary_score', None)
+        if score is None:
             logger.warning(f"The score is not provided. Defaulting to 'yes'. Question: {state['question']}")
             score = "yes"
 

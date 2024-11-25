@@ -13,8 +13,8 @@ chatchat = 'chatchat.cli:main'
 
 [tool.poetry.dependencies]
 python = ">=3.9,<3.9.7 || >3.9.7,<3.13"
-langchain = "0.3.7"
-langgraph = "0.2.44"
+langchain = "^0.3.8"
+langgraph = "^0.2.53"
 langchainhub = "0.1.20"
 fastapi = "^0.115.4"
 sse_starlette = "~1.8.2"
@@ -73,13 +73,17 @@ openai = "^1.53.0"
 langgraph-checkpoint-sqlite = "^2.0.1"
 tiktoken = "^0.8.0"
 langchain-openai = "^0.2.5"
-langchain-community = "^0.3.5"
+langchain-community = "^0.3.8"
 mysqlclient = "^2.2.5"
 metaphor-python = "^0.1.23"
 psycopg-pool = "^3.2.3"
 langgraph-checkpoint-postgres = "^2.0.2"
 setuptools = {version = "^75.5.0", allow-prereleases = true}
 pymilvus = "^2.4.9"
+pypandoc = "^1.14"
+pandoc = "^2.4"
+jq = "^1.8.0"
+sqlalchemy-vectorstores = {version = "~0.1.2", extras = ["sqlite"]}
 [tool.poetry.extras]
 xinference = ["xinference_client"]
 zhipuai = ["zhipuai"]

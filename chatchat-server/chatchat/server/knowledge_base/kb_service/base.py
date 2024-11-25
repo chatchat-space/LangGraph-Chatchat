@@ -1,3 +1,4 @@
+import enum
 import operator
 import os
 from abc import ABC, abstractmethod
@@ -43,7 +44,7 @@ from chatchat.server.utils import (
 logger = build_logger()
 
 
-class SupportedVSType:
+class SupportedVSType(str, enum.Enum):
     FAISS = "faiss"
     MILVUS = "milvus"
     DEFAULT = "default"
@@ -52,6 +53,7 @@ class SupportedVSType:
     RELYT = "relyt"
     ES = "es"
     CHROMADB = "chromadb"
+    SQLITE = "sqlite"
 
 
 class KBService(ABC):
@@ -201,7 +203,7 @@ class KBService(ABC):
         self,
         query: str,
         top_k: int = Settings.kb_settings.VECTOR_SEARCH_TOP_K,
-        score_threshold: float = Settings.kb_settings.SCORE_THRESHOLD,
+        score_threshold: float = Settings.kb_settings.SCORE_THRESHOLD,  # TODO: vector and bm25 should use different value
     ) -> List[Document]:
         if not self.check_embed_model()[0]:
             return []
@@ -401,6 +403,12 @@ class KBServiceFactory:
                 ChromaKBService,
             )
             return ChromaKBService(**params)
+        elif SupportedVSType.SQLITE == vector_store_type:
+            from chatchat.server.knowledge_base.kb_service.sqlite_kb_service import (
+                SqliteKBService,
+            )
+
+            return SqliteKBService(**params)
         elif (
             SupportedVSType.DEFAULT == vector_store_type
         ):  # kb_exists of default kbservice is False, to make validation easier.
