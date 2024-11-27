@@ -17,7 +17,9 @@ from chatchat.server.utils import get_Embeddings
 
 
 def _create_database():
+    print(f" 🚄 this is SqliteKBService _create_database.")
     db_uri = Settings.kb_settings.kbs_config.get("sqlite", {}).get("uri", "knowledge_base.db")
+    print(f" 🚄 this is SqliteKBService db_uri: {db_uri}.")
     if not db_uri.startswith("sqlite") and not os.path.isabs(db_uri):
         db_uri = os.path.join(Settings.basic_settings.KB_ROOT_PATH, db_uri)
     if not db_uri.startswith("sqlite") and os.path.isabs(db_uri):
@@ -33,12 +35,19 @@ class SqliteKBService(KBService):
         def embed_func(text: str) -> List[float]:
             embeddings = get_Embeddings(self.embed_model)
             return embeddings.embed_documents([text])[0]
+        print(f" 🚄 this is SqliteKBService embed_func.")
+        print(" 🚄 _sqlite_db:")
+        import rich
+        rich.print(_sqlite_db)
+        print(f" 🚄 kb_name: {self.kb_name}.")
+        print(f" 🚄 test embed_func: {embed_func('hello world')}.")
         self.sqlite_vs = SqliteVectorStore(
             _sqlite_db,
             table_prefix=self.kb_name,
             embedding_func=embed_func,
             fts_tokenize="jieba",
         )
+        print(f" 🚄 self.sqlite_vs: {self.sqlite_vs}.")
 
     def do_create_kb(self):
         ...

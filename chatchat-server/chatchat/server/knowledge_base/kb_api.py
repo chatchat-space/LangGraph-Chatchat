@@ -30,13 +30,18 @@ def create_kb(
     if knowledge_base_name is None or knowledge_base_name.strip() == "":
         return BaseResponse(code=404, msg="知识库名称不能为空，请重新填写知识库名称")
 
+    print(f" 🚗 knowledge_base_name: {knowledge_base_name}")
+
     kb = KBServiceFactory.get_service_by_name(knowledge_base_name)
     if kb is not None:
         return BaseResponse(code=404, msg=f"已存在同名知识库 {knowledge_base_name}")
+    print(f" 🚗 kb_1: {kb}")
 
+    logger.info(f"there has no knowledge: {knowledge_base_name}, prepare to create. vector_store_type: {vector_store_type}. embedding_model: {embed_model}.")
     kb = KBServiceFactory.get_service(
         knowledge_base_name, vector_store_type, embed_model, kb_info=kb_info
     )
+    print(f" 🚗 kb_2: {kb}")
     try:
         kb.create_kb()
     except Exception as e:

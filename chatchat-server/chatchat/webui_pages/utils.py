@@ -410,11 +410,13 @@ class ApiRequest:
             "vector_store_type": vector_store_type,
             "embed_model": embed_model,
         }
-
+        import rich
+        logger.info(f"Creating knowledge parameters: {data}")
         response = self.post(
             "/knowledge_base/create_knowledge_base",
             json=data,
         )
+        rich.print(response)
         return self._get_response_value(response, as_json=True)
 
     def delete_knowledge_base(

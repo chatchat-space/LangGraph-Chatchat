@@ -88,6 +88,8 @@ class KBService(ABC):
         """
         创建知识库
         """
+        print(" ✈️ this is KBService create_kb")
+
         if not os.path.exists(self.doc_path):
             os.makedirs(self.doc_path)
 
@@ -407,8 +409,11 @@ class KBServiceFactory:
             from chatchat.server.knowledge_base.kb_service.sqlite_kb_service import (
                 SqliteKBService,
             )
-
-            return SqliteKBService(**params)
+            print(f" ✈️ this is get_service SqliteKBService")
+            qks = SqliteKBService(**params)
+            print(f" ✈️ SqliteKBService: {qks}")
+            return qks
+            # return SqliteKBService(**params)
         elif (
             SupportedVSType.DEFAULT == vector_store_type
         ):  # kb_exists of default kbservice is False, to make validation easier.

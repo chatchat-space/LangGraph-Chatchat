@@ -253,7 +253,7 @@ class KBSettings(BaseFileSettings):
                 }
             },
             "chromadb": {},
-            "sqlite": {"uri": None},
+            "sqlite": {"uri": "sqlite:///" + str(CHATCHAT_ROOT / "data/knowledge_base/sqlite-knowledge.db")},
         }
     """可选向量库类型及对应配置"""
 
