@@ -1,5 +1,4 @@
-![](libs/chatchat-server/chatchat/img/logo-long-langraph-chatchat.jpg)
-<a href="https://trendshift.io/repositories/329" target="_blank"><img src="https://trendshift.io/api/badge/repositories/329" alt="chatchat-space%2FLangchain-Chatchat | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
+![](chatchat-server/chatchat/img/logo-long-langraph-chatchat.jpg)
 
 [![Generic badge](https://img.shields.io/badge/python-3.9%7C3.10%7C3.11%7C3.12-blue.svg)](https://pypi.org/project/pypiserver/)
 
@@ -84,7 +83,7 @@ OpenAI GPT API 的调用，并将在后续持续扩充对各类模型及模型 A
 
 ### 项目交流群
 
-<img src="docs/img/qr_code_116_3.jpg" alt="二维码" width="300" />
+<img src="docs/img/wx_01.jpg" alt="二维码" width="300" />
 
 🎉 LangGraph-Chatchat 项目微信交流群，如果你也对本项目感兴趣，欢迎加入群聊参与讨论交流。
 
