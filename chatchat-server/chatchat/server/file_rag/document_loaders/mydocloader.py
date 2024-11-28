@@ -1,10 +1,10 @@
 from typing import List
 
 import tqdm
-from langchain_community.document_loaders.unstructured import UnstructuredFileLoader
+from langchain_unstructured import UnstructuredLoader
 
 
-class RapidOCRDocLoader(UnstructuredFileLoader):
+class RapidOCRDocLoader(UnstructuredLoader):
     def _get_elements(self) -> List:
         def doc2text(filepath):
             from io import BytesIO

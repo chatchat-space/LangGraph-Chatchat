@@ -1,11 +1,11 @@
 from typing import List
 
-from langchain_community.document_loaders.unstructured import UnstructuredFileLoader
+from langchain_unstructured import UnstructuredLoader
 
 from chatchat.server.file_rag.document_loaders.ocr import get_ocr
 
 
-class RapidOCRLoader(UnstructuredFileLoader):
+class RapidOCRLoader(UnstructuredLoader):
     def _get_elements(self) -> List:
         def img2text(filepath):
             resp = ""

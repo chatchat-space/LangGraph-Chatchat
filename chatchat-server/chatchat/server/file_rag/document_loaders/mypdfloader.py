@@ -3,14 +3,14 @@ from typing import List
 import cv2
 import numpy as np
 import tqdm
-from langchain_community.document_loaders.unstructured import UnstructuredFileLoader
+from langchain_unstructured import UnstructuredLoader
 from PIL import Image
 
 from chatchat.settings import Settings
 from chatchat.server.file_rag.document_loaders.ocr import get_ocr
 
 
-class RapidOCRPDFLoader(UnstructuredFileLoader):
+class RapidOCRPDFLoader(UnstructuredLoader):
     def _get_elements(self) -> List:
         def rotate_img(img, angle):
             """

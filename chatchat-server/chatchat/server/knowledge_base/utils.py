@@ -110,7 +110,7 @@ LOADER_DICT = {
         ".pptx",
     ],
     "RapidOCRLoader": [".png", ".jpg", ".jpeg", ".bmp"],
-    "UnstructuredFileLoader": [
+    "UnstructuredLoader": [
         ".txt",
     ],
     "UnstructuredEmailLoader": [".eml", ".msg"],
@@ -174,6 +174,10 @@ def get_loader(loader_name: str, file_path: str, loader_kwargs: Dict = None):
             document_loaders_module = importlib.import_module(
                 "chatchat.server.file_rag.document_loaders"
             )
+        elif loader_name in ["UnstructuredLoader"]:
+            document_loaders_module = importlib.import_module(
+                "langchain_unstructured"
+            )
         else:
             document_loaders_module = importlib.import_module(
                 "langchain_community.document_loaders"
@@ -185,9 +189,9 @@ def get_loader(loader_name: str, file_path: str, loader_kwargs: Dict = None):
         document_loaders_module = importlib.import_module(
             "langchain_community.document_loaders"
         )
-        DocumentLoader = getattr(document_loaders_module, "UnstructuredFileLoader")
+        DocumentLoader = getattr(document_loaders_module, "UnstructuredLoader")
 
-    if loader_name == "UnstructuredFileLoader":
+    if loader_name == "UnstructuredLoader":
         loader_kwargs.setdefault("autodetect_encoding", True)
     elif loader_name == "CSVLoader":
         if not loader_kwargs.get("encoding"):
