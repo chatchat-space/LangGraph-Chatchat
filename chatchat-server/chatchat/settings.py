@@ -270,6 +270,10 @@ class KBSettings(BaseFileSettings):
                     ("####", "head4"),
                 ]
             },
+            "NoneTextSplitter": {
+                "source": "",
+                "tokenizer_name_or_path": "",
+            }
         }
     """
     TextSplitter 配置项，如果你不明白其中的含义，就不要修改。
