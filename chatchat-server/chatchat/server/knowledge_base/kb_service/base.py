@@ -4,7 +4,6 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Dict, List, Tuple, Union
 
-import rich
 from langchain.docstore.document import Document
 
 from chatchat.settings import Settings
@@ -33,7 +32,8 @@ from chatchat.server.knowledge_base.utils import (
     get_doc_path,
     get_kb_path,
     list_files_from_folder,
-    list_kbs_from_folder, make_text_splitter,
+    list_kbs_from_folder,
+    make_text_splitter,
 )
 from chatchat.server.utils import (
     check_embed_model as _check_embed_model,

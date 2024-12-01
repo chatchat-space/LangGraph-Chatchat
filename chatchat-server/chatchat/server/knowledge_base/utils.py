@@ -3,7 +3,6 @@ import json
 import os
 from functools import lru_cache
 from pathlib import Path
-from urllib.parse import urlencode
 from typing import Dict, Generator, List, Tuple, Union
 
 import chardet
@@ -209,7 +208,7 @@ def get_loader(loader_name: str, file_path: str, loader_kwargs: Dict = None):
     return loader
 
 
-# @lru_cache()
+@lru_cache()
 def make_text_splitter(splitter_name, chunk_size, chunk_overlap):
     """
     根据参数获取特定的分词器
