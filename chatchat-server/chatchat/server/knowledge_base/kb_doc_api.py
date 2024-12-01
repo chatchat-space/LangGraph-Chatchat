@@ -173,6 +173,7 @@ def upload_docs(
         ),
         override: bool = Form(False, description="覆盖已有文件"),
         to_vector_store: bool = Form(True, description="上传文件后是否进行向量化"),
+        text_splitter_name: str = Body(Settings.kb_settings.TEXT_SPLITTER_NAME, description="文本分割器名称"),
         chunk_size: int = Form(Settings.kb_settings.CHUNK_SIZE, description="知识库中单段文本最大长度"),
         chunk_overlap: int = Form(Settings.kb_settings.OVERLAP_SIZE, description="知识库中相邻文本重合长度"),
         zh_title_enhance: bool = Form(Settings.kb_settings.ZH_TITLE_ENHANCE, description="是否开启中文标题加强"),
@@ -210,6 +211,7 @@ def upload_docs(
             knowledge_base_name=knowledge_base_name,
             file_names=file_names,
             override_custom_docs=True,
+            text_splitter_name=text_splitter_name,
             chunk_size=chunk_size,
             chunk_overlap=chunk_overlap,
             zh_title_enhance=zh_title_enhance,
@@ -280,12 +282,9 @@ def update_info(
 
 
 def update_docs(
-        knowledge_base_name: str = Body(
-            ..., description="知识库名称", examples=["samples"]
-        ),
-        file_names: List[str] = Body(
-            ..., description="文件名称，支持多文件", examples=[["file_name1", "text.txt"]]
-        ),
+        knowledge_base_name: str = Body(..., description="知识库名称", examples=["samples"]),
+        file_names: List[str] = Body(..., description="文件名称，支持多文件", examples=[["file_name1", "text.txt"]]),
+        text_splitter_name: str = Body(Settings.kb_settings.TEXT_SPLITTER_NAME, description="文本分割器名称"),
         chunk_size: int = Body(Settings.kb_settings.CHUNK_SIZE, description="知识库中单段文本最大长度"),
         chunk_overlap: int = Body(Settings.kb_settings.OVERLAP_SIZE, description="知识库中相邻文本重合长度"),
         zh_title_enhance: bool = Body(Settings.kb_settings.ZH_TITLE_ENHANCE, description="是否开启中文标题加强"),
@@ -329,6 +328,7 @@ def update_docs(
     # 这里利用了KnowledgeFile的缓存功能，在多线程中加载Document，然后传给KnowledgeFile
     for status, result in files2docs_in_thread(
             kb_files,
+            text_splitter_name=text_splitter_name,
             chunk_size=chunk_size,
             chunk_overlap=chunk_overlap,
             zh_title_enhance=zh_title_enhance,
@@ -339,7 +339,7 @@ def update_docs(
                 filename=file_name, knowledge_base_name=knowledge_base_name
             )
             kb_file.splited_docs = new_docs
-            kb.update_doc(kb_file, not_refresh_vs_cache=True)
+            kb.update_doc(kb_file, text_splitter_name=text_splitter_name, not_refresh_vs_cache=True)
         else:
             kb_name, file_name, error = result
             failed_files[file_name] = error
@@ -351,7 +351,7 @@ def update_docs(
             kb_file = KnowledgeFile(
                 filename=file_name, knowledge_base_name=knowledge_base_name
             )
-            kb.update_doc(kb_file, docs=v, not_refresh_vs_cache=True)
+            kb.update_doc(kb_file, text_splitter_name=text_splitter_name, docs=v, not_refresh_vs_cache=True)
         except Exception as e:
             msg = f"为 {file_name} 添加自定义docs时出错：{e}"
             logger.error(f"{e.__class__.__name__}: {msg}")
@@ -412,6 +412,7 @@ def recreate_vector_store(
         allow_empty_kb: bool = Body(True),
         vs_type: str = Body(Settings.kb_settings.DEFAULT_VS_TYPE),
         embed_model: str = Body(get_default_embedding()),
+        text_splitter_name: str = Body(Settings.kb_settings.TEXT_SPLITTER_NAME, description="文本分割器名称"),
         chunk_size: int = Body(Settings.kb_settings.CHUNK_SIZE, description="知识库中单段文本最大长度"),
         chunk_overlap: int = Body(Settings.kb_settings.OVERLAP_SIZE, description="知识库中相邻文本重合长度"),
         zh_title_enhance: bool = Body(Settings.kb_settings.ZH_TITLE_ENHANCE, description="是否开启中文标题加强"),
@@ -442,6 +443,7 @@ def recreate_vector_store(
                     i = 0
                     for status, result in files2docs_in_thread(
                             kb_files,
+                            text_splitter_name=text_splitter_name,
                             chunk_size=chunk_size,
                             chunk_overlap=chunk_overlap,
                             zh_title_enhance=zh_title_enhance,
@@ -462,7 +464,11 @@ def recreate_vector_store(
                                 },
                                 ensure_ascii=False,
                             )
-                            kb.add_doc(kb_file, not_refresh_vs_cache=True)
+                            kb.add_doc(kb_file=kb_file,
+                                       text_splitter_name=text_splitter_name,
+                                       chunk_size=chunk_size,
+                                       chunk_overlap=chunk_overlap,
+                                       not_refresh_vs_cache=True)
                         else:
                             kb_name, file_name, error = result
                             msg = f"添加文件‘{file_name}’到知识库‘{knowledge_base_name}’时出错：{error}。已跳过。"

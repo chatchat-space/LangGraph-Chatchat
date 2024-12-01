@@ -478,6 +478,7 @@ class ApiRequest:
         knowledge_base_name: str,
         override: bool = False,
         to_vector_store: bool = True,
+        text_splitter_name: str = Settings.kb_settings.TEXT_SPLITTER_NAME,
         chunk_size=Settings.kb_settings.CHUNK_SIZE,
         chunk_overlap=Settings.kb_settings.OVERLAP_SIZE,
         zh_title_enhance=Settings.kb_settings.ZH_TITLE_ENHANCE,
@@ -503,6 +504,7 @@ class ApiRequest:
             "knowledge_base_name": knowledge_base_name,
             "override": override,
             "to_vector_store": to_vector_store,
+            "text_splitter_name": text_splitter_name,
             "chunk_size": chunk_size,
             "chunk_overlap": chunk_overlap,
             "zh_title_enhance": zh_title_enhance,
@@ -562,6 +564,7 @@ class ApiRequest:
         knowledge_base_name: str,
         file_names: List[str],
         override_custom_docs: bool = False,
+        text_splitter_name: str = Settings.kb_settings.TEXT_SPLITTER_NAME,
         chunk_size=Settings.kb_settings.CHUNK_SIZE,
         chunk_overlap=Settings.kb_settings.OVERLAP_SIZE,
         zh_title_enhance=Settings.kb_settings.ZH_TITLE_ENHANCE,
@@ -569,12 +572,13 @@ class ApiRequest:
         not_refresh_vs_cache: bool = False,
     ):
         """
-        对应api.py/knowledge_base/update_docs接口
+        对应 kb_doc_api.py/knowledge_base/update_docs 接口
         """
         data = {
             "knowledge_base_name": knowledge_base_name,
             "file_names": file_names,
             "override_custom_docs": override_custom_docs,
+            "text_splitter_name": text_splitter_name,
             "chunk_size": chunk_size,
             "chunk_overlap": chunk_overlap,
             "zh_title_enhance": zh_title_enhance,
@@ -597,18 +601,20 @@ class ApiRequest:
         allow_empty_kb: bool = True,
         vs_type: str = Settings.kb_settings.DEFAULT_VS_TYPE,
         embed_model: str = get_default_embedding(),
-        chunk_size=Settings.kb_settings.CHUNK_SIZE,
-        chunk_overlap=Settings.kb_settings.OVERLAP_SIZE,
+        text_splitter_name: str = Settings.kb_settings.TEXT_SPLITTER_NAME,
+        chunk_size: int = Settings.kb_settings.CHUNK_SIZE,
+        chunk_overlap: int = Settings.kb_settings.OVERLAP_SIZE,
         zh_title_enhance=Settings.kb_settings.ZH_TITLE_ENHANCE,
     ):
         """
-        对应api.py/knowledge_base/recreate_vector_store接口
+        对应 kb_routes.py/knowledge_base/recreate_vector_store 接口
         """
         data = {
             "knowledge_base_name": knowledge_base_name,
             "allow_empty_kb": allow_empty_kb,
             "vs_type": vs_type,
             "embed_model": embed_model,
+            "text_splitter_name": text_splitter_name,
             "chunk_size": chunk_size,
             "chunk_overlap": chunk_overlap,
             "zh_title_enhance": zh_title_enhance,
@@ -839,9 +845,9 @@ async def process_graph(graph_class: Graph, graph: CompiledStateGraph, graph_inp
                 response = serialize_content_to_json(response)
 
                 # debug
-                import rich
-                print(f"--- node: {node} ---")
-                rich.print(response)
+                # import rich
+                # print(f"--- node: {node} ---")
+                # rich.print(response)
 
                 # 检查 'content' 是否在响应中(因为我们只需要 AIMessage 的内容)
                 if "content" in response:
@@ -1005,7 +1011,7 @@ def llm_model_setting():
     llm_model = cols[1].selectbox("模型设置(LLM)", llm_models)
     temperature = cols[2].slider("温度设置(Temperature)", 0.0, 1.0, value=st.session_state["temperature"])
     # 检查所选模型是否支持流式传输
-    supports_streaming = check_model_supports_streaming(llm_model)  # 需要实现此函数
+    supports_streaming = check_model_supports_streaming(llm_model)
     streaming = st.checkbox("启用流式传输(Streaming)", value=supports_streaming, help="不支持流式输出的模型勾选后会报错")
 
     if st.button("确认"):
