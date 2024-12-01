@@ -209,16 +209,14 @@ def get_loader(loader_name: str, file_path: str, loader_kwargs: Dict = None):
     return loader
 
 
-@lru_cache()
+# @lru_cache()
 def make_text_splitter(splitter_name, chunk_size, chunk_overlap):
     """
     根据参数获取特定的分词器
     """
     splitter_name = splitter_name or "SpacyTextSplitter"
     try:
-        if (
-            splitter_name == "MarkdownHeaderTextSplitter"
-        ):  # MarkdownHeaderTextSplitter特殊判定
+        if splitter_name == "MarkdownHeaderTextSplitter":  # MarkdownHeaderTextSplitter特殊判定
             headers_to_split_on = Settings.kb_settings.text_splitter_dict[splitter_name][
                 "headers_to_split_on"
             ]
@@ -235,9 +233,7 @@ def make_text_splitter(splitter_name, chunk_size, chunk_overlap):
                 )
                 TextSplitter = getattr(text_splitter_module, splitter_name)
 
-            if (
-                Settings.kb_settings.text_splitter_dict[splitter_name]["source"] == "tiktoken"
-            ):  # 从tiktoken加载
+            if Settings.kb_settings.text_splitter_dict[splitter_name]["source"] == "tiktoken":  # 从tiktoken加载
                 try:
                     text_splitter = TextSplitter.from_tiktoken_encoder(
                         encoding_name=Settings.kb_settings.text_splitter_dict[splitter_name][
@@ -255,9 +251,7 @@ def make_text_splitter(splitter_name, chunk_size, chunk_overlap):
                         chunk_size=chunk_size,
                         chunk_overlap=chunk_overlap,
                     )
-            elif (
-                Settings.kb_settings.text_splitter_dict[splitter_name]["source"] == "huggingface"
-            ):  # 从huggingface加载
+            elif Settings.kb_settings.text_splitter_dict[splitter_name]["source"] == "huggingface":  # 从huggingface加载
                 if (
                     Settings.kb_settings.text_splitter_dict[splitter_name]["tokenizer_name_or_path"]
                     == "gpt2"
@@ -285,12 +279,14 @@ def make_text_splitter(splitter_name, chunk_size, chunk_overlap):
                         chunk_size=chunk_size,
                         chunk_overlap=chunk_overlap,
                     )
-                except:
+                except Exception as e:
+                    logger.warning(f"Make text_splitter error: {e}")
                     text_splitter = TextSplitter(
-                        chunk_size=chunk_size, chunk_overlap=chunk_overlap
+                        chunk_size=chunk_size,
+                        chunk_overlap=chunk_overlap
                     )
     except Exception as e:
-        print(e)
+        logger.warning(f"Make text_splitter error: {e}")
         text_splitter_module = importlib.import_module("langchain.text_splitter")
         TextSplitter = getattr(text_splitter_module, "RecursiveCharacterTextSplitter")
         text_splitter = TextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
@@ -348,6 +344,7 @@ class KnowledgeFile:
         text_splitter: TextSplitter = None,
     ):
         docs = docs or self.file2docs(refresh=refresh)
+
         if not docs:
             return []
         if self.ext not in [".csv"]:
@@ -357,6 +354,8 @@ class KnowledgeFile:
                     chunk_size=chunk_size,
                     chunk_overlap=chunk_overlap,
                 )
+
+            # Split text
             if self.text_splitter_name == "MarkdownHeaderTextSplitter":
                 docs = text_splitter.split_text(docs[0].page_content)
             else:
@@ -365,7 +364,7 @@ class KnowledgeFile:
         if not docs:
             return []
 
-        print(f"文档切分示例：{docs[0]}")
+        logger.info(f"文档切分示例: {docs[0]}")
         if zh_title_enhance:
             docs = func_zh_title_enhance(docs)
         self.splited_docs = docs
@@ -375,9 +374,9 @@ class KnowledgeFile:
         self,
         zh_title_enhance: bool = Settings.kb_settings.ZH_TITLE_ENHANCE,
         refresh: bool = False,
+        text_splitter: TextSplitter = None,
         chunk_size: int = Settings.kb_settings.CHUNK_SIZE,
         chunk_overlap: int = Settings.kb_settings.OVERLAP_SIZE,
-        text_splitter: TextSplitter = None,
     ):
         if self.splited_docs is None or refresh:
             docs = self.file2docs()
@@ -414,6 +413,7 @@ def files2docs_in_thread_file2docs(
 
 def files2docs_in_thread(
     files: List[Union[KnowledgeFile, Tuple[str, str], Dict]],
+    text_splitter_name: str = Settings.kb_settings.TEXT_SPLITTER_NAME,
     chunk_size: int = Settings.kb_settings.CHUNK_SIZE,
     chunk_overlap: int = Settings.kb_settings.OVERLAP_SIZE,
     zh_title_enhance: bool = Settings.kb_settings.ZH_TITLE_ENHANCE,
@@ -423,7 +423,6 @@ def files2docs_in_thread(
     如果传入参数是Tuple，形式为(filename, kb_name)
     生成器返回值为 status, (kb_name, file_name, docs | error)
     """
-
     kwargs_list = []
     for i, file in enumerate(files):
         kwargs = {}
@@ -438,6 +437,12 @@ def files2docs_in_thread(
                 kwargs.update(file)
                 file = KnowledgeFile(filename=filename, knowledge_base_name=kb_name)
             kwargs["file"] = file
+            text_splitter = make_text_splitter(
+                splitter_name=text_splitter_name,
+                chunk_size=chunk_size,
+                chunk_overlap=chunk_overlap,
+            )
+            kwargs["text_splitter"] = text_splitter
             kwargs["chunk_size"] = chunk_size
             kwargs["chunk_overlap"] = chunk_overlap
             kwargs["zh_title_enhance"] = zh_title_enhance
@@ -505,8 +510,7 @@ def files2docs_in_thread(
 
 
 if __name__ == "__main__":
-    from pprint import pprint
-
+    # from pprint import pprint
     kb_file = KnowledgeFile(
         filename="E:\\LLM\\Data\\Test.md", knowledge_base_name="samples"
     )

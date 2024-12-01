@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Dict, List, Tuple, Union
 
+import rich
 from langchain.docstore.document import Document
 
 from chatchat.settings import Settings
@@ -32,7 +33,7 @@ from chatchat.server.knowledge_base.utils import (
     get_doc_path,
     get_kb_path,
     list_files_from_folder,
-    list_kbs_from_folder,
+    list_kbs_from_folder, make_text_splitter,
 )
 from chatchat.server.utils import (
     check_embed_model as _check_embed_model,
@@ -113,7 +114,13 @@ class KBService(ABC):
         status = delete_kb_from_db(self.kb_name)
         return status
 
-    def add_doc(self, kb_file: KnowledgeFile, docs: List[Document] = [], **kwargs):
+    def add_doc(self,
+                kb_file: KnowledgeFile,
+                docs: List[Document] = [],
+                text_splitter_name: str = Settings.kb_settings.TEXT_SPLITTER_NAME,
+                chunk_size: int = Settings.kb_settings.CHUNK_SIZE,
+                chunk_overlap: int = Settings.kb_settings.OVERLAP_SIZE,
+                **kwargs):
         """
         向知识库添加文件
         如果指定了docs，则不再将文本向量化，并将数据库对应条目标为custom_docs=True
@@ -124,7 +131,13 @@ class KBService(ABC):
         if docs:
             custom_docs = True
         else:
-            docs = kb_file.file2text()
+            # Split Text
+            text_splitter = make_text_splitter(
+                splitter_name=text_splitter_name,
+                chunk_size=chunk_size,
+                chunk_overlap=chunk_overlap,
+            )
+            docs = kb_file.file2text(text_splitter=text_splitter)
             custom_docs = False
 
         if docs:
@@ -141,7 +154,10 @@ class KBService(ABC):
                         f"cannot convert absolute path ({source}) to relative path. error is : {e}"
                     )
             self.delete_doc(kb_file)
+
+            # embedding docs
             doc_infos = self.do_add_doc(docs, **kwargs)
+
             status = add_file_to_db(
                 kb_file,
                 custom_docs=custom_docs,
@@ -174,7 +190,11 @@ class KBService(ABC):
         )
         return status
 
-    def update_doc(self, kb_file: KnowledgeFile, docs: List[Document] = [], **kwargs):
+    def update_doc(self,
+                   kb_file: KnowledgeFile,
+                   docs: List[Document] = [],
+                   text_splitter_name: str = Settings.kb_settings.TEXT_SPLITTER_NAME,
+                   **kwargs):
         """
         使用content中的文件更新向量库
         如果指定了docs，则使用自定义docs，并将数据库对应条目标为custom_docs=True
@@ -184,7 +204,7 @@ class KBService(ABC):
 
         if os.path.exists(kb_file.filepath):
             self.delete_doc(kb_file, **kwargs)
-            return self.add_doc(kb_file, docs=docs, **kwargs)
+            return self.add_doc(kb_file, text_splitter_name=text_splitter_name, docs=docs, **kwargs)
 
     def exist_doc(self, file_name: str):
         return file_exists_in_db(

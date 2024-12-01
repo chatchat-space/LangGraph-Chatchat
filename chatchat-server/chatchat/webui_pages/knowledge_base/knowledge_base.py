@@ -15,6 +15,12 @@ cell_renderer = JsCode(
     """function(params) {if(params.value==true){return '✓'}else{return '×'}}"""
 )
 
+# 定义文本分割器字典
+Splitters_Dict = {
+    "根据文本长度分割": "ChineseRecursiveTextSplitter",
+    "不需要分割": "NoneTextSplitter",
+}
+
 
 def config_aggrid(
     df: pd.DataFrame,
@@ -51,6 +57,7 @@ def file_exists(kb: str, selected_rows: List) -> Tuple[str, str]:
 
 
 def knowledge_base_page(api: ApiRequest, is_lite: bool = None):
+    st.title(" 📖 知识库管理")
     try:
         kb_list = {x["kb_name"]: x for x in get_kb_details()}
     except Exception as e:
@@ -78,7 +85,7 @@ def knowledge_base_page(api: ApiRequest, is_lite: bool = None):
             return kb_name
 
     selected_kb = st.selectbox(
-        "请选择或新建知识库：",
+        "请选择或新建知识库:",
         kb_names + ["新建知识库"],
         format_func=format_selected_kb,
         index=selected_kb_index,
@@ -144,7 +151,7 @@ def knowledge_base_page(api: ApiRequest, is_lite: bool = None):
         st.session_state["selected_kb_info"] = kb_list[kb]["kb_info"]
         # 上传文件
         files = st.file_uploader(
-            "上传知识文件：",
+            "上传知识文件:",
             [i for ls in LOADER_DICT.values() for i in ls],
             accept_multiple_files=True,
         )
@@ -163,19 +170,34 @@ def knowledge_base_page(api: ApiRequest, is_lite: bool = None):
             st.session_state["selected_kb_info"] = kb_info
             api.update_kb_info(kb, kb_info)
 
-        # with st.sidebar:
-        with st.expander(
-            "文件处理配置",
-            expanded=True,
-        ):
+        with st.expander("文件处理配置", expanded=True):
             cols = st.columns(3)
-            chunk_size = cols[0].number_input("单段文本最大长度：", 1, 32768, Settings.kb_settings.CHUNK_SIZE)
-            chunk_overlap = cols[1].number_input(
-                "相邻文本重合长度：", 0, chunk_size, Settings.kb_settings.OVERLAP_SIZE
+
+            # 选择处理方式
+            cols[0].selectbox(
+                "选择处理方式：",
+                options=list(Splitters_Dict.keys()),
+                key="selected_splitter_key"
             )
-            cols[2].write("")
-            cols[2].write("")
-            zh_title_enhance = cols[2].checkbox("开启中文标题加强", Settings.kb_settings.ZH_TITLE_ENHANCE)
+
+            # 获取选中的分割器的值
+            selected_splitter_value = Splitters_Dict[st.session_state["selected_splitter_key"]]
+            st.session_state["selected_splitter"] = selected_splitter_value  # 更新 session_state
+
+            # 如果选择了根据文本长度分割，显示相关设置
+            if st.session_state["selected_splitter"] == "ChineseRecursiveTextSplitter":
+                chunk_size = cols[1].number_input("单段文本最大长度:", 1, 32768, Settings.kb_settings.CHUNK_SIZE)
+                chunk_overlap = cols[2].number_input(
+                    "相邻文本重合长度:", 0, chunk_size, Settings.kb_settings.OVERLAP_SIZE
+                )
+            elif st.session_state["selected_splitter"] == "NoneTextSplitter":
+                chunk_size, chunk_overlap = None, None
+                st.info("不对文件进行分割处理，直接上传到知识库中。", icon="ℹ️")
+
+            # 其他设置
+            cols[0].write("")
+            cols[0].write("")
+            zh_title_enhance = cols[0].checkbox("开启中文标题加强", Settings.kb_settings.ZH_TITLE_ENHANCE)
 
         if st.button(
             "添加文件到知识库",
@@ -186,6 +208,7 @@ def knowledge_base_page(api: ApiRequest, is_lite: bool = None):
                 files,
                 knowledge_base_name=kb,
                 override=True,
+                text_splitter_name=st.session_state["selected_splitter"],
                 chunk_size=chunk_size,
                 chunk_overlap=chunk_overlap,
                 zh_title_enhance=zh_title_enhance,
@@ -289,6 +312,7 @@ def knowledge_base_page(api: ApiRequest, is_lite: bool = None):
                 api.update_kb_docs(
                     kb,
                     file_names=file_names,
+                    text_splitter_name=st.session_state["selected_splitter"],
                     chunk_size=chunk_size,
                     chunk_overlap=chunk_overlap,
                     zh_title_enhance=zh_title_enhance,
@@ -329,6 +353,7 @@ def knowledge_base_page(api: ApiRequest, is_lite: bool = None):
                 empty.progress(0.0, "")
                 for d in api.recreate_vector_store(
                     kb,
+                    text_splitter_name=st.session_state["selected_splitter"],
                     chunk_size=chunk_size,
                     chunk_overlap=chunk_overlap,
                     zh_title_enhance=zh_title_enhance,
