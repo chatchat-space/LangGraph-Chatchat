@@ -1,3 +1,4 @@
+from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai.chat_models import ChatOpenAI
 from langchain_core.tools import BaseTool
 from langchain_core.messages import BaseMessage, ToolMessage
@@ -7,6 +8,7 @@ from langgraph.graph.state import CompiledStateGraph
 from langgraph.prebuilt import ToolNode, tools_condition
 
 from chatchat.server.utils import build_logger
+from chatchat.settings import Settings
 from .graphs_registry import State, register_graph, Graph
 
 logger = build_logger()
@@ -24,7 +26,16 @@ class BaseAgentGraph(Graph):
                  history_len: int,
                  checkpoint: BaseCheckpointSaver):
         super().__init__(llm, tools, history_len, checkpoint)
-        self.llm_with_tools = self.llm.bind_tools(self.tools)
+        prompt = ChatPromptTemplate.from_messages(
+            [
+                (
+                    "system",
+                    Settings.prompt_settings.chatbot["default"],
+                ),
+                ("placeholder", "{history}"),
+            ]
+        )
+        self.llm_with_tools = prompt | self.llm.bind_tools(self.tools)
 
     async def chatbot(self, state: State) -> State:
         # ToolNode 默认只将结果追加到 messages 队列中, 所以需要手动在 history 中追加 ToolMessage 结果, 否则报错如下:
@@ -40,7 +51,7 @@ class BaseAgentGraph(Graph):
         if isinstance(state["messages"][-1], ToolMessage):
             state["history"].append(state["messages"][-1])
 
-        messages = self.llm_with_tools.invoke(state["history"])
+        messages = self.llm_with_tools.invoke(state)
         state["messages"] = [messages]
         # 因为 chatbot 执行依赖于 state["history"], 所以在同一次 workflow 没有执行结束前, 需要将每一次输出内容都追加到 state["history"] 队列中缓存起来
         state["history"].append(messages)

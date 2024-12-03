@@ -147,7 +147,7 @@ async def graph_rag_page(api: ApiRequest):
 
     selected_tools_configs = list(selected_tool_configs)
 
-    st.title("知识库聊天")
+    st.title("📖 知识库聊天")
     with st.chat_message(name="assistant", avatar=st.session_state["assistant_avatar"]):
         st.write("Hello 👋😊，我是智能知识库问答机器人，试着输入任何内容和我聊天呦～（ps: 可尝试切换不同知识库）")
 
