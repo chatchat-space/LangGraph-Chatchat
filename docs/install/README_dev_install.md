@@ -1,7 +1,11 @@
 # LangGraph-Chatchat 源代码部署/开发部署指南
+> [!IMPORTANT]  
+> 开始源码部署前, 请先阅读容器化部署文档 [README_docker_install](README_docker_install.md) 
+> 来简单了解各配置文件的主要作用以及前端使用.
+
 > [!WARNING]  
-> 为避免依赖冲突，请将 LangGraph-Chatchat 和模型部署框架如 Xinference 等放在不同的 Python 虚拟环境中, 比如 conda, venv,
-> virtualenv 等。
+> 为避免依赖冲突, 请将 LangGraph-Chatchat 和模型部署框架如 Xinference 等放在不同的 Python 虚拟环境中,
+> 比如 conda, venv, virtualenv 等.
 
 ## 0. 拉取项目代码
 
@@ -33,9 +37,10 @@ LangGraph-Chatchat 使用 Poetry 进行环境管理。
 进入主项目目录，并安装 LangGraph-Chatchat 依赖
 
 ```shell
-cd  LangGraph-Chatchat/chatchat-server
+cd LangGraph-Chatchat/chatchat-server
 poetry install --with lint,test -E xinference
 pip install -e .
+conda install mysqlclient # 其他虚拟环境请按照各自支持的方式下载 mysqlclient
 ```
 
 > [!Note]
@@ -49,15 +54,20 @@ pip install -e .
 
 如果您在开发时所使用的 IDE 需要指定项目源代码根目录，请将主项目目录(`LangGraph-Chatchat/chatchat-server/`)设置为源代码根目录。
 
-执行以下命令之前，请先设置当前目录和项目数据目录：
+执行下面命令之前，请先创建数据目录(存知识库数据和配置文件), 例如: /path/to/chatchat_data, 然后执行下面命令配置环境变量.
 ```shell
-cd LangGraph-Chatchat/chatchat-server/chatchat
+# linux 或 macos
 export CHATCHAT_ROOT=/path/to/chatchat_data
+# windows
+set CHATCHAT_ROOT=/path/to/chatchat_data
 ```
 
-## 3. 关于 chatchat 配置项
+## 3. 初始化知识库和配置文件
 
-配置项均为 `yaml` 文件，具体参考 [Settings](settings.md)。
+配置项均为 `yaml` 文件，具体作用参考 [README_docker_install](README_docker_install.md)。
+
+> [!WARNING]
+> 这个命令会清空数据库、删除已有的配置文件，如果您有重要数据，请备份。
 
 执行以下命令初始化项目配置文件和数据目录：
 ```shell
@@ -65,10 +75,7 @@ cd LangGraph-Chatchat/chatchat-server
 python chatchat/cli.py init
 ```
 
-## 4. 初始化知识库
-
-> [!WARNING]
-> 这个命令会清空数据库、删除已有的配置文件，如果您有重要数据，请备份。
+## 4. 初始化 samples 知识库(老用户可跳过)
 
 ```shell
 cd LangGraph-Chatchat/chatchat-server
