@@ -392,7 +392,6 @@ class ApiRequest:
         对应api.py/knowledge_base/list_knowledge_bases接口
         """
         response = self.get("/knowledge_base/list_knowledge_bases")
-        print(f" ✅ response: {response}")
         return self._get_response_value(
             response, as_json=True, value_func=lambda r: r.get("data", [])
         )
