@@ -363,7 +363,7 @@ class KnowledgeFile:
         if not docs:
             return []
 
-        logger.info(f"文档切分示例: {docs[0]}")
+        print(f"文档切分示例: {docs[0]}")
         if zh_title_enhance:
             docs = func_zh_title_enhance(docs)
         self.splited_docs = docs

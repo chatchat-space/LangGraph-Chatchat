@@ -19,20 +19,26 @@ git clone https://github.com/chatchat-space/LangGraph-Chatchat.git
 
 LangGraph-Chatchat 使用 Poetry 进行环境管理。
 
-### 1.1 安装 Poetry
+### 1.1 创建虚拟环境(推荐使用 python=3.12)
+```shell
+conda create -n chatchat python=3.12
+```
 
-> 在安装 Poetry 之前，如果您使用 Conda，请创建并激活一个新的 Conda 环境，例如使用 `conda create -n chatchat python=3.12` 创建一个新的 Conda 环境。
+### 1.2 安装 Poetry
 
-安装 Poetry: [Poetry 安装文档](https://python-poetry.org/docs/#installing-with-pipx)
+```shell
+pip install poetry
+```
+如果有问题, 请查看文档: [Poetry 安装文档](https://python-poetry.org/docs/#installing-with-pipx)
 
 > [!Note]
-> 如果你没有其它 poetry 进行环境/依赖管理的项目，利用 pipx 或 pip 都可以完成 poetry 的安装，
+> 如果你没有其它 poetry 进行环境/依赖管理的项目, 利用 pipx 或 pip 都可以完成 poetry 的安装
 
 > [!Note]
 > 如果您使用 Conda 或 Pyenv 作为您的环境/包管理器，在安装Poetry之后，
 > 使用如下命令使 Poetry 使用 virtualenv python environment (`poetry config virtualenvs.prefer-active-python true`)
 
-### 1.2 安装源代码/开发部署所需依赖库
+### 1.3 安装源代码/开发部署所需依赖库
 
 进入主项目目录，并安装 LangGraph-Chatchat 依赖
 
@@ -40,13 +46,14 @@ LangGraph-Chatchat 使用 Poetry 进行环境管理。
 cd LangGraph-Chatchat/chatchat-server
 poetry install --with lint,test -E xinference
 pip install -e .
-conda install mysqlclient # 其他虚拟环境请按照各自支持的方式下载 mysqlclient
+# 如果要用 text2sql 的 graph, 需要安装 `mysqlclient` 此其他虚拟环境请按照各自支持的方式下载 mysqlclient
+#conda install mysqlclient
 ```
 
 > [!Note]
 > Poetry install 后会在你的虚拟环境中 site-packages 路径下生成一个 chatchat-`<version>`.dist-info 文件夹带有 direct_url.json 文件，这个文件指向你的开发环境
 
-### 1.3 更新开发部署环境依赖库
+### 1.4 更新开发部署环境依赖库
 
 当开发环境中所需的依赖库发生变化时，一般按照更新主项目目录(`LangGraph-Chatchat/chatchat-server/`)下的 pyproject.toml 再进行 poetry update 的顺序执行。
 
