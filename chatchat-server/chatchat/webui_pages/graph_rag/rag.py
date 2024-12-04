@@ -1,4 +1,3 @@
-import rich
 from langchain_core.tools import BaseTool
 from langchain_openai import ChatOpenAI
 from streamlit_extras.bottom_container import bottom
