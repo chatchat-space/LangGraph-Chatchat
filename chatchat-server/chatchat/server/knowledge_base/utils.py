@@ -363,7 +363,7 @@ class KnowledgeFile:
         if not docs:
             return []
 
-        logger.info(f"文档切分示例: {docs[0]}")
+        print(f"文档切分示例: {docs[0]}")
         if zh_title_enhance:
             docs = func_zh_title_enhance(docs)
         self.splited_docs = docs
@@ -510,11 +510,15 @@ def files2docs_in_thread(
 
 if __name__ == "__main__":
     # from pprint import pprint
+    # kb_file = KnowledgeFile(
+    #     filename="E:\\LLM\\Data\\Test.md", knowledge_base_name="samples"
+    # )
     kb_file = KnowledgeFile(
-        filename="E:\\LLM\\Data\\Test.md", knowledge_base_name="samples"
+        filename="/Users/zhangyuehua/Documents/opensource/LangGraph-Chatchat/chatchat-server/chatchat/data/knowledge_base/samples/content/", knowledge_base_name="samples"
     )
     # kb_file.text_splitter_name = "RecursiveCharacterTextSplitter"
-    kb_file.text_splitter_name = "MarkdownHeaderTextSplitter"
+    # kb_file.text_splitter_name = "MarkdownHeaderTextSplitter"
+    kb_file.text_splitter_name = "ChineseRecursiveTextSplitter"
     docs = kb_file.file2docs()
     # pprint(docs[-1])
     texts = kb_file.docs2texts(docs)
