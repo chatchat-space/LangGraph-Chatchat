@@ -40,7 +40,8 @@ LangGraph-Chatchat 使用 Poetry 进行环境管理。
 cd LangGraph-Chatchat/chatchat-server
 poetry install --with lint,test -E xinference
 pip install -e .
-conda install mysqlclient # 其他虚拟环境请按照各自支持的方式下载 mysqlclient
+# 如果要用 text2sql 的 graph, 需要安装 `mysqlclient` 此其他虚拟环境请按照各自支持的方式下载 mysqlclient
+#conda install mysqlclient
 ```
 
 > [!Note]
