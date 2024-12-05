@@ -1,6 +1,7 @@
 from .arxiv import arxiv
 from .calculate import calculate
 from .search_internet import search_internet
+from .batch_search_internet import serperV2
 from .search_local_knowledgebase import search_local_knowledgebase
 from .search_youtube import search_youtube
 # from .shell import shell

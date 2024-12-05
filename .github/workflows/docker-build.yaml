@@ -1,15 +1,15 @@
 name: docker-build
 on:
-  push:
-    branches:
-      - master
-    paths-ignore:
-      - 'README.md'
-      - 'README_en.md'
-      - 'docs/**'
-      - '.github/actions/**'
-      - '.github/ISSUE_TEMPLATE/**'
-      - 'docker/docker-compose.yaml'
+#  push:
+#    branches:
+#      - master
+#    paths-ignore:
+#      - 'README.md'
+#      - 'README_en.md'
+#      - 'docs/**'
+#      - '.github/actions/**'
+#      - '.github/ISSUE_TEMPLATE/**'
+#      - 'docker/docker-compose.yaml'
 #  pull_request:
 #    branches:
 #      - master

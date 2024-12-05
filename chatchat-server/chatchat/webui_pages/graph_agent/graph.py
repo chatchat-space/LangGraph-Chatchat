@@ -243,7 +243,6 @@ async def graph_agent_page():
             )
 
             tools_list = list_tools()
-            # tool_names = ["None"] + list(tools_list)
             if selected_graph == "数据库查询机器人[Beta]":
                 selected_tools = st.multiselect(
                     label="选择工具",
@@ -253,6 +252,15 @@ async def graph_agent_page():
                     default="query_sql_data",
                     help="仅可选择 SQL查询工具"
                 )
+            elif selected_graph == "自我反思机器人[Beta]":
+                selected_tools = st.multiselect(
+                    label="选择工具",
+                    options=list(tools_list),
+                    format_func=lambda x: tools_list[x]["title"],
+                    key="selected_tools",
+                    default="search_internet",
+                    help="支持多选"
+                )
             else:
                 # selected_tools demo: ['search_internet', 'search_youtube']
                 selected_tools = st.multiselect(
@@ -260,7 +268,6 @@ async def graph_agent_page():
                     options=list(tools_list),
                     format_func=lambda x: tools_list[x]["title"],
                     key="selected_tools",
-                    default="search_internet",
                     help="支持多选"
                 )
 

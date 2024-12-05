@@ -576,6 +576,10 @@ class ToolSettings(BaseFileSettings):
                 "chunk_size": 500,
                 "chunk_overlap": 0,
             },
+            "google": {
+                "google_search_url": "https://google.serper.dev/search",
+                "google_key": "",
+            }
         },
         "top_k": 5,
         "verbose": "Origin",
