@@ -2,7 +2,7 @@ name: docker-build
 on:
   push:
     branches:
-      - master
+#      - master
     paths-ignore:
       - 'README.md'
       - 'README_en.md'
