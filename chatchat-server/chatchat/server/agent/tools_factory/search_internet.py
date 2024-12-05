@@ -4,7 +4,7 @@ from langchain.docstore.document import Document
 
 from chatchat.settings import Settings
 from chatchat.server.utils import get_tool_config
-
+from chatchat.server.utils import search, fetch_details, build_document
 from .tools_registry import BaseToolOutput, regist_tool
 
 
@@ -123,3 +123,14 @@ def search_engine(query: str, top_k: int = 0, engine_name: str = "", config: dic
 def search_internet(query: str = Field(description="query for Internet search")):
     """Use this tool to use bing search engine to search the internet and get information."""
     return BaseToolOutput(search_engine(query=query))
+
+
+@registry_tool(title="联网查询")
+async def serperV2(query: str = Field(description="The search query title")):
+    """
+    useful for when you need to search the internet for information
+    translate user question to serperV2 Required questions that can be evaluated by serperV2
+    """
+    response = await search(query)
+    result = await fetch_details(build_document(response))
+    return result
