@@ -40,6 +40,30 @@ OpenAI GPT API 的调用，并将在后续持续扩充对各类模型及模型 A
 
 🧑‍💻 如果你想对本项目做出贡献，欢迎提交 pr。
 
+## 项目优势与定位
+
+### 项目定位
+一款面向`开发者`的`轻量级`的囊括了`RAG`,`Agent`等场景的`LLM`应用`微服务`.
+
+### 与 `LangChain-Chatchat` 的主要联系与自身特色
+
+1. 与 `LangChain-Chatchat` 的联系 
+- 开发人员相同, 属于原项目人员新拓展方向
+- RAG 检索逻辑不变
+- 知识库 功能不变
+- 模型和配置架构不变(少量关于 `Agent` 和 `Tool` 的配置有变化) 
+
+ps: 保持这么多的联系的目的: 方便大家在两个项目间平滑切换
+
+2. `LangGraph-Chatchat` 的项目特色
+- 背靠 `LangChain` 生态链, `LangGraph` 项目活跃, 有向无环图功能强大, 可供开发者根据不同场景定制各种不同的 `graph` 使用;
+- `LangChain` 的 `agent_executor` 过度封装, 可定制性差, 社区目前全力推广 `LangGraph`;
+- `LangGraph` 可与 `LangSmith` 搭配使用, 让 `Agent` 开发可视化性更强, 更直观;
+- `LangChain-Chatchat` 的历史消息存在前端管理, `LangGraph-Chatchat` 历史消息存在 `sqlite`(默认, 支持异步) 和 `PostgreSQL`(支持连接池+异步) 中, 方便开发者统一管理(UI 管理待支持);
+- `LangGraph-Chatchat` 提供了 `graph` 注册器和 `tool` 注册器, 并提供了几种 `demo` 和规范供开发者参考, 开发者可以像组装变形金刚一样开发 `graph`, 并且也都是异步;
+- `LangGraph-Chatchat` 对话的全部流程(`agent`和`rag`)均采用 `LangGraph` 来构建, 需要模型具备 `function call` 的能力.
+- `LangGraph-Chatchat` 计划只保留一个对话接口, 如: `/chat`, 其他操作全部通过 UI, 如有其他接口需求可随时与开发者讨论. 
+
 ## 快速上手
 
 ### Docker 安装部署 (一定要看)
