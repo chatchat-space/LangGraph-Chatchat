@@ -31,13 +31,6 @@ pip install poetry
 ```
 如果有问题, 请查看文档: [Poetry 安装文档](https://python-poetry.org/docs/#installing-with-pipx)
 
-> [!Note]
-> 如果你没有其它 poetry 进行环境/依赖管理的项目, 利用 pipx 或 pip 都可以完成 poetry 的安装
-
-> [!Note]
-> 如果您使用 Conda 或 Pyenv 作为您的环境/包管理器，在安装Poetry之后，
-> 使用如下命令使 Poetry 使用 virtualenv python environment (`poetry config virtualenvs.prefer-active-python true`)
-
 ### 1.3 安装源代码/开发部署所需依赖库
 
 进入主项目目录，并安装 LangGraph-Chatchat 依赖
@@ -59,9 +52,9 @@ pip install -e .
 
 ## 2. 设置源代码根目录
 
-如果您在开发时所使用的 IDE 需要指定项目源代码根目录，请将主项目目录(`LangGraph-Chatchat/chatchat-server/`)设置为源代码根目录。
+2.1 如果您在开发时所使用的 IDE 需要指定项目源代码根目录，请将主项目目录(`LangGraph-Chatchat/chatchat-server/`)设置为源代码根目录。
 
-执行下面命令之前，请先创建数据目录(存知识库数据和配置文件), 例如: /path/to/chatchat_data, 然后执行下面命令配置环境变量.
+2.2 执行下面命令之前，请先创建数据目录(存知识库数据和配置文件), 例如: /path/to/chatchat_data, 然后执行下面命令配置环境变量.
 ```shell
 # linux 或 macos
 export CHATCHAT_ROOT=/path/to/chatchat_data
