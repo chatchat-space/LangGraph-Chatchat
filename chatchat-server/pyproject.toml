@@ -81,6 +81,7 @@ psycopg-pool = "^3.2.3"
 langgraph-checkpoint-postgres = "^2.0.2"
 setuptools = {version = "^75.5.0", allow-prereleases = true}
 pymilvus = "^2.4.9"
+langchain-ollama = ">=0.2,<0.3"
 [tool.poetry.extras]
 xinference = ["xinference_client"]
 zhipuai = ["zhipuai"]

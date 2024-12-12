@@ -17,7 +17,7 @@ from typing import (
 
 from langchain_community.utils.openai import is_openai_v1
 from langchain_core.embeddings import Embeddings
-from langchain_core.pydantic_v1 import BaseModel, Field, root_validator
+from pydantic import BaseModel, Field, model_validator
 from langchain_core.utils import get_from_dict_or_env, get_pydantic_field_names
 from tenacity import (
     AsyncRetrying,
@@ -171,9 +171,9 @@ class LocalAIEmbeddings(BaseModel, Embeddings):
     class Config:
         """Configuration for this pydantic object."""
 
-        allow_population_by_field_name = True
+        populate_by_name = True
 
-    @root_validator(pre=True)
+    @model_validator(mode='before')
     def build_extra(cls, values: Dict[str, Any]) -> Dict[str, Any]:
         """Build extra kwargs from additional params that were passed in."""
         all_required_field_names = get_pydantic_field_names(cls)
@@ -199,7 +199,7 @@ class LocalAIEmbeddings(BaseModel, Embeddings):
         values["model_kwargs"] = extra
         return values
 
-    @root_validator()
+    @model_validator(mode='after')
     def validate_environment(cls, values: Dict) -> Dict:
         """Validate that api key and python package exists in environment."""
         values["openai_api_key"] = get_from_dict_or_env(
