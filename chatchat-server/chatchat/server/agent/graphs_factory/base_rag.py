@@ -124,7 +124,7 @@ class BaseRagGraph(Graph):
             The chat history and user questions are as follows:
             {history}
             """,
-            input_variables=["history", "knowledge_base", "top_k", "score_threshold"],
+            input_variables=["history", "question", "knowledge_base", "top_k", "score_threshold"],
         )
 
         llm_with_tools = prompt | self.llm_with_tools
@@ -170,11 +170,13 @@ class BaseRagGraph(Graph):
         # Chain
         referee = prompt | self.llm.with_structured_output(Grade)
         scored_result = await referee.ainvoke(state)
-        score = scored_result.binary_score
-
-        if score is None or score == "":
-            logger.warning(f"The score is not provided. Defaulting to 'yes'. Question: {state['question']}")
+        # score = scored_result.binary_score
+        # 检查 scored_result 是否为 None
+        if scored_result is None:
+            logger.warning(f"The scored_result is None. Defaulting to 'yes'. Question: {state['question']}")
             score = "yes"
+        else:
+            score = scored_result.binary_score
 
         if score == "yes":
             return "generate"
