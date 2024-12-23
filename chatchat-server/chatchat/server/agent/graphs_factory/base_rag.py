@@ -124,7 +124,7 @@ class BaseRagGraph(Graph):
             The chat history and user questions are as follows:
             {history}
             """,
-            input_variables=["history", "question", "knowledge_base", "top_k", "score_threshold"],
+            input_variables=["history", "knowledge_base", "top_k", "score_threshold"],
         )
 
         llm_with_tools = prompt | self.llm_with_tools
