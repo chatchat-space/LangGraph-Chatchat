@@ -40,7 +40,6 @@ strsimpy = ">=0.2.1"
 markdownify = ">=0.11.6"
 tqdm = ">=4.66.1"
 websockets = ">=12.0"
-#numpy = "~1.24.4"
 pandas = "~1" # test
 pydantic = "2.9.2"
 httpx = "0.27.2"
@@ -81,7 +80,6 @@ psycopg-pool = "^3.2.3"
 langgraph-checkpoint-postgres = "^2.0.2"
 setuptools = {version = "^75.5.0", allow-prereleases = true}
 pymilvus = "^2.4.9"
-langchain-ollama = ">=0.2,<0.3"
 [tool.poetry.extras]
 xinference = ["xinference_client"]
 zhipuai = ["zhipuai"]
