@@ -163,6 +163,7 @@ class BaseRagGraph(Graph):
 
             If the document contains keyword(s) or semantic meaning related to the user question, grade it as relevant.
             Give a binary score 'yes' or 'no' score to indicate whether the document is relevant to the question.
+            The format of output must be an object contains attribute of 'binary_score', like: '{{"binary_score": "yes"}}.'
             """,
             input_variables=["docs", "history"],
         )
@@ -175,7 +176,7 @@ class BaseRagGraph(Graph):
             logger.warning(f"The scored_result is None. Defaulting to 'yes'. Question: {state['question']}")
             score = "yes"
         else:
-            score = scored_result.binary_score
+            score = scored_result.binary_score if hasattr(scored_result, "binary_score") else None
 
         if score == "yes":
             return "generate"
