@@ -15,8 +15,8 @@ class AliTextSplitter(CharacterTextSplitter):
         # 考虑到使用了三个模型，可能对于低配置gpu不太友好，因此这里将模型load进cpu计算，有需要的话可以替换device为自己的显卡id
         if self.pdf:
             text = re.sub(r"\n{3,}", r"\n", text)
-            text = re.sub("\s", " ", text)
-            text = re.sub("\n\n", "", text)
+            text = re.sub(r"\s", " ", text)
+            text = re.sub(r"\n\n", "", text)
         try:
             from modelscope.pipelines import pipeline
         except ImportError:
