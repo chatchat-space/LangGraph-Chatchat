@@ -28,7 +28,7 @@ def get_chatbot() -> CompiledStateGraph:
         messages: Annotated[list, add_messages]
 
     llm = create_agent_models(configs=None,
-                              model="Qwen2.5-72B-Instruct",
+                              model="qwen2.5-instruct",
                               max_tokens=None,
                               temperature=0,
                               stream=True)
@@ -57,7 +57,7 @@ def get_chatbot() -> CompiledStateGraph:
     return graph
 
 
-@app.get("/stream")
+@app.post("/stream")
 async def openai_stream_output(request: Request):
     async def generator():
         graph = get_chatbot()
