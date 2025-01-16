@@ -293,7 +293,7 @@ class PlatformConfig(MyBaseModel):
     platform_name: str = "xinference"
     """平台名称"""
 
-    platform_type: t.Literal["xinference", "ollama", "oneapi", "fastchat", "openai", "bigmodel", "custom openai"] = "xinference"
+    platform_type: t.Literal["xinference", "ollama", "oneapi", "fastchat", "openai", "bigmodel", "hunyuan", "custom openai"] = "xinference"
     """平台类型"""
 
     api_base_url: str = "http://127.0.0.1:9997/v1"
@@ -506,6 +506,19 @@ class ApiModelSettings(BaseFileSettings):
                 "embed_models": [
                     "embedding-3",
                     "embedding-2",
+                ],
+            }),
+            PlatformConfig(**{
+                "platform_name": "hunyuan",
+                "platform_type": "hunyuan",
+                "api_base_url": "http://hunyuan.xxx.com/openapi/v1/",
+                "api_key": "sk-proj-",
+                "api_concurrencies": 5,
+                "llm_models": [
+                    "hunyuan",
+                ],
+                "embed_models": [
+                    "embedding-test",
                 ],
             }),
         ]
