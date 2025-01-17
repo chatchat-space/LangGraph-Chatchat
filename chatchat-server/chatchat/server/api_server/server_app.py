@@ -8,7 +8,7 @@ from starlette.responses import RedirectResponse
 from chatchat import __version__
 from chatchat.settings import Settings
 from chatchat.server.api_server.kb_routes import kb_router
-from chatchat.server.api_server.openai_routes import openai_router
+from chatchat.server.api_server.chat_routes import chat_router
 from chatchat.server.api_server.server_routes import server_router
 from chatchat.server.utils import MakeFastAPIOffline
 
@@ -33,7 +33,8 @@ def create_app(run_mode: str = None):
         return RedirectResponse(url="/docs")
 
     app.include_router(kb_router)
-    app.include_router(openai_router)
+    # app.include_router(openai_router)
+    app.include_router(chat_router)
     app.include_router(server_router)
 
     # 媒体文件

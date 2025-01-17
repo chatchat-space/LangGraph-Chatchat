@@ -30,26 +30,30 @@ class OpenAIBaseInput(BaseModel):
         extra = "allow"
 
 
-class OpenAIChatInput(OpenAIBaseInput):
+class AgentChatInput(BaseModel):
     messages: List[ChatCompletionMessageParam]
     model: str = get_default_llm()
-    frequency_penalty: Optional[float] = None
-    function_call: Optional[completion_create_params.FunctionCall] = None
-    functions: List[completion_create_params.Function] = None
-    logit_bias: Optional[Dict[str, int]] = None
-    logprobs: Optional[bool] = None
-    max_tokens: Optional[int] = None
-    n: Optional[int] = None
-    presence_penalty: Optional[float] = None
-    response_format: completion_create_params.ResponseFormat = None
-    seed: Optional[int] = None
-    stop: Union[Optional[str], List[str]] = None
-    stream: Optional[bool] = None
+    graph: str
+    thread_id: int
     temperature: Optional[float] = Settings.model_settings.TEMPERATURE
+    max_completion_tokens: Optional[int] = None
     tool_choice: Optional[Union[ChatCompletionToolChoiceOptionParam, str]] = None
     tools: List[Union[ChatCompletionToolParam, str]] = None
-    top_logprobs: Optional[int] = None
-    top_p: Optional[float] = None
+    stream: Optional[bool] = True
+    stream_method: Optional[Literal["streamlog", "node", "invoke"]] = "streamlog"
+    # frequency_penalty: Optional[float] = None
+    # function_call: Optional[completion_create_params.FunctionCall] = None
+    # functions: List[completion_create_params.Function] = None
+    # logit_bias: Optional[Dict[str, int]] = None
+    # logprobs: Optional[bool] = None
+    # max_tokens: Optional[int] = None
+    # n: Optional[int] = None
+    # presence_penalty: Optional[float] = None
+    # response_format: completion_create_params.ResponseFormat = None
+    # seed: Optional[int] = None
+    # stop: Union[Optional[str], List[str]] = None
+    # top_logprobs: Optional[int] = None
+    # top_p: Optional[float] = None
 
 
 class OpenAIEmbeddingsInput(OpenAIBaseInput):

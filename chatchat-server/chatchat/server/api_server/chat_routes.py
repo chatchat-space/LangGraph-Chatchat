@@ -1,26 +1,23 @@
 import asyncio
 import json
-import logging
+from typing import TypedDict, Annotated
 
-from langgraph.graph.state import CompiledStateGraph
-from langgraph.prebuilt import tools_condition, ToolNode
-from sse_starlette.sse import EventSourceResponse
-from typing import Annotated
-from typing_extensions import TypedDict
+import rich
+from fastapi import APIRouter
+from langgraph.graph import add_messages
+from langgraph.graph.state import CompiledStateGraph, StateGraph
+from langgraph.prebuilt import ToolNode, tools_condition
+from sse_starlette import EventSourceResponse
 
-from fastapi import FastAPI, Request
-from langgraph.graph import StateGraph
-from langgraph.graph.message import add_messages
-
-from chatchat.server.agent.tools_factory import search_internet
-from chatchat.server.utils import create_agent_models, add_tools_if_not_exists
-
-app = FastAPI()
-logger = logging.getLogger("uvicorn.error")
+from chatchat.server.agent.tools_factory import search_internet, search_youtube
+from chatchat.server.api_server.api_schemas import AgentChatInput
+from chatchat.server.utils import create_agent_models
+from chatchat.utils import build_logger
 
 
-class ClientDisconnectException(Exception):
-    pass
+logger = build_logger()
+
+chat_router = APIRouter(prefix="/v1", tags=["Agent 对话接口"])
 
 
 def get_chatbot() -> CompiledStateGraph:
@@ -28,12 +25,12 @@ def get_chatbot() -> CompiledStateGraph:
         messages: Annotated[list, add_messages]
 
     llm = create_agent_models(configs=None,
-                              model="qwen2.5-instruct",
+                              model="hunyuan-turbo",
                               max_tokens=None,
                               temperature=0,
                               stream=True)
 
-    tools = add_tools_if_not_exists(tools_provides=[], tools_need_append=[search_internet])
+    tools = [search_internet, search_youtube]
     llm_with_tools = llm.bind_tools(tools)
 
     def chatbot(state: State):
@@ -57,16 +54,17 @@ def get_chatbot() -> CompiledStateGraph:
     return graph
 
 
-@app.post("/stream")
-async def openai_stream_output(request: Request):
+@chat_router.post("/chat/completions")
+async def openai_stream_output(
+        body: AgentChatInput
+):
+    rich.print(body)
+
     async def generator():
         graph = get_chatbot()
-        inputs = {"role": "user", "content": "Please introduce Trump based on the Internet search results."}
         try:
-            async for event in graph.astream(input={"messages": inputs}, stream_mode="updates"):
-                disconnected = await request.is_disconnected()
-                if disconnected:
-                    raise ClientDisconnectException("Client disconnected")
+            # async for event in graph.astream(input={"messages": inputs}, stream_mode="updates"):
+            async for event in graph.astream(input={"messages": body.messages}, stream_mode="updates"):
                 yield str(event)
         except asyncio.exceptions.CancelledError:
             logger.warning("Streaming progress has been interrupted by user.")
@@ -77,7 +75,3 @@ async def openai_stream_output(request: Request):
             return
 
     return EventSourceResponse(generator())
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8000)
