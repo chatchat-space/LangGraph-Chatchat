@@ -81,20 +81,6 @@ ps: 保持这么多的联系的目的: 方便大家在两个项目间平滑切�
 
 ---
 
-## 项目里程碑
-
-+ `2023年4月`: `Langchain-ChatGLM 0.1.0` 发布，支持基于 ChatGLM-6B 模型的本地知识库问答。
-+ `2023年8月`: `Langchain-ChatGLM` 改名为 `Langchain-Chatchat`，发布 `0.2.0` 版本，使用 `fastchat` 作为模型加载方案，支持更多的模型和数据库。
-+ `2023年10月`: `Langchain-Chatchat 0.2.5` 发布，推出 Agent 内容，开源项目在`Founder Park & Zhipu AI & Zilliz`
-  举办的黑客马拉松获得三等奖。
-+ `2023年12月`: `Langchain-Chatchat` 开源项目获得超过 **20K** stars.
-+ `2024年6月`: `Langchain-Chatchat 0.3.0` 发布，带来全新项目架构。
-+ `2024年11月`: `LangGraph-Chatchat 0.3.0` 发布，带来全新项目架构。
-
-+ 🔥 让我们一起期待未来 Chatchat 的故事 ···
-
----
-
 ## 协议
 
 本项目代码遵循 [Apache-2.0](LICENSE) 协议。
@@ -118,8 +104,8 @@ ps: 保持这么多的联系的目的: 方便大家在两个项目间平滑切�
 ```
 @software{LangGraph-Chatchat,
     title        = {{LangGraph-Chatchat}},
-    author       = {Liu, Qian and Zhang, Yuehua, and Song, Jinke, and liunux4odoo, and glide-the, and Huang, Zhiguo, and Zhang, Yuxuan},
-    year         = 2024,
+    author       = {Zhang, Yuehua},
+    year         = 2025,
     journal      = {GitHub repository},
     publisher    = {GitHub},
     howpublished = {\url{https://github.com/chatchat-space/LangGraph-Chatchat}}
