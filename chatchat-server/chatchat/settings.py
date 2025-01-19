@@ -348,7 +348,7 @@ class ApiModelSettings(BaseFileSettings):
     """默认历史对话轮数"""
     """LangGraph Agent 单轮对话可能包含多个 Node, 故默认设置为 20"""
 
-    MAX_TOKENS: t.Optional[int] = None  # TODO: 似乎与 LLM_MODEL_CONFIG 重复了
+    MAX_COMPLETION_TOKENS: t.Optional[int] = None  # TODO: 似乎与 LLM_MODEL_CONFIG 重复了
     """大模型最长支持的长度，如果不填写，则使用模型默认的最大长度，如果填写，则为用户设定的最大长度"""
 
     TEMPERATURE: float = 0.7

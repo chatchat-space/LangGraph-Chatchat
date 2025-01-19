@@ -192,6 +192,7 @@ def get_default_llm():
     else:
         logger.error("can not find an available llm model")
 
+
 def get_default_embedding():
     available_embeddings = list(get_config_models(model_type="embed").keys())
     if Settings.model_settings.DEFAULT_EMBEDDING_MODEL in available_embeddings:
@@ -204,15 +205,15 @@ def get_default_embedding():
         logger.error("can not find an available embedding model")
 
 
-def get_history_len() -> int:
-    return (Settings.model_settings.HISTORY_LEN or
-            Settings.model_settings.LLM_MODEL_CONFIG["action_model"]["history_len"])
+# def get_history_len() -> int:
+#     return (Settings.model_settings.HISTORY_LEN or
+#             Settings.model_settings.LLM_MODEL_CONFIG["action_model"]["history_len"])
 
 
 def get_ChatOpenAI(
         model_name: str = get_default_llm(),
         temperature: float = Settings.model_settings.TEMPERATURE,
-        max_tokens: int = Settings.model_settings.MAX_TOKENS,
+        max_tokens: int = Settings.model_settings.MAX_COMPLETION_TOKENS,
         streaming: bool = True,
         callbacks: List[Callable] = [],
         verbose: bool = True,
@@ -309,44 +310,44 @@ def check_embed_model(embed_model: str = None) -> Tuple[bool, str]:
         return False, msg
 
 
-def get_OpenAIClient(
-        platform_name: str = None,
-        model_name: str = None,
-        is_async: bool = True,
-) -> Union[openai.Client, openai.AsyncClient]:
-    """
-    construct an openai Client for specified platform or model
-    """
-    if platform_name is None:
-        platform_info = get_model_info(
-            model_name=model_name, platform_name=platform_name
-        )
-        if platform_info is None:
-            raise RuntimeError(
-                f"cannot find configured platform for model: {model_name}"
-            )
-        platform_name = platform_info.get("platform_name")
-    platform_info = get_config_platforms().get(platform_name)
-    assert platform_info, f"cannot find configured platform: {platform_name}"
-    params = {
-        "base_url": platform_info.get("api_base_url"),
-        "api_key": platform_info.get("api_key"),
-    }
-    httpx_params = {}
-    if api_proxy := platform_info.get("api_proxy"):
-        httpx_params = {
-            "proxies": api_proxy,
-            "transport": httpx.HTTPTransport(local_address="0.0.0.0"),
-        }
-
-    if is_async:
-        if httpx_params:
-            params["http_client"] = httpx.AsyncClient(**httpx_params)
-        return openai.AsyncClient(**params)
-    else:
-        if httpx_params:
-            params["http_client"] = httpx.Client(**httpx_params)
-        return openai.Client(**params)
+# def get_OpenAIClient(
+#         platform_name: str = None,
+#         model_name: str = None,
+#         is_async: bool = True,
+# ) -> Union[openai.Client, openai.AsyncClient]:
+#     """
+#     construct an openai Client for specified platform or model
+#     """
+#     if platform_name is None:
+#         platform_info = get_model_info(
+#             model_name=model_name, platform_name=platform_name
+#         )
+#         if platform_info is None:
+#             raise RuntimeError(
+#                 f"cannot find configured platform for model: {model_name}"
+#             )
+#         platform_name = platform_info.get("platform_name")
+#     platform_info = get_config_platforms().get(platform_name)
+#     assert platform_info, f"cannot find configured platform: {platform_name}"
+#     params = {
+#         "base_url": platform_info.get("api_base_url"),
+#         "api_key": platform_info.get("api_key"),
+#     }
+#     httpx_params = {}
+#     if api_proxy := platform_info.get("api_proxy"):
+#         httpx_params = {
+#             "proxies": api_proxy,
+#             "transport": httpx.HTTPTransport(local_address="0.0.0.0"),
+#         }
+#
+#     if is_async:
+#         if httpx_params:
+#             params["http_client"] = httpx.AsyncClient(**httpx_params)
+#         return openai.AsyncClient(**params)
+#     else:
+#         if httpx_params:
+#             params["http_client"] = httpx.Client(**httpx_params)
+#         return openai.Client(**params)
 
 
 class MsgType:
@@ -383,39 +384,39 @@ class ListResponse(BaseResponse):
         }
 
 
-class ChatMessage(BaseModel):
-    question: str = Field(..., description="Question text")
-    response: str = Field(..., description="Response text")
-    history: List[List[str]] = Field(..., description="History text")
-    source_documents: List[str] = Field(
-        ..., description="List of source documents and their scores"
-    )
-
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "question": "工伤保险如何办理？",
-                "response": "根据已知信息，可以总结如下：\n\n1. 参保单位为员工缴纳工伤保险费，以保障员工在发生工伤时能够获得相应的待遇。\n"
-                            "2. 不同地区的工伤保险缴费规定可能有所不同，需要向当地社保部门咨询以了解具体的缴费标准和规定。\n"
-                            "3. 工伤从业人员及其近亲属需要申请工伤认定，确认享受的待遇资格，并按时缴纳工伤保险费。\n"
-                            "4. 工伤保险待遇包括工伤医疗、康复、辅助器具配置费用、伤残待遇、工亡待遇、一次性工亡补助金等。\n"
-                            "5. 工伤保险待遇领取资格认证包括长期待遇领取人员认证和一次性待遇领取人员认证。\n"
-                            "6. 工伤保险基金支付的待遇项目包括工伤医疗待遇、康复待遇、辅助器具配置费用、一次性工亡补助金、丧葬补助金等。",
-                "history": [
-                    [
-                        "工伤保险是什么？",
-                        "工伤保险是指用人单位按照国家规定，为本单位的职工和用人单位的其他人员，缴纳工伤保险费，"
-                        "由保险机构按照国家规定的标准，给予工伤保险待遇的社会保险制度。",
-                    ]
-                ],
-                "source_documents": [
-                    "出处 [1] 广州市单位从业的特定人员参加工伤保险办事指引.docx：\n\n\t"
-                    "( 一)  从业单位  (组织)  按“自愿参保”原则，  为未建 立劳动关系的特定从业人员单项参加工伤保险 、缴纳工伤保 险费。",
-                    "出处 [2] ...",
-                    "出处 [3] ...",
-                ],
-            }
-        }
+# class ChatMessage(BaseModel):
+#     question: str = Field(..., description="Question text")
+#     response: str = Field(..., description="Response text")
+#     history: List[List[str]] = Field(..., description="History text")
+#     source_documents: List[str] = Field(
+#         ..., description="List of source documents and their scores"
+#     )
+#
+#     class Config:
+#         json_schema_extra = {
+#             "example": {
+#                 "question": "工伤保险如何办理？",
+#                 "response": "根据已知信息，可以总结如下：\n\n1. 参保单位为员工缴纳工伤保险费，以保障员工在发生工伤时能够获得相应的待遇。\n"
+#                             "2. 不同地区的工伤保险缴费规定可能有所不同，需要向当地社保部门咨询以了解具体的缴费标准和规定。\n"
+#                             "3. 工伤从业人员及其近亲属需要申请工伤认定，确认享受的待遇资格，并按时缴纳工伤保险费。\n"
+#                             "4. 工伤保险待遇包括工伤医疗、康复、辅助器具配置费用、伤残待遇、工亡待遇、一次性工亡补助金等。\n"
+#                             "5. 工伤保险待遇领取资格认证包括长期待遇领取人员认证和一次性待遇领取人员认证。\n"
+#                             "6. 工伤保险基金支付的待遇项目包括工伤医疗待遇、康复待遇、辅助器具配置费用、一次性工亡补助金、丧葬补助金等。",
+#                 "history": [
+#                     [
+#                         "工伤保险是什么？",
+#                         "工伤保险是指用人单位按照国家规定，为本单位的职工和用人单位的其他人员，缴纳工伤保险费，"
+#                         "由保险机构按照国家规定的标准，给予工伤保险待遇的社会保险制度。",
+#                     ]
+#                 ],
+#                 "source_documents": [
+#                     "出处 [1] 广州市单位从业的特定人员参加工伤保险办事指引.docx：\n\n\t"
+#                     "( 一)  从业单位  (组织)  按“自愿参保”原则，  为未建 立劳动关系的特定从业人员单项参加工伤保险 、缴纳工伤保 险费。",
+#                     "出处 [2] ...",
+#                     "出处 [3] ...",
+#                 ],
+#             }
+#         }
 
 
 def MakeFastAPIOffline(
@@ -523,15 +524,15 @@ def webui_address() -> str:
     return f"http://{host}:{port}"
 
 
-def get_prompt_template(type: str, name: str) -> Optional[str]:
-    """
-    从prompt_config中加载模板内容
-    type: 对应于 model_settings.llm_model_config 模型类别其中的一种，以及 "rag"，如果有新功能，应该进行加入。
-    """
-
-    from chatchat.settings import Settings
-
-    return Settings.prompt_settings.model_dump().get(type, {}).get(name)
+# def get_prompt_template(type: str, name: str) -> Optional[str]:
+#     """
+#     从prompt_config中加载模板内容
+#     type: 对应于 model_settings.llm_model_config 模型类别其中的一种，以及 "rag"，如果有新功能，应该进行加入。
+#     """
+#
+#     from chatchat.settings import Settings
+#
+#     return Settings.prompt_settings.model_dump().get(type, {}).get(name)
 
 
 def set_httpx_config(
@@ -690,23 +691,23 @@ def get_server_configs() -> Dict:
     return {**{k: v for k, v in locals().items() if k[0] != "_"}, **_custom}
 
 
-def get_temp_dir(id: str = None) -> Tuple[str, str]:
-    """
-    创建一个临时目录，返回（路径，文件夹名称）
-    """
-    import uuid
-
-    from chatchat.settings import Settings
-
-    if id is not None:  # 如果指定的临时目录已存在，直接返回
-        path = os.path.join(Settings.basic_settings.BASE_TEMP_DIR, id)
-        if os.path.isdir(path):
-            return path, id
-
-    id = uuid.uuid4().hex
-    path = os.path.join(Settings.basic_settings.BASE_TEMP_DIR, id)
-    os.mkdir(path)
-    return path, id
+# def get_temp_dir(id: str = None) -> Tuple[str, str]:
+#     """
+#     创建一个临时目录，返回（路径，文件夹名称）
+#     """
+#     import uuid
+#
+#     from chatchat.settings import Settings
+#
+#     if id is not None:  # 如果指定的临时目录已存在，直接返回
+#         path = os.path.join(Settings.basic_settings.BASE_TEMP_DIR, id)
+#         if os.path.isdir(path):
+#             return path, id
+#
+#     id = uuid.uuid4().hex
+#     path = os.path.join(Settings.basic_settings.BASE_TEMP_DIR, id)
+#     os.mkdir(path)
+#     return path, id
 
 
 # 动态更新知识库信息
@@ -776,9 +777,22 @@ def get_tool_config(name: str = None) -> Dict:
         return Settings.tool_settings.model_dump().get(name, {})
 
 
-def get_checkpointer(memory_type: Optional[Literal["memory", "sqlite", "postgres"]] = None) -> (Union)[MemorySaver, AsyncSqliteSaver]:
+def get_graph_memory_type() -> Literal["memory", "sqlite", "postgres"]:
     """
-    获取 graph 的 checkpointer(MemorySaver 和 AsyncSqliteSaver)
+    获取项目配置的 checkpointer 的类型, 如: memory, sqlite, postgres
+    """
+    valid_types = {'memory', 'sqlite', 'postgres'}
+    graph_memory_type = Settings.tool_settings.GRAPH_MEMORY_TYPE
+
+    if graph_memory_type not in valid_types:
+        logger.error(f"Invalid GRAPH_MEMORY_TYPE: {graph_memory_type}. Must be one of {valid_types}")
+        raise ValueError(f"Invalid GRAPH_MEMORY_TYPE: {graph_memory_type}. Must be one of {valid_types}")
+    return graph_memory_type
+
+
+def get_checkpointer(memory_type: Literal["memory", "sqlite"]) -> Union[MemorySaver, AsyncSqliteSaver]:
+    """
+    获取 checkpointer 对象, 如: MemorySaver, AsyncSqliteSaver
     """
     if memory_type is None:
         memory_type = Settings.tool_settings.GRAPH_MEMORY_TYPE
@@ -788,16 +802,16 @@ def get_checkpointer(memory_type: Optional[Literal["memory", "sqlite", "postgres
     elif memory_type == "sqlite":
         return AsyncSqliteSaver.from_conn_string(Settings.basic_settings.SQLITE_GRAPH_DATABASE_URI)
 
-    raise ValueError("Invalid memory_type provided. Must be 'memory', 'sqlite', or 'postgres'.")
+    raise ValueError("Invalid memory_type provided. Must be 'memory', 'sqlite'.")
 
 
 @streamlit.cache_resource
 def create_agent_models(
         configs: Any,
         model: str,
-        max_tokens: Any,
+        max_tokens: int,
         temperature: float,
-        stream: Any
+        stream: bool
 ) -> ChatOpenAI:
     """
     为适配原先 chatchat 逻辑中创建 ChatOpenAI 的函数构造此函数.

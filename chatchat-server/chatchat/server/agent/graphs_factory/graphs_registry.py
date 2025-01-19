@@ -18,7 +18,8 @@ __all__ = [
     "State",
     "register_graph",
     "list_graph_titles_by_label",
-    "get_graph_class_by_label_and_title"
+    "get_graph_class_by_label_and_title",
+    "get_graph_class"
 ]
 
 
@@ -36,6 +37,7 @@ class State(TypedDict):
 # 全局字典用于存储不同类型图的名称和对应的类
 rag_registry = {}
 agent_registry = {}
+graph_registry = {}
 
 
 def register_graph(cls):
@@ -56,6 +58,11 @@ def register_graph(cls):
         }
     else:
         raise ValueError(f"Unknown label '{label}' for class '{cls.__name__}'.")
+
+    graph_registry[name] = {
+        "class": cls,
+        "title": title
+    }
 
     return cls
 
@@ -158,3 +165,9 @@ def get_graph_class_by_label_and_title(label: str, title: str) -> Type[Graph]:
     else:
         raise ValueError(f"Unknown label '{label}'.")
     raise ValueError(f"No graph found with title '{title}' for label '{label}'.")
+
+
+def get_graph_class(name: str) -> Type[Graph]:
+    if name not in graph_registry:
+        raise ValueError(f"Graph '{name}' is not registered in graph_registry.")
+    return graph_registry[name]["class"]

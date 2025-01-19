@@ -32,9 +32,8 @@ def create_app(run_mode: str = None):
     async def document():
         return RedirectResponse(url="/docs")
 
-    app.include_router(kb_router)
-    # app.include_router(openai_router)
     app.include_router(chat_router)
+    app.include_router(kb_router)
     app.include_router(server_router)
 
     # 媒体文件
