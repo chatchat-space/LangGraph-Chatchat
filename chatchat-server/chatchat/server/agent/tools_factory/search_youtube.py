@@ -9,7 +9,4 @@ def search_youtube(query: str = Field(description="Query for Videos search")):
     from langchain_community.tools import YouTubeSearchTool
 
     tool = YouTubeSearchTool()
-    # return BaseToolOutput(tool.run(tool_input=query))
-    res = tool.run(tool_input=query)
-    print(res)
-    return BaseToolOutput(res)
+    return BaseToolOutput(tool.run(tool_input=query))
