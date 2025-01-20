@@ -1,11 +1,10 @@
-import rich
 import asyncio
 import json
 
 from sse_starlette import EventSourceResponse
 from fastapi import APIRouter
 
-from chatchat.server.api_server.api_schemas import AgentChatInput
+from chatchat.server.api_server.api_schemas import AgentChatInput, AgentChatOutput
 from chatchat.server.agent.graphs_factory.graphs_registry import get_graph_class
 from chatchat.server.utils import get_checkpointer, get_graph_memory_type, create_agent_models, get_tool
 from chatchat.settings import Settings
@@ -18,7 +17,10 @@ chat_router = APIRouter(prefix="/v1", tags=["Agent 对话接口"])
 
 @chat_router.post("/chat/completions")
 async def openai_stream_output(body: AgentChatInput):
+    # debug
+    import rich
     rich.print(body)
+
     graph_memory_type = get_graph_memory_type()
     llm = create_agent_models(configs=None,
                               model=body.model,
@@ -53,11 +55,22 @@ async def openai_stream_output(body: AgentChatInput):
                     graph = graph_class_ins.get_graph()
                     if not graph:
                         raise ValueError(f"Graph '{graph_class}' is not registered.")
-                    async for event in graph.astream(input={"messages": body.messages},
-                                                     config=graph_config,
-                                                     stream_mode="updates"):
-                        logger.debug(f"Event: {event}")
-                        yield str(event)
+                    if body.stream_type == "node":
+                        async for events in graph.astream(input={"messages": body.messages},
+                                                          config=graph_config,
+                                                          stream_mode="updates"):
+                            for node, event in events.items():
+                                yield str(AgentChatOutput(node=node, metadata=None, messages=event))
+                    elif body.stream_type == "token":
+                        async for msg, metadata in graph.astream(input={"messages": body.messages},
+                                                                 config=graph_config,
+                                                                 stream_mode="messages"):
+                            yield str(AgentChatOutput(node=None, metadata=metadata, messages=msg))
+                    elif body.stream_type == "direct":
+                        message = await graph.ainvoke(input={"messages": body.messages},
+                                                      config=graph_config,
+                                                      stream_mode="updates")
+                        yield str(AgentChatOutput(node=None, metadata=None, messages=message))
                 elif graph_memory_type == "sqlite":
                     checkpointer = get_checkpointer(memory_type=graph_memory_type)
                     async with checkpointer as checkpointer:
@@ -68,11 +81,22 @@ async def openai_stream_output(body: AgentChatInput):
                         graph = graph_class_ins.get_graph()
                         if not graph:
                             raise ValueError(f"Graph '{graph_class}' is not registered.")
-                        async for event in graph.astream(input={"messages": body.messages},
-                                                         config=graph_config,
-                                                         stream_mode="updates"):
-                            logger.debug(f"Event: {event}")
-                            yield str(event)
+                        if body.stream_type == "node":
+                            async for events in graph.astream(input={"messages": body.messages},
+                                                              config=graph_config,
+                                                              stream_mode="updates"):
+                                for node, event in events.items():
+                                    yield str(AgentChatOutput(node=node, metadata=None, messages=event))
+                        elif body.stream_type == "token":
+                            async for msg, metadata in graph.astream(input={"messages": body.messages},
+                                                                     config=graph_config,
+                                                                     stream_mode="messages"):
+                                yield str(AgentChatOutput(node=None, metadata=metadata, messages=msg))
+                        elif body.stream_type == "direct":
+                            message = await graph.ainvoke(input={"messages": body.messages},
+                                                          config=graph_config,
+                                                          stream_mode="updates")
+                            yield str(AgentChatOutput(node=None, metadata=None, messages=message))
                 elif graph_memory_type == "postgres":
                     from psycopg_pool import AsyncConnectionPool
                     from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
@@ -91,11 +115,22 @@ async def openai_stream_output(body: AgentChatInput):
                         graph = graph_class_ins.get_graph()
                         if not graph:
                             raise ValueError(f"Graph '{graph_class}' is not registered.")
-                        async for event in graph.astream(input={"messages": body.messages},
-                                                         config=graph_config,
-                                                         stream_mode="updates"):
-                            logger.debug(f"Event: {event}")
-                            yield str(event)
+                        if body.stream_type == "node":
+                            async for events in graph.astream(input={"messages": body.messages},
+                                                              config=graph_config,
+                                                              stream_mode="updates"):
+                                for node, event in events.items():
+                                    yield str(AgentChatOutput(node=node, metadata=None, messages=event))
+                        elif body.stream_type == "token":
+                            async for msg, metadata in graph.astream(input={"messages": body.messages},
+                                                                     config=graph_config,
+                                                                     stream_mode="messages"):
+                                yield str(AgentChatOutput(node=None, metadata=metadata, messages=msg))
+                        elif body.stream_type == "direct":
+                            message = await graph.ainvoke(input={"messages": body.messages},
+                                                          config=graph_config,
+                                                          stream_mode="updates")
+                            yield str(AgentChatOutput(node=None, metadata=None, messages=message))
             except asyncio.exceptions.CancelledError:
                 logger.warning("Streaming progress has been interrupted by user.")
                 return
@@ -122,11 +157,10 @@ async def openai_stream_output(body: AgentChatInput):
                 graph = graph_class_ins.get_graph()
                 if not graph:
                     raise ValueError(f"Graph '{graph_class}' is not registered.")
-
-                result = await graph.ainvoke(input={"messages": body.messages},
-                                             config=graph_config,
-                                             stream_mode="updates")
-                return result
+                message = await graph.ainvoke(input={"messages": body.messages},
+                                              config=graph_config,
+                                              stream_mode="updates")
+                return str(AgentChatOutput(node=None, metadata=None, messages=message))
             elif graph_memory_type == "sqlite":
                 checkpointer = get_checkpointer(memory_type=graph_memory_type)
                 async with checkpointer as checkpointer:
@@ -137,10 +171,10 @@ async def openai_stream_output(body: AgentChatInput):
                     graph = graph_class_ins.get_graph()
                     if not graph:
                         raise ValueError(f"Graph '{graph_class}' is not registered.")
-                    result = await graph.ainvoke(input={"messages": body.messages},
-                                                 config=graph_config,
-                                                 stream_mode="updates")
-                    return result
+                    message = await graph.ainvoke(input={"messages": body.messages},
+                                                  config=graph_config,
+                                                  stream_mode="updates")
+                    return str(AgentChatOutput(node=None, metadata=None, messages=message))
             elif graph_memory_type == "postgres":
                 from psycopg_pool import AsyncConnectionPool
                 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
@@ -159,10 +193,10 @@ async def openai_stream_output(body: AgentChatInput):
                     graph = graph_class_ins.get_graph()
                     if not graph:
                         raise ValueError(f"Graph '{graph_class}' is not registered.")
-                    result = await graph.ainvoke(input={"messages": body.messages},
-                                                 config=graph_config,
-                                                 stream_mode="updates")
-                    return result
+                    message = await graph.ainvoke(input={"messages": body.messages},
+                                                  config=graph_config,
+                                                  stream_mode="updates")
+                    return str(AgentChatOutput(node=None, metadata=None, messages=message))
         except asyncio.exceptions.CancelledError:
             logger.warning("Streaming progress has been interrupted by user.")
             return
