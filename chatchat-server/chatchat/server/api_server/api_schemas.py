@@ -2,108 +2,63 @@ from __future__ import annotations
 
 import json
 import time
-from typing import Dict, List, Literal, Optional, Union
 
-from fastapi import UploadFile
-from openai.types.chat import (
-    ChatCompletionMessageParam,
-    ChatCompletionToolChoiceOptionParam,
-    ChatCompletionToolParam,
-    completion_create_params,
-)
+from typing import Dict, List, Literal, Optional, Union, Any
+from pydantic import BaseModel, Field
+from openai.types.chat import ChatCompletionMessageParam
 
 from chatchat.settings import Settings
-from pydantic import AnyUrl, BaseModel, Field
 from chatchat.server.utils import MsgType, get_default_llm
 
 
-class OpenAIBaseInput(BaseModel):
-    user: Optional[str] = None
-    # Use the following arguments if you need to pass additional parameters to the API that aren't available via kwargs.
-    # The extra values given here take precedence over values defined on the client or passed to this method.
-    extra_headers: Optional[Dict] = None
-    extra_query: Optional[Dict] = None
-    extra_json: Optional[Dict] = Field(None, alias="extra_body")
-    timeout: Optional[float] = None
+class AgentChatInput(BaseModel):
+    """
+    定义了 agent 对话调用的 API 请求参数.
 
-    class Config:
-        extra = "allow"
-
-
-class OpenAIChatInput(OpenAIBaseInput):
+    messages: 必选, list, 消息列表.
+    model: 必选, str, 模型名称.
+    graph: 必选, str, agent 名称.
+    thread_id: 必选, int, 线程 id, 用来记录单个线程的对话历史.
+    history_len: 必选, int, agent 具备的短期记忆窗口长度.
+    temperature: 可选, float, 调用模型时 temperature 参数值.
+    max_completion_tokens: 可选, int, 调用模型时 max_completion_tokens 参数值.
+    tools: 可选, list[str], agent 可调用的工具列表.
+    stream: 可选, bool, 是否开启流式输出, 默认为 True.
+    stream_type: 可选,
+        当 stream = True 时, stream_type 为 node, token 中任意之一:
+            node 指 node 级别的流式输出;
+            token 指 token 级别的流式输出.
+        当 stream = False 时, stream_type 为 null, 非流式输出, 直接返回最终结果.
+    knowledge_base: 可选(RAG 必选), str, 检索文档时的知识库.
+    top_k: 可选(RAG 必选), int, 检索文档时保留的文档数量.
+    score: 可选(RAG 必选), float, 检索文档时分数阈值.
+    """
     messages: List[ChatCompletionMessageParam]
     model: str = get_default_llm()
-    frequency_penalty: Optional[float] = None
-    function_call: Optional[completion_create_params.FunctionCall] = None
-    functions: List[completion_create_params.Function] = None
-    logit_bias: Optional[Dict[str, int]] = None
-    logprobs: Optional[bool] = None
-    max_tokens: Optional[int] = None
-    n: Optional[int] = None
-    presence_penalty: Optional[float] = None
-    response_format: completion_create_params.ResponseFormat = None
-    seed: Optional[int] = None
-    stop: Union[Optional[str], List[str]] = None
-    stream: Optional[bool] = None
+    graph: str = "base_agent"
+    thread_id: int
+    history_len: Optional[int] = Settings.model_settings.HISTORY_LEN
     temperature: Optional[float] = Settings.model_settings.TEMPERATURE
-    tool_choice: Optional[Union[ChatCompletionToolChoiceOptionParam, str]] = None
-    tools: List[Union[ChatCompletionToolParam, str]] = None
-    top_logprobs: Optional[int] = None
-    top_p: Optional[float] = None
+    max_completion_tokens: Optional[Union[int, None]] = Settings.model_settings.MAX_COMPLETION_TOKENS
+    tools: Optional[List[str]] = None
+    stream: Optional[bool] = True
+    stream_type: Optional[Literal["node", "token", None]] = "node"
+    knowledge_base: Optional[str] = Settings.kb_settings.DEFAULT_KNOWLEDGE_BASE
+    top_k: Optional[int] = Settings.kb_settings.VECTOR_SEARCH_TOP_K
+    score: Optional[float] = Settings.kb_settings.SCORE_THRESHOLD
 
 
-class OpenAIEmbeddingsInput(OpenAIBaseInput):
-    input: Union[str, List[str]]
-    model: str
-    dimensions: Optional[int] = None
-    encoding_format: Optional[Literal["float", "base64"]] = None
+class AgentChatOutput(BaseModel):
+    """
+    定义了 agent 对话调用的 API 返回参数.
 
-
-class OpenAIImageBaseInput(OpenAIBaseInput):
-    model: str
-    n: int = 1
-    response_format: Optional[Literal["url", "b64_json"]] = None
-    size: Optional[
-        Literal["256x256", "512x512", "1024x1024", "1792x1024", "1024x1792"]
-    ] = "256x256"
-
-
-class OpenAIImageGenerationsInput(OpenAIImageBaseInput):
-    prompt: str
-    quality: Literal["standard", "hd"] = None
-    style: Optional[Literal["vivid", "natural"]] = None
-
-
-class OpenAIImageVariationsInput(OpenAIImageBaseInput):
-    image: Union[UploadFile, AnyUrl]
-
-
-class OpenAIImageEditsInput(OpenAIImageVariationsInput):
-    prompt: str
-    mask: Union[UploadFile, AnyUrl]
-
-
-class OpenAIAudioTranslationsInput(OpenAIBaseInput):
-    file: Union[UploadFile, AnyUrl]
-    model: str
-    prompt: Optional[str] = None
-    response_format: Optional[str] = None
-    temperature: float = Settings.model_settings.TEMPERATURE
-
-
-class OpenAIAudioTranscriptionsInput(OpenAIAudioTranslationsInput):
-    language: Optional[str] = None
-    timestamp_granularities: Optional[List[Literal["word", "segment"]]] = None
-
-
-class OpenAIAudioSpeechInput(OpenAIBaseInput):
-    input: str
-    model: str
-    voice: str
-    response_format: Optional[
-        Literal["mp3", "opus", "aac", "flac", "pcm", "wav"]
-    ] = None
-    speed: Optional[float] = None
+    node: agent 的 node
+    metadata: agenet 的 node 的 metadata
+    messages: agent 返回结果
+    """
+    node: Optional[str]
+    metadata: Optional[dict]
+    messages: Any
 
 
 class OpenAIBaseOutput(BaseModel):

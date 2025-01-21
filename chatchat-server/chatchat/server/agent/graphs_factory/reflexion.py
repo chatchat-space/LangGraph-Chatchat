@@ -103,7 +103,10 @@ class ReflexionGraph(Graph):
                  llm: ChatOpenAI,
                  tools: list[BaseTool],
                  history_len: int,
-                 checkpoint: BaseCheckpointSaver):
+                 checkpoint: BaseCheckpointSaver,
+                 knowledge_base: str = None,
+                 top_k: int = None,
+                 score_threshold: float = None):
         super().__init__(llm, tools, history_len, checkpoint)
         # 担心用户没有选择任何 tool 而造成 agent 逻辑无效, 为保证效果, 强行追加一个 search_internet 工具, 如开发者不需要可注释此行代码.
         search_internet = get_tool(name="search_internet")

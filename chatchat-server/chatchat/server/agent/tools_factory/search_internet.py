@@ -106,7 +106,6 @@ def search_engine(query: str, top_k: int = 0, engine_name: str = "", config: dic
         top_k = config.get("top_k", Settings.kb_settings.SEARCH_ENGINE_TOP_K)
     engine_name = engine_name or config.get("search_engine_name")
     search_engine_use = SEARCH_ENGINES[engine_name]
-    print(f"Searching engine: {engine_name}")
     if engine_name == "duckduckgo":
         results = search_engine_use(
             text=query, top_k=top_k

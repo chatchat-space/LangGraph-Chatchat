@@ -67,7 +67,10 @@ class PlanExecuteGraph(Graph):
                  llm: ChatOpenAI,
                  tools: list[BaseTool],
                  history_len: int,
-                 checkpoint: BaseCheckpointSaver):
+                 checkpoint: BaseCheckpointSaver,
+                 knowledge_base: str = None,
+                 top_k: int = None,
+                 score_threshold: float = None):
         super().__init__(llm, tools, history_len, checkpoint)
 
     async def plan_step(self, state: PlanExecute) -> PlanExecute:

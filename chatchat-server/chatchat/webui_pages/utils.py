@@ -4,13 +4,13 @@ import base64
 import contextlib
 import json
 import os
+import httpx
+import uuid
+import streamlit as st
+
 from io import BytesIO
 from pathlib import Path
 from typing import *
-import httpx
-import uuid
-
-import streamlit as st
 from langgraph.graph.state import CompiledStateGraph
 from pydantic import BaseModel
 
@@ -880,114 +880,6 @@ async def process_graph(graph_class: Graph, graph: CompiledStateGraph, graph_inp
                 is_last_message=True
             ))
             st.markdown(response_last)
-
-        # if graph_class_instance.name == "article_generation":
-        #     async for event in events:
-        #         node, response = extract_node_and_response(event)
-        #
-        #         # debug
-        #         # print(f"--- node: {node} ---")
-        #         # rich.print(response)
-        #
-        #         if node == "history_manager":  # history_manager node 为内部实现, 不外显
-        #             continue
-        #         if node == "article_generation_init_break_point":
-        #             with st.chat_message(name="assistant", avatar=st.session_state["assistant_avatar"]):
-        #                 st.write("请进行初始化设置")
-        #                 st.session_state.messages.append({
-        #                     "role": "assistant",
-        #                     "content": "请进行初始化设置",
-        #                     "type": "text"  # 标识为文本类型
-        #                 })
-        #             article_generation_init_setting()
-        #             continue
-        #         if node == "article_generation_start_break_point":
-        #             with st.chat_message(name="assistant", avatar=st.session_state["assistant_avatar"]):
-        #                 st.write("请开始下达指令")
-        #                 st.session_state.messages.append({
-        #                     "role": "assistant",
-        #                     "content": "请开始下达指令",
-        #                     "type": "text"  # 标识为文本类型
-        #                 })
-        #             st.session_state["article_list"] = response["article_list"]
-        #             article_generation_start_setting()
-        #             continue
-        #         if node == "article_generation_repeat_break_point":
-        #             with st.chat_message(name="assistant", avatar=st.session_state["assistant_avatar"]):
-        #                 st.write("请确认是否重写")
-        #                 st.session_state.messages.append({
-        #                     "role": "assistant",
-        #                     "content": "请确认是否重写",
-        #                     "type": "text"  # 标识为文本类型
-        #                 })
-        #             st.session_state["article"] = response["article"]
-        #             article_generation_repeat_setting()
-        #             continue
-        #         # Display assistant response in chat message container
-        #         with st.chat_message(name="assistant", avatar=st.session_state["assistant_avatar"]):
-        #             with st.status(node, expanded=True) as status:
-        #                 st.json(response, expanded=True)
-        #                 status.update(
-        #                     label=node, state="complete", expanded=False
-        #                 )
-        #             # Add assistant response to chat history
-        #             st.session_state.messages.append({
-        #                 "role": "assistant",
-        #                 "content": response,
-        #                 "node": node,
-        #                 "expanded": False,
-        #                 "type": "json"  # 标识为JSON类型
-        #             })
-        # else:
-        #     # Display assistant response in chat message container
-        #     with st.chat_message(name="assistant", avatar=st.session_state["assistant_avatar"]):
-        #         response_last = ""
-        #         async for event in events:
-        #             node, response = extract_node_and_response(event)
-        #             # debug
-        #             # print(f"--- node: {node} ---")
-        #             # rich.print(response)
-        #
-        #             if node == "history_manager":  # history_manager node 为内部实现, 不外显
-        #                 continue
-        #
-        #             # 获取 event
-        #             response = graph_class_instance.handle_event(node=node, event=response)
-        #             # 将 event 转化为 json
-        #             response = serialize_content_to_json(response)
-        #             # rich.print(response)
-        #
-        #             # 检查 'content' 是否在响应中(因为我们只需要 AIMessage 的内容)
-        #             if "content" in response:
-        #                 response_last = response["content"]
-        #             elif "response" in response:  # plan_execute_agent
-        #                 response_last = response["response"]
-        #             elif "answer" in response:  # reflexion
-        #                 response_last = response["answer"]
-        #
-        #             # Add assistant response to chat history
-        #             st.session_state.messages.append(create_chat_message(
-        #                 role="assistant",
-        #                 content=response,
-        #                 node=node,
-        #                 expanded=False,
-        #                 type="json",
-        #                 is_last_message=False
-        #             ))
-        #             with st.status(node, expanded=True) as status:
-        #                 st.json(response, expanded=True)
-        #                 status.update(label=node, state="complete", expanded=False)
-        #
-        #         # Add assistant response_last to chat history
-        #         st.session_state.messages.append(create_chat_message(
-        #             role="assistant",
-        #             content=response_last,
-        #             node=None,
-        #             expanded=None,
-        #             type="text",
-        #             is_last_message=True
-        #         ))
-        #         st.markdown(response_last)
 
 
 def check_model_supports_streaming(llm_model: str):
