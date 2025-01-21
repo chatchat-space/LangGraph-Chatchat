@@ -790,7 +790,7 @@ def get_graph_memory_type() -> Literal["memory", "sqlite", "postgres"]:
     return graph_memory_type
 
 
-def get_checkpointer(memory_type: Literal["memory", "sqlite"]) -> Union[MemorySaver, AsyncSqliteSaver]:
+def get_checkpointer(memory_type: Literal["memory", "sqlite"] = None) -> Union[MemorySaver, AsyncSqliteSaver]:
     """
     获取 checkpointer 对象, 如: MemorySaver, AsyncSqliteSaver
     """

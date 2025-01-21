@@ -18,8 +18,8 @@ chat_router = APIRouter(prefix="/v1", tags=["Agent 对话接口"])
 @chat_router.post("/chat/completions")
 async def openai_stream_output(body: AgentChatInput):
     # debug
-    import rich
-    rich.print(body)
+    # import rich
+    # rich.print(body)
 
     graph_memory_type = get_graph_memory_type()
     llm = create_agent_models(configs=None,
