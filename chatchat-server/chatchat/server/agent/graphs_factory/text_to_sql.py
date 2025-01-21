@@ -24,7 +24,10 @@ class TextToSQLGraph(Graph):
                  llm: ChatOpenAI,
                  tools: list[BaseTool],
                  history_len: int,
-                 checkpoint: BaseCheckpointSaver):
+                 checkpoint: BaseCheckpointSaver,
+                 knowledge_base: str = None,
+                 top_k: int = None,
+                 score_threshold: float = None):
         super().__init__(llm, tools, history_len, checkpoint)
         query_sql_data = get_tool(name="query_sql_data")
         self.tools = add_tools_if_not_exists(tools_provides=self.tools, tools_need_append=[query_sql_data])

@@ -51,7 +51,10 @@ async def openai_stream_output(body: AgentChatInput):
                     graph_class_ins = graph_class(llm=llm,
                                                   tools=tools,
                                                   history_len=Settings.model_settings.HISTORY_LEN,
-                                                  checkpoint=checkpointer)
+                                                  checkpoint=checkpointer,
+                                                  knowledge_base=body.knowledge_base,
+                                                  top_k=body.top_k,
+                                                  score_threshold=body.score)
                     graph = graph_class_ins.get_graph()
                     if not graph:
                         raise ValueError(f"Graph '{graph_class}' is not registered.")
@@ -66,18 +69,16 @@ async def openai_stream_output(body: AgentChatInput):
                                                                  config=graph_config,
                                                                  stream_mode="messages"):
                             yield str(AgentChatOutput(node=None, metadata=metadata, messages=msg))
-                    elif body.stream_type == "direct":
-                        message = await graph.ainvoke(input={"messages": body.messages},
-                                                      config=graph_config,
-                                                      stream_mode="updates")
-                        yield str(AgentChatOutput(node=None, metadata=None, messages=message))
                 elif graph_memory_type == "sqlite":
                     checkpointer = get_checkpointer(memory_type=graph_memory_type)
                     async with checkpointer as checkpointer:
                         graph_class_ins = graph_class(llm=llm,
                                                       tools=tools,
                                                       history_len=Settings.model_settings.HISTORY_LEN,
-                                                      checkpoint=checkpointer)
+                                                      checkpoint=checkpointer,
+                                                      knowledge_base=body.knowledge_base,
+                                                      top_k=body.top_k,
+                                                      score_threshold=body.score)
                         graph = graph_class_ins.get_graph()
                         if not graph:
                             raise ValueError(f"Graph '{graph_class}' is not registered.")
@@ -92,11 +93,6 @@ async def openai_stream_output(body: AgentChatInput):
                                                                      config=graph_config,
                                                                      stream_mode="messages"):
                                 yield str(AgentChatOutput(node=None, metadata=metadata, messages=msg))
-                        elif body.stream_type == "direct":
-                            message = await graph.ainvoke(input={"messages": body.messages},
-                                                          config=graph_config,
-                                                          stream_mode="updates")
-                            yield str(AgentChatOutput(node=None, metadata=None, messages=message))
                 elif graph_memory_type == "postgres":
                     from psycopg_pool import AsyncConnectionPool
                     from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
@@ -111,7 +107,10 @@ async def openai_stream_output(body: AgentChatInput):
                         graph_class_ins = graph_class(llm=llm,
                                                       tools=tools,
                                                       history_len=Settings.model_settings.HISTORY_LEN,
-                                                      checkpoint=checkpointer)
+                                                      checkpoint=checkpointer,
+                                                      knowledge_base=body.knowledge_base,
+                                                      top_k=body.top_k,
+                                                      score_threshold=body.score)
                         graph = graph_class_ins.get_graph()
                         if not graph:
                             raise ValueError(f"Graph '{graph_class}' is not registered.")
@@ -126,11 +125,6 @@ async def openai_stream_output(body: AgentChatInput):
                                                                      config=graph_config,
                                                                      stream_mode="messages"):
                                 yield str(AgentChatOutput(node=None, metadata=metadata, messages=msg))
-                        elif body.stream_type == "direct":
-                            message = await graph.ainvoke(input={"messages": body.messages},
-                                                          config=graph_config,
-                                                          stream_mode="updates")
-                            yield str(AgentChatOutput(node=None, metadata=None, messages=message))
             except asyncio.exceptions.CancelledError:
                 logger.warning("Streaming progress has been interrupted by user.")
                 return
@@ -153,7 +147,10 @@ async def openai_stream_output(body: AgentChatInput):
                 graph_class_ins = graph_class(llm=llm,
                                               tools=tools,
                                               history_len=Settings.model_settings.HISTORY_LEN,
-                                              checkpoint=checkpointer)
+                                              checkpoint=checkpointer,
+                                              knowledge_base=body.knowledge_base,
+                                              top_k=body.top_k,
+                                              score_threshold=body.score)
                 graph = graph_class_ins.get_graph()
                 if not graph:
                     raise ValueError(f"Graph '{graph_class}' is not registered.")
@@ -167,7 +164,10 @@ async def openai_stream_output(body: AgentChatInput):
                     graph_class_ins = graph_class(llm=llm,
                                                   tools=tools,
                                                   history_len=Settings.model_settings.HISTORY_LEN,
-                                                  checkpoint=checkpointer)
+                                                  checkpoint=checkpointer,
+                                                  knowledge_base=body.knowledge_base,
+                                                  top_k=body.top_k,
+                                                  score_threshold=body.score)
                     graph = graph_class_ins.get_graph()
                     if not graph:
                         raise ValueError(f"Graph '{graph_class}' is not registered.")
@@ -189,7 +189,10 @@ async def openai_stream_output(body: AgentChatInput):
                     graph_class_ins = graph_class(llm=llm,
                                                   tools=tools,
                                                   history_len=Settings.model_settings.HISTORY_LEN,
-                                                  checkpoint=checkpointer)
+                                                  checkpoint=checkpointer,
+                                                  knowledge_base=body.knowledge_base,
+                                                  top_k=body.top_k,
+                                                  score_threshold=body.score)
                     graph = graph_class_ins.get_graph()
                     if not graph:
                         raise ValueError(f"Graph '{graph_class}' is not registered.")
