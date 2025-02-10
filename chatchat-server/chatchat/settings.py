@@ -293,7 +293,7 @@ class PlatformConfig(MyBaseModel):
     platform_name: str = "xinference"
     """平台名称"""
 
-    platform_type: t.Literal["xinference", "ollama", "oneapi", "fastchat", "openai", "bigmodel", "hunyuan", "custom openai"] = "xinference"
+    platform_type: t.Literal["xinference", "ollama", "oneapi", "fastchat", "openai", "bigmodel", "deepseek", "hunyuan", "custom openai"] = "xinference"
     """平台类型"""
 
     api_base_url: str = "http://127.0.0.1:9997/v1"
@@ -506,6 +506,19 @@ class ApiModelSettings(BaseFileSettings):
                 "embed_models": [
                     "embedding-3",
                     "embedding-2",
+                ],
+            }),
+            PlatformConfig(**{
+                "platform_name": "deepseek",
+                "platform_type": "deepseek",
+                "api_base_url": "https://api.deepseek.com",
+                "api_key": "sk-",
+                "api_concurrencies": 5,
+                "llm_models": [
+                    "deepseek-reasoner",
+                ],
+                "embed_models": [
+                    "",
                 ],
             }),
             PlatformConfig(**{
