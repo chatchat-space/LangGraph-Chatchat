@@ -516,6 +516,7 @@ class ApiModelSettings(BaseFileSettings):
                 "api_concurrencies": 5,
                 "llm_models": [
                     "deepseek-reasoner",
+                    "deepseek-chat",
                 ],
                 "embed_models": [
                     "",
