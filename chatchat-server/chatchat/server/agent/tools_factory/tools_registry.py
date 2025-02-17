@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import re
-from typing import Any, Callable, Dict, Optional, Tuple, Type, Union
+from typing import Any, Callable, Optional, Type, Union
 
 from langchain.agents import tool
 from langchain_core.tools import BaseTool
@@ -12,51 +12,6 @@ __all__ = ["regist_tool", "BaseToolOutput"]
 
 
 _TOOLS_REGISTRY = {}
-
-
-def _new_parse_input(
-    self,
-    tool_input: Union[str, Dict],
-) -> Union[str, Dict[str, Any]]:
-    """Convert tool input to pydantic model."""
-    input_args = self.args_schema
-    if isinstance(tool_input, str):
-        if input_args is not None:
-            key_ = next(iter(input_args.__fields__.keys()))
-            input_args.validate({key_: tool_input})
-        return tool_input
-    else:
-        if input_args is not None:
-            result = input_args.parse_obj(tool_input)
-            return result.dict()
-
-
-def _new_to_args_and_kwargs(self, tool_input: Union[str, Dict]) -> Tuple[Tuple, Dict]:
-    # For backwards compatibility, if run_input is a string,
-    # pass as a positional argument.
-    if isinstance(tool_input, str):
-        return (tool_input,), {}
-    else:
-        # for tool defined with `*args` parameters
-        # the args_schema has a field named `args`
-        # it should be expanded to actual *args
-        # e.g.: test_tools
-        #       .test_named_tool_decorator_return_direct
-        #       .search_api
-        if "args" in tool_input:
-            args = tool_input["args"]
-            if args is None:
-                tool_input.pop("args")
-                return (), tool_input
-            elif isinstance(args, tuple):
-                tool_input.pop("args")
-                return args, tool_input
-        return (), tool_input
-
-
-BaseTool._parse_input = _new_parse_input
-BaseTool._to_args_and_kwargs = _new_to_args_and_kwargs
-###############################
 
 
 def regist_tool(
