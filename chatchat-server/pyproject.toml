@@ -13,8 +13,8 @@ chatchat = 'chatchat.cli:main'
 
 [tool.poetry.dependencies]
 python = ">=3.9,<3.9.7 || >3.9.7,<3.13"
-langchain = "0.3.7"
-langgraph = "0.2.44"
+langchain = "^0.3.18"
+langgraph = "^0.2.73"
 langchainhub = "0.1.20"
 fastapi = "^0.115.6"
 sse_starlette = "~1.8.2"
