@@ -12,7 +12,7 @@ packages = [
 chatchat = 'chatchat.cli:main'
 
 [tool.poetry.dependencies]
-python = ">=3.9,<3.9.7 || >3.9.7,<3.13"
+python = ">=3.11,<3.13"
 langchain = "^0.3.18"
 langgraph = "^0.2.73"
 langchainhub = "0.1.20"
