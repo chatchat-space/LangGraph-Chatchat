@@ -7895,4 +7895,4 @@ zhipuai = ["zhipuai"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.12,<3.13"
-content-hash = "1f4c89fca358e62b6d3a077b1f91aeabeddf41a4f1604df396ec951681016a27"
+content-hash = "e2caa5616380dff71fa05617b6f02de0bd577d96ff247bfb461d418419bbd3fd"
