@@ -10,7 +10,6 @@ import nltk
 from chatchat import __version__
 from chatchat.pydantic_settings_file import *
 
-
 # chatchat 数据目录，必须通过环境变量设置。如未设置则自动使用当前目录。
 CHATCHAT_ROOT = Path(os.environ.get("CHATCHAT_ROOT", ".")).resolve()
 
@@ -199,82 +198,82 @@ class KBSettings(BaseFileSettings):
     """每个知识库的初始化介绍，用于在初始化知识库时显示和Agent调用，没写则没有介绍，不会被Agent调用。"""
 
     kbs_config: t.Dict[str, t.Dict] = {
-            "faiss": {},
-            "milvus": {
-                "host": "127.0.0.1",
-                "port": "19530",
-                "user": "",
-                "password": "",
-                "secure": False
+        "faiss": {},
+        "milvus": {
+            "host": "127.0.0.1",
+            "port": "19530",
+            "user": "",
+            "password": "",
+            "secure": False
+        },
+        "zilliz": {
+            "host": "in01-a7ce524e41e3935.ali-cn-hangzhou.vectordb.zilliz.com.cn",
+            "port": "19530",
+            "user": "",
+            "password": "",
+            "secure": True
+        },
+        "pg": {
+            "connection_uri": "postgresql://postgres:postgres@127.0.0.1:5432/langchain_chatchat"
+        },
+        "relyt": {
+            "connection_uri": "postgresql+psycopg2://postgres:postgres@127.0.0.1:7000/langchain_chatchat"
+        },
+        "es": {
+            "scheme": "http",
+            "host": "127.0.0.1",
+            "port": "9200",
+            "index_name": "test_index",
+            "user": "",
+            "password": "",
+            "verify_certs": True,
+            "ca_certs": None,
+            "client_cert": None,
+            "client_key": None
+        },
+        "milvus_kwargs": {
+            "search_params": {
+                "metric_type": "L2"
             },
-            "zilliz": {
-                "host": "in01-a7ce524e41e3935.ali-cn-hangzhou.vectordb.zilliz.com.cn",
-                "port": "19530",
-                "user": "",
-                "password": "",
-                "secure": True
-            },
-            "pg": {
-                "connection_uri": "postgresql://postgres:postgres@127.0.0.1:5432/langchain_chatchat"
-            },
-            "relyt": {
-                "connection_uri": "postgresql+psycopg2://postgres:postgres@127.0.0.1:7000/langchain_chatchat"
-            },
-            "es": {
-                "scheme": "http",
-                "host": "127.0.0.1",
-                "port": "9200",
-                "index_name": "test_index",
-                "user": "",
-                "password": "",
-                "verify_certs": True,
-                "ca_certs": None,
-                "client_cert": None,
-                "client_key": None
-            },
-            "milvus_kwargs": {
-                "search_params": {
-                    "metric_type": "L2"
-                },
-                "index_params": {
-                    "metric_type": "L2",
-                    "index_type": "HNSW",
-                    "params": {
-                        "efConstruction": 128,
-                        "M": 16,
-                        "efSearch": 128}
-                }
-            },
-            "chromadb": {}
-        }
+            "index_params": {
+                "metric_type": "L2",
+                "index_type": "HNSW",
+                "params": {
+                    "efConstruction": 128,
+                    "M": 16,
+                    "efSearch": 128}
+            }
+        },
+        "chromadb": {}
+    }
     """可选向量库类型及对应配置"""
 
     text_splitter_dict: t.Dict[str, t.Dict[str, t.Any]] = {
-            "ChineseRecursiveTextSplitter": {
-                "source": "",
-                "tokenizer_name_or_path": "",
-            },
-            "SpacyTextSplitter": {
-                "source": "huggingface",
-                "tokenizer_name_or_path": "gpt2",
-            },
-            "RecursiveCharacterTextSplitter": {
-                "source": "tiktoken",
-                "tokenizer_name_or_path": "cl100k_base",
-            },
-            "MarkdownHeaderTextSplitter": {
-                "headers_to_split_on": [
-                    ("#", "head1"),
-                    ("##", "head2"),
-                    ("###", "head3"),
-                    ("####", "head4"),
-                ]
-            },
-            "NoneTextSplitter": {
-                "source": "",
-                "tokenizer_name_or_path": "",
-            }
+        "ChineseRecursiveTextSplitter": {
+            "source": "",
+            "tokenizer_name_or_path": "",
+        },
+        "SpacyTextSplitter": {
+            "source": "huggingface",
+            "tokenizer_name_or_path": "gpt2",
+        },
+        "RecursiveCharacterTextSplitter": {
+            "source": "tiktoken",
+            "tokenizer_name_or_path": "cl100k_base",
+        },
+        "MarkdownHeaderTextSplitter": {
+            "headers_to_split_on": [
+                ("#", "head1"),
+                ("##", "head2"),
+                ("###", "head3"),
+                ("####", "head4"),
+            ]
+        },
+        "NoneTextSplitter": {
+            "source": "",
+            "tokenizer_name_or_path": "",
         }
+    }
     """
     TextSplitter 配置项，如果你不明白其中的含义，就不要修改。
     source 如果选择 tiktoken 则使用 openai 的方法 "huggingface"
@@ -293,7 +292,7 @@ class PlatformConfig(MyBaseModel):
     platform_name: str = "xinference"
     """平台名称"""
 
-    platform_type: t.Literal["xinference", "ollama", "oneapi", "fastchat", "openai", "bigmodel", "deepseek", "hunyuan", "custom openai"] = "xinference"
+    platform_type: t.Literal["xinference", "ollama", "oneapi", "fastchat", "openai", "bigmodel", "deepseek", "hunyuan", "lke", "custom openai"] = "xinference"
     """平台类型"""
 
     api_base_url: str = "http://127.0.0.1:9997/v1"
@@ -368,174 +367,188 @@ class ApiModelSettings(BaseFileSettings):
     #     }
 
     LLM_MODEL_CONFIG: t.Dict[str, t.Dict] = {
-            # 意图识别不需要输出，模型后台知道就行
-            "preprocess_model": {
-                "model": "",
-                "temperature": 0.05,
-                "max_tokens": 4096,
-                "history_len": 10,
-                "prompt_name": "default",
-                "callbacks": False,
-            },
-            "llm_model": {
-                "model": "",
-                "temperature": 0.9,
-                "max_tokens": None,
-                "history_len": 10,
-                "prompt_name": "default",
-                "callbacks": True,
-            },
-            "action_model": {
-                "model": "",
-                "temperature": 0.01,
-                "max_tokens": None,
-                "history_len": 10,
-                "prompt_name": "ChatGLM3",
-                "callbacks": True,
-            },
-            "postprocess_model": {
-                "model": "",
-                "temperature": 0.01,
-                "max_tokens": 4096,
-                "history_len": 10,
-                "prompt_name": "default",
-                "callbacks": True,
-            },
-            "image_model": {
-                "model": "sd-turbo",
-                "size": "256*256",
-            },
-        }
+        # 意图识别不需要输出，模型后台知道就行
+        "preprocess_model": {
+            "model": "",
+            "temperature": 0.05,
+            "max_tokens": 4096,
+            "history_len": 10,
+            "prompt_name": "default",
+            "callbacks": False,
+        },
+        "llm_model": {
+            "model": "",
+            "temperature": 0.9,
+            "max_tokens": None,
+            "history_len": 10,
+            "prompt_name": "default",
+            "callbacks": True,
+        },
+        "action_model": {
+            "model": "",
+            "temperature": 0.01,
+            "max_tokens": None,
+            "history_len": 10,
+            "prompt_name": "ChatGLM3",
+            "callbacks": True,
+        },
+        "postprocess_model": {
+            "model": "",
+            "temperature": 0.01,
+            "max_tokens": 4096,
+            "history_len": 10,
+            "prompt_name": "default",
+            "callbacks": True,
+        },
+        "image_model": {
+            "model": "sd-turbo",
+            "size": "256*256",
+        },
+    }
     """
     LLM模型配置，包括了不同模态初始化参数。
     `model` 如果留空则自动使用 DEFAULT_LLM_MODEL
     """
 
     MODEL_PLATFORMS: t.List[PlatformConfig] = [
-            PlatformConfig(**{
-                "platform_name": "xinference",
-                "platform_type": "xinference",
-                "api_base_url": "http://106.54.43.139:9997/v1",
-                "api_key": "EMPTY",
-                "api_concurrencies": 5,
-                "auto_detect_model": True,
-                "llm_models": [],
-                "embed_models": [],
-                "text2image_models": [],
-                "image2text_models": [],
-                "rerank_models": [],
-                "speech2text_models": [],
-                "text2speech_models": [],
-            }),
-            PlatformConfig(**{
-                "platform_name": "ollama",
-                "platform_type": "ollama",
-                "api_base_url": "http://127.0.0.1:11434/v1",
-                "api_key": "EMPTY",
-                "api_concurrencies": 5,
-                "llm_models": [
-                    "qwen:7b",
-                    "qwen2:7b",
-                ],
-                "embed_models": [
-                    "quentinz/bge-large-zh-v1.5",
-                ],
-            }),
-            PlatformConfig(**{
-                "platform_name": "oneapi",
-                "platform_type": "oneapi",
-                "api_base_url": "http://127.0.0.1:3000/v1",
-                "api_key": "sk-",
-                "api_concurrencies": 5,
-                "llm_models": [
-                    # 智谱 API
-                    "chatglm_pro",
-                    "chatglm_turbo",
-                    "chatglm_std",
-                    "chatglm_lite",
-                    # 千问 API
-                    "qwen-turbo",
-                    "qwen-plus",
-                    "qwen-max",
-                    "qwen-max-longcontext",
-                    # 千帆 API
-                    "ERNIE-Bot",
-                    "ERNIE-Bot-turbo",
-                    "ERNIE-Bot-4",
-                    # 星火 API
-                    "SparkDesk",
-                ],
-                "embed_models": [
-                    # 千问 API
-                    "text-embedding-v1",
-                    # 千帆 API
-                    "Embedding-V1",
-                ],
-                "text2image_models": [],
-                "image2text_models": [],
-                "rerank_models": [],
-                "speech2text_models": [],
-                "text2speech_models": [],
-            }),
-            PlatformConfig(**{
-                "platform_name": "openai",
-                "platform_type": "openai",
-                "api_base_url": "https://api.openai.com/v1",
-                "api_key": "sk-proj-",
-                "api_concurrencies": 5,
-                "llm_models": [
-                    "gpt-4o-mini",
-                    "gpt-4o",
-                ],
-                "embed_models": [
-                    "text-embedding-3-small",
-                    "text-embedding-3-large",
-                ],
-            }),
-            PlatformConfig(**{
-                "platform_name": "bigmodel",
-                "platform_type": "bigmodel",
-                "api_base_url": "https://open.bigmodel.cn/api/paas/v4",
-                "api_key": "sk-proj-",
-                "api_concurrencies": 5,
-                "llm_models": [
-                    "glm-4-plus",
-                    "glm-4",
-                    "glm-4-air",
-                ],
-                "embed_models": [
-                    "embedding-3",
-                    "embedding-2",
-                ],
-            }),
-            PlatformConfig(**{
-                "platform_name": "deepseek",
-                "platform_type": "deepseek",
-                "api_base_url": "https://api.deepseek.com",
-                "api_key": "sk-",
-                "api_concurrencies": 5,
-                "llm_models": [
-                    "deepseek-reasoner",
-                    "deepseek-chat",
-                ],
-                "embed_models": [
-                    "",
-                ],
-            }),
-            PlatformConfig(**{
-                "platform_name": "hunyuan",
-                "platform_type": "hunyuan",
-                "api_base_url": "http://hunyuan.xxx.com/openapi/v1/",
-                "api_key": "sk-proj-",
-                "api_concurrencies": 5,
-                "llm_models": [
-                    "hunyuan",
-                ],
-                "embed_models": [
-                    "embedding-test",
-                ],
-            }),
-        ]
+        PlatformConfig(**{
+            "platform_name": "xinference",
+            "platform_type": "xinference",
+            "api_base_url": "http://106.54.43.139:9997/v1",
+            "api_key": "EMPTY",
+            "api_concurrencies": 5,
+            "auto_detect_model": True,
+            "llm_models": [],
+            "embed_models": [],
+            "text2image_models": [],
+            "image2text_models": [],
+            "rerank_models": [],
+            "speech2text_models": [],
+            "text2speech_models": [],
+        }),
+        PlatformConfig(**{
+            "platform_name": "ollama",
+            "platform_type": "ollama",
+            "api_base_url": "http://127.0.0.1:11434/v1",
+            "api_key": "EMPTY",
+            "api_concurrencies": 5,
+            "llm_models": [
+                "qwen:7b",
+                "qwen2:7b",
+            ],
+            "embed_models": [
+                "quentinz/bge-large-zh-v1.5",
+            ],
+        }),
+        PlatformConfig(**{
+            "platform_name": "oneapi",
+            "platform_type": "oneapi",
+            "api_base_url": "http://127.0.0.1:3000/v1",
+            "api_key": "sk-",
+            "api_concurrencies": 5,
+            "llm_models": [
+                # 智谱 API
+                "chatglm_pro",
+                "chatglm_turbo",
+                "chatglm_std",
+                "chatglm_lite",
+                # 千问 API
+                "qwen-turbo",
+                "qwen-plus",
+                "qwen-max",
+                "qwen-max-longcontext",
+                # 千帆 API
+                "ERNIE-Bot",
+                "ERNIE-Bot-turbo",
+                "ERNIE-Bot-4",
+                # 星火 API
+                "SparkDesk",
+            ],
+            "embed_models": [
+                # 千问 API
+                "text-embedding-v1",
+                # 千帆 API
+                "Embedding-V1",
+            ],
+            "text2image_models": [],
+            "image2text_models": [],
+            "rerank_models": [],
+            "speech2text_models": [],
+            "text2speech_models": [],
+        }),
+        PlatformConfig(**{
+            "platform_name": "openai",
+            "platform_type": "openai",
+            "api_base_url": "https://api.openai.com/v1",
+            "api_key": "sk-proj-",
+            "api_concurrencies": 5,
+            "llm_models": [
+                "gpt-4o-mini",
+                "gpt-4o",
+            ],
+            "embed_models": [
+                "text-embedding-3-small",
+                "text-embedding-3-large",
+            ],
+        }),
+        PlatformConfig(**{
+            "platform_name": "bigmodel",
+            "platform_type": "bigmodel",
+            "api_base_url": "https://open.bigmodel.cn/api/paas/v4",
+            "api_key": "sk-proj-",
+            "api_concurrencies": 5,
+            "llm_models": [
+                "glm-4-plus",
+                "glm-4",
+                "glm-4-air",
+            ],
+            "embed_models": [
+                "embedding-3",
+                "embedding-2",
+            ],
+        }),
+        PlatformConfig(**{
+            "platform_name": "deepseek",
+            "platform_type": "deepseek",
+            "api_base_url": "https://api.deepseek.com",
+            "api_key": "sk-",
+            "api_concurrencies": 5,
+            "llm_models": [
+                "deepseek-reasoner",
+                "deepseek-chat",
+            ],
+            "embed_models": [
+                "",
+            ],
+        }),
+        PlatformConfig(**{
+            "platform_name": "hunyuan",
+            "platform_type": "hunyuan",
+            "api_base_url": "http://hunyuan.xxx.com/openapi/v1/",
+            "api_key": "sk-proj-",
+            "api_concurrencies": 5,
+            "llm_models": [
+                "hunyuan",
+            ],
+            "embed_models": [
+                "embedding-test",
+            ],
+        }),
+        PlatformConfig(**{
+            "platform_name": "lke",
+            "platform_type": "lke",
+            "api_base_url": "https://api.lkeap.cloud.tencent.com/v1",
+            "api_key": "sk-",
+            "api_concurrencies": 5,
+            "llm_models": [
+                "deepseek-r1",
+                "deepseek-v3",
+            ],
+            "embed_models": [
+                "embedding-test",
+            ],
+        }),
+    ]
     """模型平台配置"""
 
 
@@ -611,10 +624,10 @@ class ToolSettings(BaseFileSettings):
         "top_k": 5,
         "verbose": "Origin",
         "conclude_prompt": "<指令>这是搜索到的互联网信息，请你根据这些信息进行提取并有调理，简洁的回答问题。如果无法从中得到答案，请说 “无法搜索到能回答问题的内容”。 "
-        "</指令>\n<已知信息>{{ context }}</已知信息>\n"
-        "<问题>\n"
-        "{{ question }}\n"
-        "</问题>\n",
+                           "</指令>\n<已知信息>{{ context }}</已知信息>\n"
+                           "<问题>\n"
+                           "{{ question }}\n"
+                           "</问题>\n",
     }
 
     arxiv: dict = {
@@ -647,7 +660,6 @@ class ToolSettings(BaseFileSettings):
         "model": "sd-turbo",
         "size": "256*256",
     }
-
 
     text2sql: dict = {
         # 该工具需单独指定使用的大模型，与用户前端选择使用的模型无关
@@ -953,7 +965,7 @@ class SettingsContainer:
         self.tool_settings.create_template_file(write_file=True, file_format="yaml", model_obj=ToolSettings())
         self.prompt_settings.create_template_file(write_file=True, file_format="yaml")
 
-    def set_auto_reload(self, flag: bool=True):
+    def set_auto_reload(self, flag: bool = True):
         self.basic_settings.auto_reload = flag
         self.kb_settings.auto_reload = flag
         self.model_settings.auto_reload = flag
@@ -963,7 +975,6 @@ class SettingsContainer:
 
 Settings = SettingsContainer()
 nltk.data.path.append(str(Settings.basic_settings.NLTK_DATA_PATH))
-
 
 if __name__ == "__main__":
     Settings.createl_all_templates()
